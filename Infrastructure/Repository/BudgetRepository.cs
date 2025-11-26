@@ -12,9 +12,15 @@ namespace Infrastructure.Repository
             _DbContext = dbContext;
         }
 
+        public async Task<Budget?> GetBudgetById(int budgetId, int userId)
+        {
+            return await _DbContext.Budgets.Where(b => b.Id == budgetId && b.Users.Any(u => u.Id == userId)).Include(budget => budget.Users).Include(budget => budget.BudgetCategories).ThenInclude(bc => bc.Spendings).FirstOrDefaultAsync();
+
+        }
+
         public async Task<List<Budget>> GetUserBudgets(int userId)
         {
-            return await _DbContext.Budgets.Where(b => b.Users.Any(u => u.Id == userId)).ToListAsync();
+            return await _DbContext.Budgets.Where(b => b.Users.Any(u => u.Id == userId)).Include(budget => budget.Users).Include(budget => budget.BudgetCategories).ThenInclude(bc => bc.Spendings).ToListAsync();
         }
 
         public Budget CreateBudget(Budget budget)
@@ -26,6 +32,12 @@ namespace Infrastructure.Repository
         public Budget UpdateBudget(Budget budget)
         {
             _DbContext.Budgets.Update(budget);
+            return budget;
+        }
+
+        public Budget DeleteBudget(Budget budget)
+        {
+            _DbContext.Budgets.Remove(budget);
             return budget;
         }
 

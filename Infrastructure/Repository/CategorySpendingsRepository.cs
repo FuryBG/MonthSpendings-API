@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces.Repository;
 using Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repository
 {
@@ -17,10 +18,22 @@ namespace Infrastructure.Repository
             return spending;
         }
 
-        public Spending DeleteSpending(Spending spending)
+        public async Task<Spending?> GetSpending(int spendingId, int userId)
+        {
+            Spending? spending = await _DbContext.Spendings
+                .Include(spending => spending.BudgetCategory)
+                .ThenInclude(category => category.Budget)
+                .ThenInclude(budget => budget.Users)
+                .Where(spending => spending.BudgetCategory.Budget.Users.Any(user => user.Id == userId) && spending.Id == spendingId)
+                .FirstOrDefaultAsync();
+
+            return spending;
+        }
+
+        public int DeleteSpending(Spending spending)
         {
             _DbContext.Spendings.Remove(spending);
-            return spending;
+            return spending.Id;
         }
     }
 }

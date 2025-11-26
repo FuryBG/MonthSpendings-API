@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces.Repository;
 using Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repository
 {
@@ -9,6 +10,15 @@ namespace Infrastructure.Repository
         public BudgetCategoryRepository(AppDbContext dbContext)
         {
             _DbContext = dbContext;
+        }
+
+        public async Task<BudgetCategory?> GetBudgetCategoryById(int budgetCategoryId, int userId)
+        {
+            return await _DbContext.BudgetCategories
+                .Include(category => category.Budget)
+                .ThenInclude(budget => budget.Users)
+                .Where(bc => bc.Id == budgetCategoryId && bc.Budget.Users.Any(user => user.Id == userId))
+                .FirstOrDefaultAsync();
         }
 
         public BudgetCategory CreateCategory(BudgetCategory budgetCategory)

@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces.Repository;
 using Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repository
 {
@@ -9,6 +10,16 @@ namespace Infrastructure.Repository
         public UserRepository(AppDbContext dbContext)
         {
             _DbContext = dbContext;
+        }
+
+        public async Task<AppUser?> GetUserById(int userId)
+        {
+            return await _DbContext.Users.Where(u => u.Id == userId).FirstOrDefaultAsync();
+        }
+
+        public async Task<AppUser?> GetUserByGoogleId(string googleId)
+        {
+            return await _DbContext.Users.Where(u => u.GoogleId == googleId).FirstOrDefaultAsync();
         }
 
         public AppUser AddUser(AppUser user)

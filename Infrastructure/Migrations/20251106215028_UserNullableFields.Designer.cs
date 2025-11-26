@@ -3,6 +3,7 @@ using System;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251106215028_UserNullableFields")]
+    partial class UserNullableFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -96,7 +99,7 @@ namespace Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("BudgetId")
+                    b.Property<int>("MonthlyBudgetId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Name")
@@ -105,12 +108,12 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BudgetId");
+                    b.HasIndex("MonthlyBudgetId");
 
                     b.ToTable("BudgetCategories");
                 });
 
-            modelBuilder.Entity("Domain.BudgetPeriod", b =>
+            modelBuilder.Entity("Domain.MonthlyBudget", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -121,7 +124,7 @@ namespace Infrastructure.Migrations
                     b.Property<int>("BudgetId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime?>("EndDate")
+                    b.Property<DateTime>("EndDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("StartDate")
@@ -129,9 +132,10 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BudgetId");
+                    b.HasIndex("BudgetId")
+                        .IsUnique();
 
-                    b.ToTable("BudgetPeriods");
+                    b.ToTable("MonthlyBudgets");
                 });
 
             modelBuilder.Entity("Domain.Spending", b =>
@@ -142,8 +146,8 @@ namespace Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<double>("Amount")
-                        .HasColumnType("double precision");
+                    b.Property<int>("Amount")
+                        .HasColumnType("integer");
 
                     b.Property<int>("BudgetCategoryId")
                         .HasColumnType("integer");
@@ -179,20 +183,20 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.BudgetCategory", b =>
                 {
-                    b.HasOne("Domain.Budget", "Budget")
+                    b.HasOne("Domain.MonthlyBudget", "MonthlyBudget")
                         .WithMany("BudgetCategories")
-                        .HasForeignKey("BudgetId")
+                        .HasForeignKey("MonthlyBudgetId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Budget");
+                    b.Navigation("MonthlyBudget");
                 });
 
-            modelBuilder.Entity("Domain.BudgetPeriod", b =>
+            modelBuilder.Entity("Domain.MonthlyBudget", b =>
                 {
                     b.HasOne("Domain.Budget", "Budget")
-                        .WithMany("BudgetPeriods")
-                        .HasForeignKey("BudgetId")
+                        .WithOne("MonthlyBudget")
+                        .HasForeignKey("Domain.MonthlyBudget", "BudgetId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -202,7 +206,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Spending", b =>
                 {
                     b.HasOne("Domain.BudgetCategory", "BudgetCategory")
-                        .WithMany("Spendings")
+                        .WithMany()
                         .HasForeignKey("BudgetCategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -212,14 +216,13 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Budget", b =>
                 {
-                    b.Navigation("BudgetCategories");
-
-                    b.Navigation("BudgetPeriods");
+                    b.Navigation("MonthlyBudget")
+                        .IsRequired();
                 });
 
-            modelBuilder.Entity("Domain.BudgetCategory", b =>
+            modelBuilder.Entity("Domain.MonthlyBudget", b =>
                 {
-                    b.Navigation("Spendings");
+                    b.Navigation("BudgetCategories");
                 });
 #pragma warning restore 612, 618
         }

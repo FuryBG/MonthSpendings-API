@@ -4,8 +4,10 @@ namespace Application.Interfaces.Repository
 {
     public interface IBudgetRepository
     {
-        Budget CreateBudget(Budget budget);
+        Task<Budget?> GetBudgetById(int budgetId, int userId);
         Task<List<Budget>> GetUserBudgets(int userId);
+        Budget CreateBudget(Budget budget);
         Budget UpdateBudget(Budget budget);
+        Budget DeleteBudget(Budget budget);
     }
 }

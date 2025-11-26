@@ -1,4 +1,5 @@
-﻿using Application;
+﻿using Application.Dto;
+using Application.UseCases;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MonthSpendings.Controllers
@@ -7,28 +8,41 @@ namespace MonthSpendings.Controllers
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
-        public UserController()
+        private IRegisterUserUseCase _RegisterUseCase { get; set; }
+        private IGetUserByIdUseCase _GetUserByIdUseCase { get; set; }
+        public UserController(IRegisterUserUseCase registerUseCase, IGetUserByIdUseCase getUserByIdUseCase)
         {
-            
+            _RegisterUseCase = registerUseCase;
+            _GetUserByIdUseCase = getUserByIdUseCase;
         }
 
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> GetAuthenticatedUser()
         {
-            return Ok();
+            var result = await _GetUserByIdUseCase.InvokeAsync();
+
+            if (result.Successful)
+            {
+                return Ok(result.Data);
+            }
+            else
+            {
+                return BadRequest(result.ErrorMessage);
+            }
         }
 
-        // POST: UserController/Create
         [HttpPost]
-        public ActionResult Create([FromBody] GoogleUserDto googleUserDto)
+        public async Task<IActionResult> Create([FromBody] GoogleUserDto googleUserDto)
         {
-            try
+            var result = await _RegisterUseCase.InvokeAsync(googleUserDto);
+
+            if (result.Successful)
             {
-                return RedirectToAction(nameof(Index));
+                return Ok(result.Data);
             }
-            catch
+            else
             {
-                return Ok();
+                return BadRequest(result.ErrorMessage);
             }
         }
     }

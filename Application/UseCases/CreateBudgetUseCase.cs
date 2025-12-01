@@ -42,7 +42,14 @@ namespace Application.UseCases
 
                 Budget budget = budgetDto.ToEntity();
                 budget.Users.Add(existingUser);
-                //budget.BudgetPeriods.Add(new BudgetPeriod() { StartDate = DateTime.UtcNow });
+                BudgetPeriod newBudgetPeriod = new BudgetPeriod() { StartDate = DateTime.UtcNow };
+                budget.BudgetPeriods.Add(newBudgetPeriod);
+
+                budget.BudgetCategories.ForEach(budgetCategory =>
+                {
+                    budgetCategory.Spendings.ForEach(spending => spending.BudgetPeriod = newBudgetPeriod);
+                });
+
                 Budget newBudget = _UnitOfWork.BudgetRepository.CreateBudget(budget);
                 await _UnitOfWork.CommitAsync();
 

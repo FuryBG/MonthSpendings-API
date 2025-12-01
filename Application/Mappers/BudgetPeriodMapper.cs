@@ -14,6 +14,7 @@ namespace Application.Mappers
         {
             return new BudgetPeriodDto()
             {
+                Id = budgetPeriod.Id,
                 BudgetId = budgetPeriod.BudgetId,
                 StartDate = budgetPeriod.StartDate,
                 EndDate = budgetPeriod.EndDate,
@@ -23,6 +24,7 @@ namespace Application.Mappers
         {
             return new BudgetPeriod()
             {
+                Id = dto.Id,
                 BudgetId = dto.BudgetId,
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,

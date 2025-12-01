@@ -14,6 +14,7 @@ namespace Application.Dto.Budget
         public double Amount { get; set; }
         [JsonPropertyName("budgetCategoryId")]
         public int BudgetCategoryId { get; set; }
-
+        [JsonPropertyName("budgetPeriodId")]
+        public int BudgetPeriodId { get; set; }
     }
 }

@@ -12,16 +12,18 @@ namespace MonthSpendings.Controllers
         private ICreateBudgetUseCase _CreateBudgetUseCase;
         private IGetAllBudgetsUseCase _GetAllBudgetsUseCase;
         private IDeleteBudgetUseCase _DeleteBudgetUseCase;
-        public BudgetController(ICreateBudgetUseCase createBudgetUseCase, IGetAllBudgetsUseCase getAllBudgetsUseCase, IDeleteBudgetUseCase deleteBudgetUseCase)
+        private IFinishBudgetPeriodUseCase _FinishBudgetPeriodUseCase;
+        public BudgetController(ICreateBudgetUseCase createBudgetUseCase, IGetAllBudgetsUseCase getAllBudgetsUseCase, IDeleteBudgetUseCase deleteBudgetUseCase, IFinishBudgetPeriodUseCase finishBudgetPeriodUseCase)
         {
             _CreateBudgetUseCase = createBudgetUseCase;
             _GetAllBudgetsUseCase = getAllBudgetsUseCase;
             _DeleteBudgetUseCase = deleteBudgetUseCase;
+            _FinishBudgetPeriodUseCase = finishBudgetPeriodUseCase;
         }
 
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetAllForUse()
+        public async Task<IActionResult> GetAllForUser()
         {
             var result = await _GetAllBudgetsUseCase.InvokeAsync();
 
@@ -57,6 +59,23 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Delete([FromQuery] int budgetId)
         {
             var result = await _DeleteBudgetUseCase.InvokeAsync(budgetId);
+
+            if (result.Successful)
+            {
+                return Ok(result.Data);
+            }
+            else
+            {
+                return BadRequest(result.ErrorMessage);
+            }
+        }
+
+        [Authorize]
+        [HttpPost("finish")]
+        public async Task<IActionResult> FinishPeriod([FromBody] BudgetDto budgetDto)
+        {
+            Console.WriteLine(ModelState);
+            var result = await _FinishBudgetPeriodUseCase.InvokeAsync(budgetDto);
 
             if (result.Successful)
             {

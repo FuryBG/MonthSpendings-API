@@ -9,8 +9,8 @@ namespace Application.Dto.Budget
         [JsonPropertyName("budgetId")]
         public int BudgetId { get; set; }
         [JsonPropertyName("name")]
-        public string Name { get; set; }
+        public required string Name { get; set; }
         [JsonPropertyName("spendings")]
-        public List<SpendingDto>? Spendings { get; set; }
+        public required List<SpendingDto> Spendings { get; set; }
     }
 }

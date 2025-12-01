@@ -7,10 +7,10 @@ namespace Domain
     {
         [Key]
         public int Id { get; set; }
-        public string Name { get; set; }
+        public required string Name { get; set; }
         [ForeignKey(nameof(Budget))]
         public int BudgetId { get; set; }
         public Budget Budget { get; set; }
-        public List<Spending>? Spendings { get; set; }
+        public required List<Spending> Spendings { get; set; }
     }
 }

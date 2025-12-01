@@ -13,7 +13,8 @@ namespace Application.Mappers
                 Amount = spending.Amount,
                 Date = spending.Date,
                 Description = spending.Description,
-                BudgetCategoryId = spending.BudgetCategoryId
+                BudgetCategoryId = spending.BudgetCategoryId,
+                BudgetPeriodId = spending.BudgetPeriodId,
             };
         }
         public static Spending ToEntity(this SpendingDto dto)
@@ -24,7 +25,8 @@ namespace Application.Mappers
                 Amount = dto.Amount,
                 Date = dto.Date ?? DateTime.UtcNow,
                 Description = dto.Description,
-                BudgetCategoryId = dto.BudgetCategoryId
+                BudgetCategoryId = dto.BudgetCategoryId,
+                BudgetPeriodId = dto.BudgetPeriodId,
             };
         }
     }

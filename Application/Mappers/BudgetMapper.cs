@@ -27,7 +27,7 @@ namespace Application.Mappers
             {
                 Id = dto.Id,
                 Name = dto.Name,
-                BudgetPeriods = dto.BudgetPeriods.Select(budgetPeriodDto => budgetPeriodDto.ToEntity()).ToList(),
+                BudgetPeriods = dto.BudgetPeriods != null ? dto.BudgetPeriods.Select(budgetPeriodDto => budgetPeriodDto.ToEntity()).ToList() : [],
                 BudgetCategories = dto.BudgetCategories != null
                                     ? dto.BudgetCategories.Select(category => category.ToEntity()).ToList()
                                     : [],

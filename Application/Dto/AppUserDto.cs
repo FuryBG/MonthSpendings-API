@@ -7,7 +7,7 @@ namespace Application.Dto
         [JsonPropertyName("id")]
         public int Id { get; set; }
         [JsonPropertyName("email")]
-        public string? Email { get; set; }
+        public required string Email { get; set; }
         [JsonPropertyName("firstName")]
         public string? FirstName { get; set; }
         [JsonPropertyName("lastName")]

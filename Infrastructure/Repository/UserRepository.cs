@@ -22,6 +22,11 @@ namespace Infrastructure.Repository
             return await _DbContext.Users.Where(u => u.GoogleId == googleId).FirstOrDefaultAsync();
         }
 
+        public async Task<AppUser?> GetUserByEmail(string email)
+        {
+            return await _DbContext.Users.Where(u => u.Email == email).FirstOrDefaultAsync();
+        }
+
         public AppUser AddUser(AppUser user)
         {
             _DbContext.Users.Add(user);

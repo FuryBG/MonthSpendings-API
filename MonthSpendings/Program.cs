@@ -41,6 +41,7 @@ public class Program
         builder.Services.AddTransient<IBudgetRepository, BudgetRepository>();
         builder.Services.AddTransient<IBudgetCategoryRepository, BudgetCategoryRepository>();
         builder.Services.AddTransient<ICategorySpendingsRepository, CategorySpendingsRepository>();
+        builder.Services.AddTransient<IBudgetInviteRepository, BudgetInviteRepository>();
 
         builder.Services.AddTransient<IRegisterUserUseCase, RegisterUserUseCase>();
         builder.Services.AddTransient<IGetUserByIdUseCase, GetUserByIdUseCase>();
@@ -55,6 +56,15 @@ public class Program
 
         builder.Services.AddTransient<ICreateSpendingUseCase, CreateSpendingUseCase>();
         builder.Services.AddTransient<IDeleteSpendingUseCase, DeleteSpendingUseCase>();
+
+        builder.Services.AddTransient<ICreateBudgetInviteUseCase, CreateBudgetInviteUseCase>();
+
+
+        builder.Services.AddTransient<IPushNotificationsService, PushNotificationsService>();
+
+        var test = new PushNotificationsService();
+        test.SendNotification(["ExponentPushToken[7P75uwAA-Z6ODX-8Qb_d8i]"], "ALEE", "BALE");
+
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(jwtOptions =>

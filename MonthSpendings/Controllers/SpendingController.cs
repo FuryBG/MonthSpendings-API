@@ -17,23 +17,6 @@ namespace MonthSpendings.Controllers
             _DeleteSpendingUseCase = deleteSpendingUseCase;
         }
 
-        //[Authorize]
-        //[HttpGet]
-        //public async Task<IActionResult> GetBudgets()
-        //{
-        //    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        //    var result = await _GetAllBudgetsUseCase.InvokeAsync(userId);
-
-        //    if (result.Successful)
-        //    {
-        //        return Ok(result.Data);
-        //    }
-        //    else
-        //    {
-        //        return BadRequest(result.ErrorMessage);
-        //    }
-        //}
-
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] SpendingDto spendingDto)

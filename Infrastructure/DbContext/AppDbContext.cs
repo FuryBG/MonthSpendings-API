@@ -1,5 +1,6 @@
 ﻿using Domain;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel;
 
 namespace Infrastructure
 {
@@ -9,10 +10,24 @@ namespace Infrastructure
         public DbSet<Budget> Budgets { get; set; }
         public DbSet<BudgetPeriod> BudgetPeriods { get; set; }
         public DbSet<BudgetCategory> BudgetCategories { get; set; }
+        public DbSet<BudgetInvite> BudgetInvites { get; set; }
         public DbSet<Spending> Spendings { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
 
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<BudgetPeriod>()
+            .Property(i => i.StartDate)
+            .HasDefaultValueSql("timezone('utc', now())");
+
+            modelBuilder.Entity<BudgetInvite>()
+           .Property(i => i.ValidTo)
+           .HasDefaultValueSql("timezone('utc', now()) + INTERVAL '2 days'");
         }
     }
 }

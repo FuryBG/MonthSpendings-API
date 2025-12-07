@@ -58,13 +58,10 @@ public class Program
         builder.Services.AddTransient<IDeleteSpendingUseCase, DeleteSpendingUseCase>();
 
         builder.Services.AddTransient<ICreateBudgetInviteUseCase, CreateBudgetInviteUseCase>();
+        builder.Services.AddTransient<IUpdateBudgetInviteResponseUseCase, UpdateBudgetInviteResponseUseCase>();
 
 
         builder.Services.AddTransient<IPushNotificationsService, PushNotificationsService>();
-
-        var test = new PushNotificationsService();
-        test.SendNotification(["ExponentPushToken[7P75uwAA-Z6ODX-8Qb_d8i]"], "ALEE", "BALE");
-
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(jwtOptions =>

@@ -35,7 +35,7 @@ namespace Application.UseCases
 
                 if (budget == null)
                 {
-                    Console.WriteLine($"Can't find budget with id {budgetInviteDto.BudgetId} to create invite.");
+                    Console.WriteLine($"Can't find budget with id {budgetInviteDto.BudgetId} and user id {userId} to create invite.");
                     result.Successful = false;
                     result.ErrorMessage = "Can't find the Budget to send Invite.";
                     return result;
@@ -63,6 +63,7 @@ namespace Application.UseCases
 
                 BudgetInvite budgetInvite = budgetInviteDto.ToEntity();
                 budgetInvite.ReceiverId = receiver.Id;
+                budgetInvite.SenderId = sender.Id;
 
                 BudgetInvite createdInvite = _UnitOfWork.BudgetInviteRepository.CreateInvite(budgetInvite);
 

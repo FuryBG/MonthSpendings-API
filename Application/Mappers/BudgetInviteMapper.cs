@@ -10,7 +10,6 @@ namespace Application.Mappers
             return new BudgetInviteDto()
             {
                 Id = budgetInvite.Id,
-                SenderId = budgetInvite.SenderId,
                 ReceiverEmail = budgetInvite.Receiver.Email,
                 BudgetId = budgetInvite.BudgetId,
                 Accepted = budgetInvite.Accepted,
@@ -23,10 +22,8 @@ namespace Application.Mappers
             return new BudgetInvite()
             {
                 Id = dto.Id,
-                SenderId = dto.SenderId,
                 BudgetId = dto.BudgetId,
                 Accepted = dto.Accepted,
-                ValidTo = dto.ValidTo
             };
         }
     }

@@ -1,5 +1,4 @@
 ﻿using Application.Dto;
-using Application.Dto.Budget;
 using Application.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,16 +10,35 @@ namespace MonthSpendings.Controllers
     public class BudgetInviteController : ControllerBase
     {
         private ICreateBudgetInviteUseCase _CreateBudgetInviteUseCase;
-        public BudgetInviteController(ICreateBudgetInviteUseCase createBudgetInviteUseCase)
+        private IUpdateBudgetInviteResponseUseCase _UpdateBudgetInviteResponseUseCase;
+        public BudgetInviteController(ICreateBudgetInviteUseCase createBudgetInviteUseCase, IUpdateBudgetInviteResponseUseCase updateBudgetInviteResponseUseCase)
         {
             _CreateBudgetInviteUseCase = createBudgetInviteUseCase;
+            _UpdateBudgetInviteResponseUseCase = updateBudgetInviteResponseUseCase;
         }
 
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> Create(BudgetInviteDto budgetInviteDto)
         {
+            Console.WriteLine(ModelState); 
             var result = await _CreateBudgetInviteUseCase.InvokeAsync(budgetInviteDto);
+
+            if (result.Successful)
+            {
+                return Ok(result.Data);
+            }
+            else
+            {
+                return BadRequest(result.ErrorMessage);
+            }
+        }
+
+        [Authorize]
+        [HttpPatch("{inviteId}")]
+        public async Task<IActionResult> Update(int inviteId, [FromBody] bool response)
+        {
+            var result = await _UpdateBudgetInviteResponseUseCase.InvokeAsync(inviteId, response);
 
             if (result.Successful)
             {

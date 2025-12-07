@@ -28,7 +28,7 @@ namespace Infrastructure.Services
             try
             {
                 var result = await _Client.PushSendAsync(pushTicketReq);
-                success = result.PushTicketErrors.Count == 0;
+                success = result.PushTicketErrors != null;
             }
             catch (Exception e)
             {

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Infrastructure
 {
-    public class UnitOfWork : IUnitOfWork
+    public class UnitOfWork : IUnitOfWork, IAsyncDisposable
     {
         private AppDbContext _DbContext { get; set; }
         private IDbContextTransaction? _CurrentTransaction;
@@ -78,6 +78,17 @@ namespace Infrastructure
             if (_CurrentTransaction != null)
             {
                 await _CurrentTransaction.DisposeAsync();
+                _CurrentTransaction = null;
+            }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (_CurrentTransaction != null)
+            {
+                await _CurrentTransaction.RollbackAsync();
+                await _CurrentTransaction.DisposeAsync();
+                _CurrentTransaction = null;
             }
         }
     }

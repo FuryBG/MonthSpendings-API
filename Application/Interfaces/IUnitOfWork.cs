@@ -11,5 +11,8 @@ namespace Application.Interfaces
         IUserRepository UserRepository { get; }
 
         Task CommitAsync();
+        Task BeginTransactionAsync();
+        Task CommitTransactionAsync();
+        Task RollbackTransactionAsync();
     }
 }

@@ -1,11 +1,14 @@
 ﻿using Application.Interfaces;
 using Application.Interfaces.Repository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Infrastructure
 {
     public class UnitOfWork : IUnitOfWork
     {
         private AppDbContext _DbContext { get; set; }
+        private IDbContextTransaction? _CurrentTransaction;
         public IUserRepository UserRepository { get; private set; }
         public IBudgetRepository BudgetRepository { get; private set; }
         public IBudgetCategoryRepository BudgetCategoryRepository { get; private set; }
@@ -25,6 +28,53 @@ namespace Infrastructure
         public async Task CommitAsync()
         {
             await _DbContext.SaveChangesAsync();
+        }
+
+        public async Task BeginTransactionAsync()
+        {
+            if (_CurrentTransaction != null)
+            {
+                return;
+            }
+            _CurrentTransaction = await _DbContext.Database.BeginTransactionAsync();
+        }
+
+        public async Task CommitTransactionAsync()
+        {
+            if (_CurrentTransaction == null)
+            {
+                throw new InvalidOperationException("No transaction in progress");
+            }
+
+            try
+            {
+                await _DbContext.SaveChangesAsync();
+                await _CurrentTransaction.CommitAsync();
+            }
+            finally
+            {
+                await DisposeTransactionAsync();
+            }
+        }
+
+        public async Task RollbackTransactionAsync()
+        {
+            try
+            {
+                await _CurrentTransaction?.RollbackAsync()!;
+            }
+            finally
+            {
+                await DisposeTransactionAsync();
+            }
+        }
+
+        private async Task DisposeTransactionAsync()
+        {
+            if (_CurrentTransaction != null)
+            {
+                await _CurrentTransaction!.DisposeAsync();
+            }
         }
     }
 }

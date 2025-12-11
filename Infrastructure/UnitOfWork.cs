@@ -1,6 +1,5 @@
 ﻿using Application.Interfaces;
 using Application.Interfaces.Repository;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Infrastructure
@@ -59,9 +58,14 @@ namespace Infrastructure
 
         public async Task RollbackTransactionAsync()
         {
+            if (_CurrentTransaction == null)
+            {
+                throw new InvalidOperationException("No transaction in progress");
+            }
+
             try
             {
-                await _CurrentTransaction?.RollbackAsync()!;
+                await _CurrentTransaction.RollbackAsync();
             }
             finally
             {
@@ -73,7 +77,7 @@ namespace Infrastructure
         {
             if (_CurrentTransaction != null)
             {
-                await _CurrentTransaction!.DisposeAsync();
+                await _CurrentTransaction.DisposeAsync();
             }
         }
     }

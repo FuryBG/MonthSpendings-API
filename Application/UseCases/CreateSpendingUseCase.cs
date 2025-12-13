@@ -32,6 +32,7 @@ namespace Application.UseCases
                 int userId = _UserService.GetUserId();
                 BudgetCategory? budgetCategory = await _UnitOfWork.BudgetCategoryRepository.GetBudgetCategoryById(spendingDto.BudgetCategoryId, userId);
 
+
                 if (budgetCategory == null)
                 {
                     Console.WriteLine($"Can't find category with id {spendingDto.Id} to add spending.");
@@ -39,6 +40,17 @@ namespace Application.UseCases
                     result.ErrorMessage = "Can't find the category to add spending.";
                     return result;
 
+                }
+
+                double categoryBalance = budgetCategory.Spendings.Sum(s => s.Amount);
+                double newBalance = categoryBalance + spendingDto.Amount;
+
+                if (spendingDto.Amount < 0 && newBalance < 0)
+                {
+                    Console.WriteLine($"Trying to spend: {spendingDto.Amount} but the balance is: {categoryBalance}");
+                    result.Successful = false;
+                    result.ErrorMessage = "Trying to spend more than the category balance.";
+                    return result;
                 }
 
                 Spending addedSpending = _UnitOfWork.CategorySpendingsRepository.AddSpending(spendingDto.ToEntity());

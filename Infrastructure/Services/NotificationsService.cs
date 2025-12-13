@@ -32,6 +32,7 @@ namespace Infrastructure.Services
             }
             catch (Exception e)
             {
+                Console.WriteLine(e.Message);
 
             }
             return success;

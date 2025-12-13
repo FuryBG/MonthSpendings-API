@@ -6,9 +6,9 @@ namespace Domain
     {
         [Key]
         public int Id { get; set; }
-        public string Name { get; set; }
-        public List<AppUser> Users { get; set; }
-        public List<BudgetPeriod> BudgetPeriods { get; set; }
-        public List<BudgetCategory> BudgetCategories { get; set; }
+        public required string Name { get; set; }
+        public List<AppUser> Users { get; set; } = new();
+        public List<BudgetPeriod> BudgetPeriods { get; set; } = new();
+        public List<BudgetCategory> BudgetCategories { get; set; } = new();
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Domain;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel;
 
 namespace Infrastructure
 {
@@ -28,6 +27,18 @@ namespace Infrastructure
             modelBuilder.Entity<BudgetInvite>()
            .Property(i => i.ValidTo)
            .HasDefaultValueSql("timezone('utc', now()) + INTERVAL '2 days'");
+
+            modelBuilder.Entity<BudgetInvite>()
+            .HasOne(bi => bi.Sender)
+            .WithMany(u => u.SentBudgetInvites)
+            .HasForeignKey(bi => bi.SenderId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<BudgetInvite>()
+            .HasOne(bi => bi.Receiver)
+            .WithMany(u => u.ReceivedBudgetInvites)
+            .HasForeignKey(bi => bi.ReceiverId)
+            .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

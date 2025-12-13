@@ -5,9 +5,9 @@ namespace Application.Dto
     public class GoogleUserDto
     {
         [JsonPropertyName("id")]
-        public string Id { get; set; }
+        public required string Id { get; set; }
         [JsonPropertyName("email")]
-        public string? Email { get; set; }
+        public required string Email { get; set; }
         [JsonPropertyName("givenName")]
         public string? FirstName { get; set; }
         [JsonPropertyName("familyName")]
@@ -15,6 +15,6 @@ namespace Application.Dto
         [JsonPropertyName("photo")]
         public string? PhotoAddress { get; set; }
         [JsonPropertyName("notificationToken")]
-        public string? NotificationToken { get; set; }
+        public required string NotificationToken { get; set; }
     }
 }

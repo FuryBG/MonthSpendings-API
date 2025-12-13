@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using Domain;
+using System.Text.Json.Serialization;
 
 namespace Application.Dto
 {
@@ -13,10 +14,12 @@ namespace Application.Dto
         [JsonPropertyName("lastName")]
         public string? LastName { get; set; }
         [JsonPropertyName("notificationToken")]
-        public string NotificationToken { get; set; }
+        public required string NotificationToken { get; set; }
         [JsonPropertyName("googleId")]
-        public string GoogleId { get; set; }
+        public required string GoogleId { get; set; }
         [JsonPropertyName("googlePhotoAddress")]
-        public string GooglePhotoAddress { get; set; }
+        public string? GooglePhotoAddress { get; set; }
+        public List<BudgetInviteDto> SentBudgetInvites { get; set; } = new();
+        public List<BudgetInviteDto> ReceivedBudgetInvites { get; set; } = new();
     }
 }

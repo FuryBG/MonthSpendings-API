@@ -9,7 +9,7 @@ namespace Application.Dto.Budget
         [JsonPropertyName("date")]
         public DateTime? Date { get; set; }
         [JsonPropertyName("description")]
-        public string Description { get; set; }
+        public string? Description { get; set; }
         [JsonPropertyName("amount")]
         public double Amount { get; set; }
         [JsonPropertyName("budgetCategoryId")]

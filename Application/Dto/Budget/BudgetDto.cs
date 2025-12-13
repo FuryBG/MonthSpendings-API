@@ -8,11 +8,11 @@ namespace Application.Dto.Budget
         [JsonPropertyName("id")]
         public int Id { get; set; }
         [JsonPropertyName("name")]
-        public string Name { get; set; }
+        public required string Name { get; set; }
         [JsonPropertyName("budgetPeriods")]
         public List<BudgetPeriodDto>? BudgetPeriods { get; set; }
         [JsonPropertyName("budgetCategories")]
-        public List<BudgetCategoryDto> BudgetCategories { get; set; }
+        public List<BudgetCategoryDto> BudgetCategories { get; set; } = new();
         [JsonPropertyName("users")]
         public List<AppUserDto>? Users { get; set; }
     }

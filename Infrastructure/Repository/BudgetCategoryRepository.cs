@@ -15,6 +15,7 @@ namespace Infrastructure.Repository
         public async Task<BudgetCategory?> GetBudgetCategoryById(int budgetCategoryId, int userId)
         {
             return await _DbContext.BudgetCategories
+                .Include(category => category.Spendings.Where(spending => spending.BudgetPeriod.EndDate == null))
                 .Include(category => category.Budget)
                 .ThenInclude(budget => budget.Users)
                 .Where(bc => bc.Id == budgetCategoryId && bc.Budget.Users.Any(user => user.Id == userId))

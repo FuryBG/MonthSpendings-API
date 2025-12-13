@@ -36,7 +36,6 @@ namespace Application.UseCases
                 {
                     result.Successful = false;
                     result.ErrorMessage = "Invalid user.";
-                    //todo log
                     Console.WriteLine($"Can't find user with id {userId}.");
                     return result;
                 }
@@ -48,7 +47,6 @@ namespace Application.UseCases
             {
                 result.Successful = false;
                 result.ErrorMessage = "Invalid user.";
-                //todo log
                 Console.WriteLine(ex.Message);
             }
 

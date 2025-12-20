@@ -1,5 +1,7 @@
 ﻿using Application.Contracts;
 using Application.Dto;
+using Application.Dto.Notification;
+using Application.Enums;
 using Application.Interfaces;
 using Application.Mappers;
 using Application.Services;
@@ -84,7 +86,7 @@ namespace Application.UseCases
 
         private async Task SendBudgetInviteNotification(string receiverNotificationToken)
         {
-            await _PushNotificationsService.SendNotification([receiverNotificationToken], "Budget Invite", "You have been invited for a Budget. Click to see the invite.");
+            await _PushNotificationsService.SendNotification([receiverNotificationToken], "Budget Invite", "You have been invited for a Budget. Click to see the invite.", new NotificationDto() { Type = NotificationTypeEnum.ReceivedInvite });
         }
     }
 }

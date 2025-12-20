@@ -1,5 +1,7 @@
 ﻿using Application.Contracts;
 using Application.Dto;
+using Application.Dto.Notification;
+using Application.Enums;
 using Application.Interfaces;
 using Application.Mappers;
 using Application.Services;
@@ -50,7 +52,7 @@ namespace Application.UseCases
                     return result;
                 }
 
-                Budget? budget = await _UnitOfWork.BudgetRepository.GetBudgetById(budgetInvite.BudgetId, userId);
+                Budget? budget = await _UnitOfWork.BudgetRepository.GetBudgetById(budgetInvite.BudgetId, budgetInvite.SenderId);
 
                 if (budget == null)
                 {
@@ -89,7 +91,7 @@ namespace Application.UseCases
             string notificationMessage = accepted
                 ? "The invite for a budget you sent is accepted by the receiver!"
                 : "The invite for a budget you sent is declined by the receiver!";
-            await _PushNotificationsService.SendNotification([receiverNotificationToken], "Budget Invite Status", notificationMessage);
+            await _PushNotificationsService.SendNotification([receiverNotificationToken], "Budget Invite Status", notificationMessage, new NotificationDto() { Type = NotificationTypeEnum.InviteResponse });
         }
     }
 }

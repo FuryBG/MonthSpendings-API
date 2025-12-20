@@ -14,7 +14,10 @@ namespace Infrastructure.Repository
 
         public async Task<AppUser?> GetUserById(int userId)
         {
-            return await _DbContext.Users.Where(u => u.Id == userId).FirstOrDefaultAsync();
+            return await _DbContext.Users
+                .Include(u => u.SentBudgetInvites)
+                .Include(u => u.ReceivedBudgetInvites)
+                .Where(u => u.Id == userId).FirstOrDefaultAsync();
         }
 
         public async Task<AppUser?> GetUserByGoogleId(string googleId)

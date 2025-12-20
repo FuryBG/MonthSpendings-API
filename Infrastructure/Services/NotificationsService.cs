@@ -1,6 +1,9 @@
-﻿using Application.Interfaces;
+﻿using Application.Dto.Notification;
+using Application.Enums;
+using Application.Interfaces;
 using Expo.Server.Client;
 using Expo.Server.Models;
+using System.Text.Json;
 
 namespace Infrastructure.Services
 {
@@ -12,7 +15,7 @@ namespace Infrastructure.Services
             _Client = new PushApiClient();
         }
 
-        public async Task<bool> SendNotification(List<string> expoPushNotificationTokens, string title, string body)
+        public async Task<bool> SendNotification(List<string> expoPushNotificationTokens, string title, string body, NotificationDto notificationDto)
         {
             bool success = false;
 
@@ -23,7 +26,8 @@ namespace Infrastructure.Services
                 PushTitle = title,
                 PushBody = body,
                 PushPriority = "high",
-                PushChannelId = "default"
+                PushChannelId = "default",
+                PushData = JsonSerializer.Serialize(notificationDto)
             };
             try
             {

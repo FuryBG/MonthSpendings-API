@@ -13,8 +13,9 @@ namespace Infrastructure
         public IBudgetCategoryRepository BudgetCategoryRepository { get; private set; }
         public ICategorySpendingsRepository CategorySpendingsRepository { get; private set; }
         public IBudgetInviteRepository BudgetInviteRepository { get; private set; }
+        public ICurrencyRepository CurrencyRepository { get; private set; }
 
-        public UnitOfWork(AppDbContext dbContext, IUserRepository userRepository, IBudgetRepository budgetRepository, IBudgetCategoryRepository budgetCategoryRepository, ICategorySpendingsRepository categorySpendingsRepository, IBudgetInviteRepository budgetInviteRepository)
+        public UnitOfWork(AppDbContext dbContext, IUserRepository userRepository, IBudgetRepository budgetRepository, IBudgetCategoryRepository budgetCategoryRepository, ICategorySpendingsRepository categorySpendingsRepository, IBudgetInviteRepository budgetInviteRepository, ICurrencyRepository currencyRepository)
         {
             _DbContext = dbContext;
             UserRepository = userRepository;
@@ -22,6 +23,7 @@ namespace Infrastructure
             BudgetCategoryRepository = budgetCategoryRepository;
             CategorySpendingsRepository = categorySpendingsRepository;
             BudgetInviteRepository = budgetInviteRepository;
+            CurrencyRepository = currencyRepository;
         }
 
         public async Task CommitAsync()

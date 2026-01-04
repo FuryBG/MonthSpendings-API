@@ -21,7 +21,6 @@ namespace MonthSpendings.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(BudgetInviteDto budgetInviteDto)
         {
-            Console.WriteLine(ModelState); 
             var result = await _CreateBudgetInviteUseCase.InvokeAsync(budgetInviteDto);
 
             if (result.Successful)

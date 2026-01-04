@@ -9,6 +9,7 @@ namespace Application.Interfaces
         ICategorySpendingsRepository CategorySpendingsRepository { get; }
         IBudgetInviteRepository BudgetInviteRepository { get; }
         IUserRepository UserRepository { get; }
+        ICurrencyRepository CurrencyRepository { get; }
 
         Task CommitAsync();
         Task BeginTransactionAsync();

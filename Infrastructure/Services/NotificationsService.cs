@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace Infrastructure.Services
 {
-    public class PushNotificationsService : IPushNotificationsService
+    public class PushNotificationsService : IPushNotificationService
     {
         private PushApiClient _Client { get; set; }
         public PushNotificationsService()

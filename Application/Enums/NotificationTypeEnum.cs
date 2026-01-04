@@ -4,6 +4,7 @@
     {
         ReceivedInvite,
         InviteResponse,
-        SpendingAdd
+        SpendingAdd,
+        SpendingDelete
     }
 }

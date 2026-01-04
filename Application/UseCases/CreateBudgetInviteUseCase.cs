@@ -18,12 +18,12 @@ namespace Application.UseCases
     {
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
-        private IPushNotificationsService _PushNotificationsService { get; set; }
-        public CreateBudgetInviteUseCase(IUnitOfWork unitOfWork, IUserService userService, IPushNotificationsService pushNotificationService)
+        private IPushNotificationService _PushNotificationService { get; set; }
+        public CreateBudgetInviteUseCase(IUnitOfWork unitOfWork, IUserService userService, IPushNotificationService pushNotificationService)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
-            _PushNotificationsService = pushNotificationService;
+            _PushNotificationService = pushNotificationService;
         }
         public async Task<CaseResult<BudgetInviteDto?>> InvokeAsync(BudgetInviteDto budgetInviteDto)
         {
@@ -86,7 +86,7 @@ namespace Application.UseCases
 
         private async Task SendBudgetInviteNotification(string receiverNotificationToken)
         {
-            await _PushNotificationsService.SendNotification([receiverNotificationToken], "Budget Invite", "You have been invited for a Budget. Click to see the invite.", new NotificationDto() { Type = NotificationTypeEnum.ReceivedInvite });
+            await _PushNotificationService.SendNotification([receiverNotificationToken], "Budget Invite", "You have been invited for a Budget. Click to see the invite.", new NotificationDto() { Type = NotificationTypeEnum.ReceivedInvite });
         }
     }
 }

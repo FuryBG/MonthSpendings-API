@@ -13,7 +13,7 @@ namespace Infrastructure.Repository
         }
         public async Task<BudgetInvite?> GetBudgetInviteById(int budgetInviteId)
         {
-            return await _DbContext.BudgetInvites.FirstOrDefaultAsync(bi => bi.Id == budgetInviteId);
+            return await _DbContext.BudgetInvites.Include(bi => bi.Sender).Include(bi => bi.Receiver).FirstOrDefaultAsync(bi => bi.Id == budgetInviteId);
         }
 
         public async Task<List<BudgetInvite>> GetBudgetInvites(int userId)

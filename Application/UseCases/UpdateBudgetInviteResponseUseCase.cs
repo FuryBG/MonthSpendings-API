@@ -18,12 +18,12 @@ namespace Application.UseCases
     {
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
-        private IPushNotificationsService _PushNotificationsService { get; set; }
-        public UpdateBudgetInviteResponseUseCase(IUnitOfWork unitOfWork, IUserService userService, IPushNotificationsService pushNotificationService)
+        private IPushNotificationService _PushNotificationService { get; set; }
+        public UpdateBudgetInviteResponseUseCase(IUnitOfWork unitOfWork, IUserService userService, IPushNotificationService pushNotificationService)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
-            _PushNotificationsService = pushNotificationService;
+            _PushNotificationService = pushNotificationService;
         }
         public async Task<CaseResult<BudgetInviteDto?>> InvokeAsync(int budgetInviteId, bool accepted)
         {
@@ -72,7 +72,7 @@ namespace Application.UseCases
                 BudgetInvite createdInvite = _UnitOfWork.BudgetInviteRepository.UpdateInvite(budgetInvite);
 
                 await _UnitOfWork.CommitAsync();
-                await SendBudgetInviteNotification(budgetInvite.Sender.NotificationToken, budgetInvite.Accepted.Value);
+                await SendBudgetInviteNotification(budgetInvite.Sender.NotificationToken, budgetInvite.Receiver.Email, budgetInvite.Accepted.Value);
 
                 result.Data = createdInvite.ToDto();
             }
@@ -86,12 +86,12 @@ namespace Application.UseCases
             return result;
         }
 
-        private async Task SendBudgetInviteNotification(string receiverNotificationToken, bool accepted)
+        private async Task SendBudgetInviteNotification(string receiverNotificationToken, string receiverEmail, bool accepted)
         {
             string notificationMessage = accepted
-                ? "The invite for a budget you sent is accepted by the receiver!"
-                : "The invite for a budget you sent is declined by the receiver!";
-            await _PushNotificationsService.SendNotification([receiverNotificationToken], "Budget Invite Status", notificationMessage, new NotificationDto() { Type = NotificationTypeEnum.InviteResponse });
+                ? $"The invite for a budget you sent is accepted by {receiverEmail}!"
+                : $"The invite for a budget you sent is declined by {receiverEmail}!";
+            await _PushNotificationService.SendNotification([receiverNotificationToken], "Budget Invite Status", notificationMessage, new NotificationDto() { Type = NotificationTypeEnum.InviteResponse });
         }
     }
 }

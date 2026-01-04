@@ -15,6 +15,7 @@ namespace Infrastructure.Repository
         public async Task<Budget?> GetBudgetById(int budgetId, int userId)
         {
             Budget? budget = await _DbContext.Budgets
+                .Include(budget => budget.Currency)
                 .Include(budget => budget.Users)
                 .Include(budget => budget.BudgetPeriods.Where(budgetPeriod => budgetPeriod.EndDate == null))
                 .Include(budget => budget.BudgetCategories)
@@ -44,6 +45,7 @@ namespace Infrastructure.Repository
         public async Task<List<Budget>> GetUserBudgets(int userId)
         {
             return await _DbContext.Budgets
+                .Include(budget => budget.Currency)
                 .Include(budget => budget.Users)
                 .Include(budget => budget.BudgetPeriods.Where(budgetPeriod => budgetPeriod.EndDate == null))
                 .Include(budget => budget.BudgetCategories)
@@ -54,6 +56,7 @@ namespace Infrastructure.Repository
 
         public Budget CreateBudget(Budget budget)
         {
+            _DbContext.Attach(budget.Currency);
             _DbContext.Budgets.Add(budget);
             return budget;
         }

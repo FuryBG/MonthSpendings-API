@@ -1,4 +1,6 @@
 ﻿using Application.Contracts;
+using Application.Dto.Notification;
+using Application.Enums;
 using Application.Interfaces;
 using Application.Services;
 using Domain;
@@ -14,10 +16,12 @@ namespace Application.UseCases
     {
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
-        public DeleteSpendingUseCase(IUnitOfWork unitOfWork, IUserService userService)
+        private IPushNotificationService _PushNotificationService { get; set; }
+        public DeleteSpendingUseCase(IUnitOfWork unitOfWork, IUserService userService, IPushNotificationService pushNotificationService)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
+            _PushNotificationService = pushNotificationService;
         }
 
         public async Task<CaseResult<int?>> InvokeAsync(int spendingId)
@@ -40,6 +44,10 @@ namespace Application.UseCases
                 _UnitOfWork.CategorySpendingsRepository.DeleteSpending(spending);
                 await _UnitOfWork.CommitAsync();
                 result.Data = spendingId;
+
+                List<string> budgetUsersNotificationTokens = spending.BudgetCategory.Budget.Users.Where(u => u.Id != userId).Select(u => u.NotificationToken).ToList();
+                AppUser currentUser = spending.BudgetCategory.Budget.Users.Where(u => u.Id == userId).First();
+                await SendDeleteSpendingNotification(budgetUsersNotificationTokens, currentUser.Email, spending.BudgetCategory.Budget.Name, spending.BudgetCategory.Name, spending.Amount);
             }
             catch (Exception ex)
             {
@@ -49,6 +57,12 @@ namespace Application.UseCases
             }
 
             return result;
+        }
+
+        private async Task SendDeleteSpendingNotification(List<string> receiversNotificationToken, string userName, string budgetName, string categoryName, double spentAmound)
+        {
+            string notificationMessage = $"{userName} spending with amount: {spentAmound} from {categoryName}.";
+            await _PushNotificationService.SendNotification(receiversNotificationToken, "Spending deleted", notificationMessage, new NotificationDto() { Type = NotificationTypeEnum.SpendingDelete });
         }
     }
 }

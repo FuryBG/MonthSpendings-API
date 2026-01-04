@@ -11,6 +11,7 @@ namespace Application.Mappers
             {
                 Id = budget.Id,
                 Name = budget.Name,
+                Currency = budget.Currency.ToDto(),
                 BudgetPeriods = budget.BudgetPeriods.Select(budgetPeriod => budgetPeriod.ToDto()).ToList(),
                 BudgetCategories = budget.BudgetCategories != null
                                     ? budget.BudgetCategories.Select(category => category.ToDto()).ToList()
@@ -33,7 +34,8 @@ namespace Application.Mappers
                                     : [],
                 Users = dto.Users != null
                         ? dto.Users.Select(user => user.ToEntity()).ToList()
-                        : []
+                        : [],
+                Currency = dto.Currency.ToEntity(),
             };
         }
     }

@@ -1,5 +1,7 @@
 ﻿using Application.Contracts;
 using Application.Dto.Budget;
+using Application.Dto.Notification;
+using Application.Enums;
 using Application.Interfaces;
 using Application.Mappers;
 using Application.Services;
@@ -16,10 +18,12 @@ namespace Application.UseCases
     {
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
-        public CreateSpendingUseCase(IUnitOfWork unitOfWork, IUserService userService)
+        private IPushNotificationService _PushNotificationService { get; set; }
+        public CreateSpendingUseCase(IUnitOfWork unitOfWork, IUserService userService, IPushNotificationService pushNotificationService)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
+            _PushNotificationService = pushNotificationService;
         }
 
         public async Task<CaseResult<SpendingDto?>> InvokeAsync(SpendingDto spendingDto)
@@ -31,7 +35,6 @@ namespace Application.UseCases
             {
                 int userId = _UserService.GetUserId();
                 BudgetCategory? budgetCategory = await _UnitOfWork.BudgetCategoryRepository.GetBudgetCategoryById(spendingDto.BudgetCategoryId, userId);
-
 
                 if (budgetCategory == null)
                 {
@@ -56,6 +59,10 @@ namespace Application.UseCases
                 Spending addedSpending = _UnitOfWork.CategorySpendingsRepository.AddSpending(spendingDto.ToEntity());
                 await _UnitOfWork.CommitAsync();
                 result.Data = addedSpending.ToDto();
+
+                List<string> budgetUsersNotificationTokens = budgetCategory.Budget.Users.Where(u => u.Id != userId).Select(u => u.NotificationToken).ToList();
+                AppUser currentUser = budgetCategory.Budget.Users.Where(u => u.Id == userId).First();
+                await SendSpendingNotification(budgetUsersNotificationTokens, currentUser.Email, budgetCategory.Budget.Name, budgetCategory.Name, spendingDto.Amount);
             }
             catch (Exception ex)
             {
@@ -65,6 +72,19 @@ namespace Application.UseCases
             }
 
             return result;
+        }
+
+        private async Task SendSpendingNotification(List<string> receiversNotificationToken, string userName, string budgetName, string categoryName, double spentAmound)
+        {
+            string notificationMessage = spentAmound > 0 ?
+                $"{userName} Added {spentAmound} to {categoryName}." :
+                $"{userName} Spent {spentAmound} from {categoryName}.";
+
+            string notificationTitle = spentAmound > 0 ?
+                $"Funds added." :
+                $"Funds spent.";
+
+            await _PushNotificationService.SendNotification(receiversNotificationToken, notificationTitle, notificationMessage, new NotificationDto() { Type = NotificationTypeEnum.SpendingAdd });
         }
     }
 }

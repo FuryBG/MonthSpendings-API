@@ -85,6 +85,8 @@ public class Program
         });
 
 
+
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
@@ -100,6 +102,27 @@ public class Program
 
         app.MapSwagger();
         app.MapControllers();
+
+        // --- Database Migration Logic ---
+        using (var scope = app.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+            try
+            {
+                var context = services.GetRequiredService<AppDbContext>();
+                if (context.Database.GetPendingMigrations().Any())
+                {
+                    Console.WriteLine("Applying migrations...");
+                    context.Database.Migrate();
+                    Console.WriteLine("Migrations applied successfully.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred during migration: {ex.Message}");
+                
+            }
+        }
 
         app.Run();
     }

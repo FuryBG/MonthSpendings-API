@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260223205136_BankIntegration")]
+    [Migration("20260223211918_BankIntegration")]
     partial class BankIntegration
     {
         /// <inheritdoc />

@@ -1,5 +1,4 @@
 ﻿using Application.Dto.Notification;
-using Application.Enums;
 using Application.Interfaces;
 using Expo.Server.Client;
 using Expo.Server.Models;

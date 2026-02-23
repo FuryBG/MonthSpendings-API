@@ -1,4 +1,5 @@
 ﻿using Domain;
+using Domain.Bank;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure
@@ -12,6 +13,9 @@ namespace Infrastructure
         public DbSet<BudgetCategory> BudgetCategories { get; set; }
         public DbSet<BudgetInvite> BudgetInvites { get; set; }
         public DbSet<Spending> Spendings { get; set; }
+        public DbSet<BankConsent> BankConsent { get; set; }
+        public DbSet<BankAccount> BankAccounts { get; set; }
+        public DbSet<BankTransaction> BankTransactions { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
 

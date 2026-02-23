@@ -1,4 +1,5 @@
 ﻿using Application.Interfaces;
+using Application.Interfaces.Repository.Bank;
 using Application.Interfaces.Repository;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -14,8 +15,9 @@ namespace Infrastructure
         public ICategorySpendingsRepository CategorySpendingsRepository { get; private set; }
         public IBudgetInviteRepository BudgetInviteRepository { get; private set; }
         public ICurrencyRepository CurrencyRepository { get; private set; }
+        public IBankConsentRepository BankConsentRepository { get; private set; }
 
-        public UnitOfWork(AppDbContext dbContext, IUserRepository userRepository, IBudgetRepository budgetRepository, IBudgetCategoryRepository budgetCategoryRepository, ICategorySpendingsRepository categorySpendingsRepository, IBudgetInviteRepository budgetInviteRepository, ICurrencyRepository currencyRepository)
+        public UnitOfWork(AppDbContext dbContext, IUserRepository userRepository, IBudgetRepository budgetRepository, IBudgetCategoryRepository budgetCategoryRepository, ICategorySpendingsRepository categorySpendingsRepository, IBudgetInviteRepository budgetInviteRepository, ICurrencyRepository currencyRepository, IBankConsentRepository bankConsentRepository)
         {
             _DbContext = dbContext;
             UserRepository = userRepository;
@@ -24,6 +26,7 @@ namespace Infrastructure
             CategorySpendingsRepository = categorySpendingsRepository;
             BudgetInviteRepository = budgetInviteRepository;
             CurrencyRepository = currencyRepository;
+            BankConsentRepository = bankConsentRepository;
         }
 
         public async Task CommitAsync()

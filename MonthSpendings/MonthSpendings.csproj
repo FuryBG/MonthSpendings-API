@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Application\Application.csproj" />
+    <ProjectReference Include="..\EnableBanking\EnableBanking\EnableBanking.csproj" />
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
   </ItemGroup>
 

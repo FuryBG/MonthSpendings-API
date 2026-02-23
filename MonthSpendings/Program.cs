@@ -1,17 +1,23 @@
 using Application.Interfaces;
 using Application.Interfaces.Repository;
+using Application.Interfaces.Repository.Bank;
 using Application.Services;
 using Application.UseCases;
+using Application.UseCases.Bank;
+using EnableBanking;
 using Infrastructure;
 using Infrastructure.Repository;
+using Infrastructure.Repository.Bank;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using System.Text;
 
 namespace MonthSpendings;
+
 public class Program
 {
     public static void Main(string[] args)
@@ -28,7 +34,23 @@ public class Program
         });
 
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-        builder.Services.AddOpenApi();
+        //builder.Services.AddOpenApi();
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+        builder.Services.AddSwaggerGen(options =>
+        {
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "Paste JWT token here"
+            });
+        });
+
+
         builder.Services.AddHttpContextAccessor();
 
         builder.Services.AddTransient<ITokenService, TokenService>();
@@ -62,9 +84,34 @@ public class Program
 
         builder.Services.AddTransient<IGetAllCurrenciesUseCase, GetAllCurrenciesUseCase>();
 
+        // INTEGRATIONS
+        string? bankingCertificatePath = builder.Configuration.GetSection("EnableBanking:AppCertPath").Value;
+        string? bankingAppKeyId = builder.Configuration.GetSection("EnableBanking:AppKeyId").Value;
 
+        if (string.IsNullOrWhiteSpace(bankingCertificatePath))
+        {
+            throw new InvalidOperationException("EnableBanking:AppCertPath is not configured in appsettings.json or environment variables.");
+        }
 
+        if (string.IsNullOrWhiteSpace(bankingAppKeyId))
+        {
+            throw new InvalidOperationException("EnableBanking:AppKeyId is not configured in appsettings.json or environment variables.");
+        }
         builder.Services.AddTransient<IPushNotificationService, PushNotificationsService>();
+
+        builder.Services.AddEnableBankingApi(options =>
+        {
+            options.KeyPath = Path.Combine(builder.Environment.ContentRootPath, bankingCertificatePath);
+            options.AppKid = bankingAppKeyId;
+        });
+
+        builder.Services.AddTransient<IGetBanksUseCase, GetBanksUseCase>();
+        builder.Services.AddTransient<IStartBankConnectionUseCase, StartBankConnectionUseCase>();
+        builder.Services.AddTransient<IFinishBankConnectionUseCase, FinishBankConnectionUseCase>();
+
+        builder.Services.AddTransient<IBankConsentRepository, BankConsentRepository>();
+
+        // END INTEGRATIONS
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(jwtOptions =>
@@ -85,14 +132,18 @@ public class Program
         });
 
 
-
-
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
+        //if (app.Environment.IsDevelopment())
+        //{
+        //    app.MapOpenApi();
+        //}
+
         if (app.Environment.IsDevelopment())
         {
-            app.MapOpenApi();
+            app.UseSwagger();
+            app.UseSwaggerUI();
         }
 
         //app.UseHttpsRedirection();
@@ -120,7 +171,7 @@ public class Program
             catch (Exception ex)
             {
                 Console.WriteLine($"An error occurred during migration: {ex.Message}");
-                
+
             }
         }
 

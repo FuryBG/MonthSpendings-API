@@ -34,9 +34,9 @@ namespace Application.UseCases
 
                 if (existingUser == null)
                 {
+                    Console.WriteLine($"Unauthorized user tries create budget.");
                     result.Successful = false;
                     result.ErrorMessage = "Can't find your personal information. Please first login, to create a budget.";
-                    //todo log
                     return result;
                 }
 

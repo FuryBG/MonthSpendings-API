@@ -1,4 +1,5 @@
 ﻿using Application.Interfaces.Repository;
+using Application.Interfaces.Repository.Bank;
 
 namespace Application.Interfaces
 {
@@ -10,6 +11,7 @@ namespace Application.Interfaces
         IBudgetInviteRepository BudgetInviteRepository { get; }
         IUserRepository UserRepository { get; }
         ICurrencyRepository CurrencyRepository { get; }
+        IBankConsentRepository BankConsentRepository { get; }
 
         Task CommitAsync();
         Task BeginTransactionAsync();

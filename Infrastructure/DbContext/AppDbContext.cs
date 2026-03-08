@@ -33,6 +33,10 @@ namespace Infrastructure
            .Property(i => i.ValidTo)
            .HasDefaultValueSql("timezone('utc', now()) + INTERVAL '2 days'");
 
+            modelBuilder.Entity<BankConsent>()
+            .Property(i => i.LastSync)
+            .HasDefaultValueSql("timezone('utc', now())");
+
             modelBuilder.Entity<BudgetInvite>()
             .HasOne(bi => bi.Sender)
             .WithMany(u => u.SentBudgetInvites)

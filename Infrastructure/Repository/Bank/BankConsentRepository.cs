@@ -28,5 +28,34 @@ namespace Infrastructure.Repository.Bank
             _DbContext.BankConsent.Update(bankConsent);
             return bankConsent;
         }
+
+        public async Task<List<BankConsent>> GetConsentsForSync(DateTime threshold, CancellationToken cancellationToken)
+        {
+            var claimedConsents = await _DbContext.BankConsent
+                .FromSql($@"
+                        UPDATE ""BankConsent""
+                        SET ""SyncStartedAt"" = NOW()
+                        WHERE
+                            ""LastSync"" <= {threshold}
+                            AND ""ExpiresOn"" > NOW()
+                            AND (""SyncStartedAt"" IS NULL OR ""SyncStartedAt"" < NOW() - INTERVAL '10 minutes')
+                        RETURNING *
+    ").ToListAsync(cancellationToken);
+
+            foreach (var consent in claimedConsents)
+            {
+                await _DbContext.Entry(consent).Collection(c => c.Accounts).LoadAsync(cancellationToken);
+            }
+
+            return claimedConsents;
+        }
+
+        public async Task MarkConsentsAsSyncedAsync(List<int> consentIds, DateTime syncedAt, CancellationToken ct)
+        {
+            await _DbContext.BankConsent
+                .Where(c => consentIds.Contains(c.Id))
+                .ExecuteUpdateAsync(c => c.SetProperty(c => c.LastSync, _ => syncedAt)
+                                        .SetProperty(c => c.SyncStartedAt, _ => null), ct);
+        }
     }
 }

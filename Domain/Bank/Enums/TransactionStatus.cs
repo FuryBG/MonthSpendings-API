@@ -2,8 +2,8 @@
 {
     public enum TransactionStatus
     {
-        Pending = 0,
-        Booked = 1,
-        Failed = 2
+        PENDING = 0,
+        BOOK = 1,
+        FAILED = 2
     }
 }

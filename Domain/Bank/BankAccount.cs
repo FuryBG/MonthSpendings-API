@@ -6,6 +6,7 @@ namespace Domain.Bank
     {
         [Key]
         public int Id { get; set; }
+        public required Guid AccountUuid { get; set; }
         public required string Iban { get; set; }
         public required string HolderName { get; set; }
         public required string Currency { get; set; }

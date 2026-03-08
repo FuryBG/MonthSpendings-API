@@ -66,8 +66,9 @@ namespace Application.UseCases.Bank
                 }
 
                 bankConsent.State = BankAccountStaatus.Connected;
-                bankConsent.Accounts = authSessionResponse.Data.Accounts.Select(ba => new BankAccount()
+                bankConsent.Accounts = authSessionResponse.Data.Accounts.Where(acc => acc.Uid.HasValue).Select(ba => new BankAccount()
                 {
+                    AccountUuid = ba.Uid!.Value,
                     ConsentId = bankConsent.Id,
                     Currency = ba.Currency ?? "not available",
                     HolderName = ba.Name ?? "not available",

@@ -36,6 +36,7 @@ namespace Application.UseCases.Bank
             {
                 int userId = _UserService.GetUserId();
                 AppUser? existingUser = await _UnitOfWork.UserRepository.GetUserById(userId);
+                Guid sessionId = Guid.NewGuid();
 
                 if (existingUser == null)
                 {
@@ -47,11 +48,11 @@ namespace Application.UseCases.Bank
 
                 ApiResponse<StartAuthorizationResponse> resp = await _GeneralService.StartAuthorizationAsync(new StartAuthorizationRequest()
                 {
-                    Access = new Access { ValidUntil = DateTime.UtcNow.AddSeconds(maximumConsentValidity), Balances = true, Transactions = true },
+                    Access = new Access { ValidUntil = DateTime.UtcNow.AddSeconds(maximumConsentValidity - 5), Balances = true, Transactions = true },
                     PsuType = "personal",
-                    State = Guid.NewGuid().ToString(),
+                    State = sessionId.ToString(),
                     Language = "en",
-                    RedirectUrl = new Uri($"https://ee43-88-203-208-219.ngrok-free.app/api/Bank/connect-callback"),
+                    RedirectUrl = new Uri($"https://b0a9-88-203-208-219.ngrok-free.app/api/Bank/connect-callback"),
                     CredentialsAutosubmit = true,
                     Aspsp = new Aspsp()
                     {
@@ -72,9 +73,10 @@ namespace Application.UseCases.Bank
                 {
                     BankName = bankName,
                     CountryCode = countryCode,
-                    SessionId = resp.Data.AuthorizationId.Value,
+                    SessionId = sessionId,
                     BankImgUrl = bankImageUrl,
-                    ExpiresOn = DateTime.UtcNow.AddSeconds(maximumConsentValidity)
+                    UserId = existingUser.Id,
+                    ExpiresOn = DateTime.UtcNow.AddSeconds(maximumConsentValidity - 5)
                 };
 
                 await _UnitOfWork.BankConsentRepository.CreateBankConsent(consent);

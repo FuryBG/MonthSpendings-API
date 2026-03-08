@@ -1,3 +1,4 @@
+using Application.BackgroundWorkers;
 using Application.Interfaces;
 using Application.Interfaces.Repository;
 using Application.Interfaces.Repository.Bank;
@@ -14,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using MonthSpendings.BackgroundServices;
 using System.Text;
 
 namespace MonthSpendings;
@@ -49,7 +51,6 @@ public class Program
                 Description = "Paste JWT token here"
             });
         });
-
 
         builder.Services.AddHttpContextAccessor();
 
@@ -110,6 +111,12 @@ public class Program
         builder.Services.AddTransient<IFinishBankConnectionUseCase, FinishBankConnectionUseCase>();
 
         builder.Services.AddTransient<IBankConsentRepository, BankConsentRepository>();
+        builder.Services.AddTransient<IBankAccountRepository, BankAccountRepository>();
+        builder.Services.AddTransient<IBankTransactionRepository, BankTransactionRepository>();
+
+        builder.Services.AddTransient<IBankSyncWorker, BankSyncWorker>();
+
+        builder.Services.AddHostedService<TransactionSyncBackgroundService>();
 
         // END INTEGRATIONS
 
@@ -171,10 +178,8 @@ public class Program
             catch (Exception ex)
             {
                 Console.WriteLine($"An error occurred during migration: {ex.Message}");
-
             }
         }
-
         app.Run();
     }
 }

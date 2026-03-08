@@ -1,10 +1,5 @@
-﻿using Application.Contracts;
-using Application.Services;
-using Application.UseCases.Bank;
+﻿using Application.UseCases.Bank;
 using EnableBanking.Interfaces;
-using EnableBanking.Models;
-using EnableBanking.Models.General;
-using EnableBanking.Models.Sessions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -42,9 +37,9 @@ namespace MonthSpendings.Controllers
 
         [Authorize]
         [HttpGet("connect")]
-        public async Task<IActionResult> Connect(string bankName, string countryCode, string bankImgUrl, int maximumConsentValidity)
+        public async Task<IActionResult> Connect(string bankName, string countryCode, string bankImageUrl, int maximumConsentValidity)
         {
-            var result = await _StartBankConnectionUseCase.InvokeAsync(bankName, countryCode, bankImgUrl, maximumConsentValidity);
+            var result = await _StartBankConnectionUseCase.InvokeAsync(bankName, countryCode, bankImageUrl, maximumConsentValidity);
 
             if (result.Successful)
             {
@@ -57,9 +52,9 @@ namespace MonthSpendings.Controllers
         }
 
         [HttpGet("connect-callback")]
-        public async Task<IActionResult> ConnectCallback(Guid sessionId, string code)
+        public async Task<IActionResult> ConnectCallback(Guid state, string code)
         {
-            var result = await _FinishBankConnectionUseCase.InvokeAsync(sessionId, code);
+            var result = await _FinishBankConnectionUseCase.InvokeAsync(state, code);
 
             if (result.Successful)
             {

@@ -15,6 +15,9 @@ namespace Domain.Bank
         public required string BankImgUrl { get; set; }
         public required string BankName { get; set; }
         public required string CountryCode { get; set; }
-        public List<BankAccount> Accounts { get; set; } = [];
+        // .HasDefaultValueSql("timezone('utc', now())");
+        public DateTime LastSync { get; set; }
+        public DateTime? SyncStartedAt { get; set; }
+        public List<BankAccount> Accounts { get; set; } = new();
     }
 }

@@ -35,7 +35,7 @@ namespace EnableBanking
 
             services.AddHttpClient<IAccountsService, AccountsService>(httpClient =>
             {
-                httpClient.BaseAddress = new Uri($"{_baseAddress}accounts");
+                httpClient.BaseAddress = new Uri($"{_baseAddress}accounts/");
             })
                 .AddHttpMessageHandler<TokenHandler>();
 

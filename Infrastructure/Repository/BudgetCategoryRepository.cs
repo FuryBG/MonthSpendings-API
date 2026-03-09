@@ -18,6 +18,7 @@ namespace Infrastructure.Repository
                 .Include(category => category.Spendings.Where(spending => spending.BudgetPeriod.EndDate == null))
                 .Include(category => category.Budget)
                 .ThenInclude(budget => budget.Users)
+                .Include(b => b.Budget.BudgetPeriods.Where(budgetPeriod => budgetPeriod.EndDate == null))
                 .Where(bc => bc.Id == budgetCategoryId && bc.Budget.Users.Any(user => user.Id == userId))
                 .FirstOrDefaultAsync();
         }

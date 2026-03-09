@@ -45,8 +45,8 @@ namespace Application.UseCases
 
                 }
 
-                double categoryBalance = budgetCategory.Spendings.Sum(s => s.Amount);
-                double newBalance = categoryBalance + spendingDto.Amount;
+                decimal categoryBalance = budgetCategory.Spendings.Sum(s => s.Amount);
+                decimal newBalance = categoryBalance + spendingDto.Amount;
 
                 if (spendingDto.Amount < 0 && newBalance < 0)
                 {
@@ -74,7 +74,7 @@ namespace Application.UseCases
             return result;
         }
 
-        private async Task SendSpendingNotification(List<string> receiversNotificationToken, string userName, string budgetName, string categoryName, double spentAmound)
+        private async Task SendSpendingNotification(List<string> receiversNotificationToken, string userName, string budgetName, string categoryName, decimal spentAmound)
         {
             string notificationMessage = spentAmound > 0 ?
                 $"{userName} Added {spentAmound} to {categoryName}." :

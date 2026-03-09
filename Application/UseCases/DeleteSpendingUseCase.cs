@@ -59,7 +59,7 @@ namespace Application.UseCases
             return result;
         }
 
-        private async Task SendDeleteSpendingNotification(List<string> receiversNotificationToken, string userName, string budgetName, string categoryName, double spentAmound)
+        private async Task SendDeleteSpendingNotification(List<string> receiversNotificationToken, string userName, string budgetName, string categoryName, decimal spentAmound)
         {
             string notificationMessage = $"{userName} spending with amount: {spentAmound} from {categoryName}.";
             await _PushNotificationService.SendNotification(receiversNotificationToken, "Spending deleted", notificationMessage, new NotificationDto() { Type = NotificationTypeEnum.SpendingDelete });

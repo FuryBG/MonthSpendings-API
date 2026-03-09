@@ -3,6 +3,7 @@ using System;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260308204117_BankTransactionToSpendingRelation")]
+    partial class BankTransactionToSpendingRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -192,8 +195,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("BankAccountId");
 
-                    b.HasIndex("SpendingId")
-                        .IsUnique();
+                    b.HasIndex("SpendingId");
 
                     b.ToTable("BankTransactions");
                 });
@@ -647,11 +649,8 @@ namespace Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric");
-
-                    b.Property<int?>("BankTransactionId")
-                        .HasColumnType("integer");
+                    b.Property<double>("Amount")
+                        .HasColumnType("double precision");
 
                     b.Property<int>("BudgetCategoryId")
                         .HasColumnType("integer");
@@ -720,8 +719,8 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("Domain.Spending", "Spending")
-                        .WithOne("BankTransaction")
-                        .HasForeignKey("Domain.Bank.BankTransaction", "SpendingId");
+                        .WithMany()
+                        .HasForeignKey("SpendingId");
 
                     b.Navigation("BankAccount");
 
@@ -831,11 +830,6 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.BudgetCategory", b =>
                 {
                     b.Navigation("Spendings");
-                });
-
-            modelBuilder.Entity("Domain.Spending", b =>
-                {
-                    b.Navigation("BankTransaction");
                 });
 #pragma warning restore 612, 618
         }

@@ -25,6 +25,12 @@ namespace Infrastructure
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<BankTransaction>()
+            .HasOne(b => b.Spending)
+            .WithOne(s => s.BankTransaction)
+            .HasForeignKey<BankTransaction>(b => b.SpendingId)
+            .IsRequired(false);
+
             modelBuilder.Entity<BudgetPeriod>()
             .Property(i => i.StartDate)
             .HasDefaultValueSql("timezone('utc', now())");

@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using Application.Dto.Bank;
+using System.Text.Json.Serialization;
 
 namespace Application.Dto.Budget
 {
@@ -11,10 +12,14 @@ namespace Application.Dto.Budget
         [JsonPropertyName("description")]
         public string? Description { get; set; }
         [JsonPropertyName("amount")]
-        public double Amount { get; set; }
+        public decimal Amount { get; set; }
         [JsonPropertyName("budgetCategoryId")]
         public int BudgetCategoryId { get; set; }
         [JsonPropertyName("budgetPeriodId")]
         public int BudgetPeriodId { get; set; }
+        [JsonPropertyName("bankTransactionId")]
+        public int? BankTransactionId { get; set; }
+        [JsonPropertyName("bankTransaction")]
+        public BankTransactionDto? BankTransaction { get; set; }
     }
 }

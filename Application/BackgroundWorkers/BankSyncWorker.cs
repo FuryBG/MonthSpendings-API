@@ -31,7 +31,7 @@ namespace Application.BackgroundWorkers
             _Logger = logger;
         }
 
-        public async Task SyncBankAccountsAsync(CancellationToken ct)
+        public async Task SyncBankAccountsAsync(CancellationToken cancellationToken)
         {
             bool intervalSet = int.TryParse(_Configuration.GetSection("EnableBanking:TransactionSyncInterval").Value, out int updateInterval);
 
@@ -41,13 +41,13 @@ namespace Application.BackgroundWorkers
             }
 
             var threshold = DateTime.UtcNow.AddMinutes(-updateInterval);
-            List<BankConsent> bankConsents = await _UnitOfWork.BankConsentRepository.GetConsentsForSync(threshold, ct);
+            List<BankConsent> bankConsents = await _UnitOfWork.BankConsentRepository.GetConsentsForSync(threshold, cancellationToken);
 
             try
             {
                 foreach (BankConsent bankConsent in bankConsents)
                 {
-                    if (ct.IsCancellationRequested)
+                    if (cancellationToken.IsCancellationRequested)
                     {
                         break;
                     }
@@ -55,7 +55,7 @@ namespace Application.BackgroundWorkers
                     foreach (BankAccount account in bankConsent.Accounts)
                     {
                         GetTransactionsRequest request = new GetTransactionsRequest() { AccountId = account.AccountUuid, TransactionStatus = TransactionStatus.BOOK.ToString() };
-                        ApiResponse<GetTransactionsResponse> response = await _AccountService.GetTransactionsAsync(request, ct);
+                        ApiResponse<GetTransactionsResponse> response = await _AccountService.GetTransactionsAsync(request, cancellationToken);
 
                         if (response.StatusCode != HttpStatusCode.OK || response.Error != null ||
                             response.Data == null || response.Data.Transactions == null)
@@ -91,11 +91,11 @@ namespace Application.BackgroundWorkers
                                 BankAccountId = account.Id,
                             };
 
-                            await _UnitOfWork.BankTransactionRepository.AddTransaction(bankTransaction);
+                            await _UnitOfWork.BankTransactionRepository.AddTransaction(bankTransaction, cancellationToken);
                         }
                         await _UnitOfWork.CommitTransactionAsync();
                     }
-                    await _UnitOfWork.BankConsentRepository.MarkConsentsAsSyncedAsync([bankConsent.Id], DateTime.UtcNow, ct);
+                    await _UnitOfWork.BankConsentRepository.MarkConsentsAsSyncedAsync([bankConsent.Id], DateTime.UtcNow, cancellationToken);
                 }
             }
             catch (Exception ex)

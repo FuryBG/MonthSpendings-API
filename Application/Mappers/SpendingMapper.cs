@@ -15,6 +15,8 @@ namespace Application.Mappers
                 Description = spending.Description,
                 BudgetCategoryId = spending.BudgetCategoryId,
                 BudgetPeriodId = spending.BudgetPeriodId,
+                BankTransactionId = spending.BankTransactionId,
+                BankTransaction = spending.BankTransaction != null ? spending.BankTransaction.ToDto() : null,
             };
         }
         public static Spending ToEntity(this SpendingDto dto)
@@ -27,6 +29,7 @@ namespace Application.Mappers
                 Description = dto.Description,
                 BudgetCategoryId = dto.BudgetCategoryId,
                 BudgetPeriodId = dto.BudgetPeriodId,
+                BankTransactionId = dto.BankTransactionId,
             };
         }
     }

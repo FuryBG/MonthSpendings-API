@@ -114,6 +114,10 @@ public class Program
         builder.Services.AddTransient<IBankAccountRepository, BankAccountRepository>();
         builder.Services.AddTransient<IBankTransactionRepository, BankTransactionRepository>();
 
+        builder.Services.AddTransient<ICategorizeTransactionsUseCase, CategorizeTransactionsUseCase>();
+        builder.Services.AddTransient<IGetUncategorizedTransactionsUseCase, GetUncategorizedTransactionsUseCase>();
+
+
         builder.Services.AddTransient<IBankSyncWorker, BankSyncWorker>();
 
         builder.Services.AddHostedService<TransactionSyncBackgroundService>();

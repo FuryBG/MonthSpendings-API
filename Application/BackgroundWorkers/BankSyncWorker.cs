@@ -54,7 +54,7 @@ namespace Application.BackgroundWorkers
 
                     foreach (BankAccount account in bankConsent.Accounts)
                     {
-                        GetTransactionsRequest request = new GetTransactionsRequest() { AccountId = account.AccountUuid, TransactionStatus = TransactionStatus.BOOK.ToString() };
+                        GetTransactionsRequest request = new GetTransactionsRequest() { AccountId = account.AccountUuid, TransactionStatus = TransactionStatus.BOOK.ToString(), DateFrom = bankConsent.LastSync };
                         ApiResponse<GetTransactionsResponse> response = await _AccountService.GetTransactionsAsync(request, cancellationToken);
 
                         if (response.StatusCode != HttpStatusCode.OK || response.Error != null ||

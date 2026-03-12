@@ -5,14 +5,14 @@ namespace MonthSpendings.BackgroundServices
     public class TransactionSyncBackgroundService : BackgroundService
     {
         private IServiceScopeFactory _ScopeFactory { get; set; }
-        private int _IntervalInMinutes { get; set; }
+        private double _IntervalInMinutes { get; set; }
         private ILogger _Logger { get; set; }
 
         public TransactionSyncBackgroundService(IServiceScopeFactory scopeFactory, ILogger<TransactionSyncBackgroundService> logger, IConfiguration configuration)
         {
             _ScopeFactory = scopeFactory;
             _Logger = logger;
-            bool intervalSet = int.TryParse(configuration.GetSection("EnableBanking:TransactionSyncInterval").Value, out int updateInterval);
+            bool intervalSet = double.TryParse(configuration.GetSection("EnableBanking:TransactionSyncInterval").Value, out double updateInterval);
 
             if (intervalSet == false)
             {
@@ -30,7 +30,7 @@ namespace MonthSpendings.BackgroundServices
                     await using var scope = _ScopeFactory.CreateAsyncScope();
                     var bankSyncWorker = scope.ServiceProvider.GetRequiredService<IBankSyncWorker>();
                     await bankSyncWorker.SyncBankAccountsAsync(stoppingToken);
-                    await Task.Delay(TimeSpan.FromMinutes((double)_IntervalInMinutes), stoppingToken);
+                    await Task.Delay(TimeSpan.FromMinutes(_IntervalInMinutes), stoppingToken);
                 }
                 catch (OperationCanceledException)
                 {

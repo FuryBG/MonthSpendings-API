@@ -56,8 +56,18 @@ namespace Application.UseCases
                     return result;
                 }
 
+                await _UnitOfWork.BeginTransactionAsync();
+
                 Spending addedSpending = _UnitOfWork.CategorySpendingsRepository.AddSpending(spendingDto.ToEntity());
+
                 await _UnitOfWork.CommitAsync();
+
+                if (addedSpending.BankTransactionId != null)
+                {
+                    await _UnitOfWork.BankTransactionRepository.CategorizeAsync([addedSpending.BankTransactionId.Value], addedSpending.Id, new CancellationToken());
+                }
+
+                await _UnitOfWork.CommitTransactionAsync();
                 result.Data = addedSpending.ToDto();
 
                 List<string> budgetUsersNotificationTokens = budgetCategory.Budget.Users.Where(u => u.Id != userId).Select(u => u.NotificationToken).ToList();
@@ -66,6 +76,7 @@ namespace Application.UseCases
             }
             catch (Exception ex)
             {
+                await _UnitOfWork.RollbackTransactionAsync();
                 Console.WriteLine(ex.Message);
                 result.Successful = false;
                 result.ErrorMessage = "Something got wrong during getting budgets. Please try again later.";

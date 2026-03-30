@@ -172,12 +172,9 @@ public class Program
             try
             {
                 var context = services.GetRequiredService<AppDbContext>();
-                if (context.Database.GetPendingMigrations().Any())
-                {
-                    Console.WriteLine("Applying migrations...");
-                    context.Database.Migrate();
-                    Console.WriteLine("Migrations applied successfully.");
-                }
+                Console.WriteLine("Applying migrations...");
+                context.Database.Migrate();
+                Console.WriteLine("Migrations applied successfully.");
             }
             catch (Exception ex)
             {

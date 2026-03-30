@@ -23,6 +23,7 @@ namespace MonthSpendings.BackgroundServices
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            await Task.Delay(TimeSpan.FromSeconds(15), stoppingToken);
             while (!stoppingToken.IsCancellationRequested)
             {
                 try

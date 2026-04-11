@@ -1,6 +1,6 @@
 ﻿namespace Domain.Bank.Enums
 {
-    public enum BankAccountStaatus
+    public enum BankAccountStatus
     {
         Initiated = 0,
         Connected = 1,

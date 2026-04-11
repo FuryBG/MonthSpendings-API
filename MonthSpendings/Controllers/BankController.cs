@@ -11,11 +11,13 @@ namespace MonthSpendings.Controllers
     {
         private IFinishBankConnectionUseCase _FinishBankConnectionUseCase;
         private IStartBankConnectionUseCase _StartBankConnectionUseCase;
+        private IRemoveConnectedBankBySessionIdUseCase _RemoveBankConnectionBySessionIdUseCase;
         private IGetBanksUseCase _GetBanksUseCase;
-        public BankController(IGetBanksUseCase getBanksUseCase, IStartBankConnectionUseCase startBankConnectionUseCase, IFinishBankConnectionUseCase finishBankConnectionUseCase, ISessionsService sessionsService)
+        public BankController(IGetBanksUseCase getBanksUseCase, IStartBankConnectionUseCase startBankConnectionUseCase, IRemoveConnectedBankBySessionIdUseCase removeConnectedBankBySessionIdUseCase, IFinishBankConnectionUseCase finishBankConnectionUseCase, ISessionsService sessionsService)
         {
             _StartBankConnectionUseCase = startBankConnectionUseCase;
             _FinishBankConnectionUseCase = finishBankConnectionUseCase;
+            _RemoveBankConnectionBySessionIdUseCase = removeConnectedBankBySessionIdUseCase;
             _GetBanksUseCase = getBanksUseCase;
         }
 
@@ -40,6 +42,22 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Connect(string bankName, string countryCode, string bankImageUrl, int maximumConsentValidity)
         {
             var result = await _StartBankConnectionUseCase.InvokeAsync(bankName, countryCode, bankImageUrl, maximumConsentValidity);
+
+            if (result.Successful)
+            {
+                return Ok(result.Data);
+            }
+            else
+            {
+                return BadRequest(result.ErrorMessage);
+            }
+        }
+
+        [Authorize]
+        [HttpDelete("delete")]
+        public async Task<IActionResult> Delete(Guid sessionId, CancellationToken cancellationToken)
+        {
+            var result = await _RemoveBankConnectionBySessionIdUseCase.InvokeAsync(sessionId, cancellationToken);
 
             if (result.Successful)
             {

@@ -12,18 +12,18 @@ namespace MonthSpendings.BackgroundServices
         {
             _ScopeFactory = scopeFactory;
             _Logger = logger;
-            bool intervalSet = double.TryParse(configuration.GetSection("EnableBanking:TransactionSyncInterval").Value, out double updateInterval);
+            bool intervalSet = double.TryParse(configuration.GetSection("EnableBanking:TransactionSyncIntervalInMinutes").Value, out double updateInterval);
 
             if (intervalSet == false)
             {
-                throw new Exception("EnableBanking:TransactionSyncInterval is not set.");
+                throw new Exception("EnableBanking:TransactionSyncIntervalInMinutes is not set.");
             }
             _IntervalInMinutes = updateInterval;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(15), stoppingToken);
+            //await Task.Delay(TimeSpan.FromSeconds(15), stoppingToken);
             while (!stoppingToken.IsCancellationRequested)
             {
                 try

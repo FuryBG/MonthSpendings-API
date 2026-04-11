@@ -33,11 +33,11 @@ namespace Application.BackgroundWorkers
 
         public async Task SyncBankAccountsAsync(CancellationToken cancellationToken)
         {
-            bool intervalSet = int.TryParse(_Configuration.GetSection("EnableBanking:TransactionSyncInterval").Value, out int updateInterval);
+            bool intervalSet = int.TryParse(_Configuration.GetSection("EnableBanking:TransactionSyncIntervalInMinutes").Value, out int updateInterval);
 
             if (!intervalSet)
             {
-                throw new ApplicationException("EnableBanking:TransactionSyncInterval is not set.");
+                throw new ApplicationException("EnableBanking:TransactionSyncIntervalInMinutes is not set.");
             }
 
             var threshold = DateTime.UtcNow.AddMinutes(-updateInterval);
@@ -54,7 +54,7 @@ namespace Application.BackgroundWorkers
 
                     foreach (BankAccount account in bankConsent.Accounts)
                     {
-                        GetTransactionsRequest request = new GetTransactionsRequest() { AccountId = account.AccountUuid, TransactionStatus = TransactionStatus.BOOK.ToString(), DateFrom = bankConsent.LastSync };
+                        GetTransactionsRequest request = new GetTransactionsRequest() { AccountId = account.AccountUuid, TransactionStatus = TransactionStatus.BOOK.ToString(), DateFrom = bankConsent.LastSync.AddDays(-5) };
                         ApiResponse<GetTransactionsResponse> response = await _AccountService.GetTransactionsAsync(request, cancellationToken);
 
                         if (response.StatusCode != HttpStatusCode.OK || response.Error != null ||
@@ -66,7 +66,9 @@ namespace Application.BackgroundWorkers
 
                         await _UnitOfWork.BeginTransactionAsync();
 
-                        foreach (Transaction transaction in response.Data.Transactions)
+                        Transaction[] expenseTransactions = response.Data.Transactions.Where(transaction => transaction.CreditDebitIndicator == "DBIT").ToArray();
+
+                        foreach (Transaction transaction in expenseTransactions)
                         {
                             bool isAmountParsed = decimal.TryParse(transaction.TransactionAmount?.Amount, out decimal amount);
                             bool bookingDateParsed = DateTime.TryParse(transaction.BookingDate, out DateTime bookingDate);

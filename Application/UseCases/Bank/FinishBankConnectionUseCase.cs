@@ -40,6 +40,7 @@ namespace Application.UseCases.Bank
                 {
                     Console.WriteLine($"Cant find Bank Consent with id: {sessionId}.");
                     result.Successful = false;
+                    result.Data = "monthspendings://(main)/ConnectBankFail";
                     result.ErrorMessage = "Can't find initiated bank connection. Please try again.";
                     return result;
                 }
@@ -50,6 +51,16 @@ namespace Application.UseCases.Bank
                 {
                     Console.WriteLine(authSessionResponse.Error?.Detail);
                     result.Successful = false;
+                    result.Data = "monthspendings://(main)/ConnectBankFail";
+                    result.ErrorMessage = authSessionResponse.Error?.Message;
+                    return result;
+                }
+
+                if (authSessionResponse.Data.Accounts != null && authSessionResponse.Data.Accounts.All(account => account.Uid == null))
+                {
+                    Console.WriteLine("All accounts are with null AccountId.");
+                    result.Successful = false;
+                    result.Data = "monthspendings://(main)/ConnectBankFail";
                     result.ErrorMessage = authSessionResponse.Error?.Message;
                     return result;
                 }
@@ -57,7 +68,7 @@ namespace Application.UseCases.Bank
                 if (authSessionResponse.StatusCode != System.Net.HttpStatusCode.OK || authSessionResponse.Data == null || authSessionResponse.Data.Accounts == null)
                 {
                     Console.WriteLine(authSessionResponse.Error?.Detail);
-                    bankConsent.State = BankAccountStaatus.ConnectionFailed;
+                    bankConsent.State = BankAccountStatus.ConnectionFailed;
                     await _UnitOfWork.BankConsentRepository.Update(bankConsent);
                     result.Successful = false;
                     result.Data = "monthspendings://(main)/ConnectBankError";
@@ -65,7 +76,7 @@ namespace Application.UseCases.Bank
                     return result;
                 }
 
-                bankConsent.State = BankAccountStaatus.Connected;
+                bankConsent.State = BankAccountStatus.Connected;
                 bankConsent.Accounts = authSessionResponse.Data.Accounts.Where(acc => acc.Uid.HasValue).Select(ba => new BankAccount()
                 {
                     AccountUuid = ba.Uid!.Value,

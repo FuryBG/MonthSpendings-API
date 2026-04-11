@@ -10,7 +10,7 @@ namespace Domain.Bank
         public int UserId { get; set; }
         public AppUser? User { get; set; }
         public required Guid SessionId { get; set; }
-        public BankAccountStaatus State { get; set; }
+        public BankAccountStatus State { get; set; }
         public required DateTime ExpiresOn { get; set; }
         public required string BankImgUrl { get; set; }
         public required string BankName { get; set; }

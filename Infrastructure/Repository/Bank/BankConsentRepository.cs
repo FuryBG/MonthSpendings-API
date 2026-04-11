@@ -1,6 +1,7 @@
 ﻿using Application.Interfaces.Repository.Bank;
 using Domain.Bank;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace Infrastructure.Repository.Bank
 {
@@ -17,6 +18,11 @@ namespace Infrastructure.Repository.Bank
             return await _DbContext.BankConsent.FirstOrDefaultAsync(b => b.SessionId == sessionId);
         }
 
+        public async Task<List<BankConsent>> GetBankConsentByUserId(int userId)
+        {
+            return await _DbContext.BankConsent.Where(b => b.UserId == userId && b.State == Domain.Bank.Enums.BankAccountStatus.Connected).Include(bc => bc.Accounts).ToListAsync();
+        }
+
         public async Task<BankConsent> CreateBankConsent(BankConsent bankConsent)
         {
             _DbContext.BankConsent.Add(bankConsent);
@@ -27,6 +33,11 @@ namespace Infrastructure.Repository.Bank
         {
             _DbContext.BankConsent.Update(bankConsent);
             return bankConsent;
+        }
+
+        public async Task<int> Delete(Expression<Func<BankConsent, bool>> expression, CancellationToken cancellationToken)
+        {
+            return await _DbContext.BankConsent.Where(expression).ExecuteDeleteAsync(cancellationToken);
         }
 
         public async Task<List<BankConsent>> GetConsentsForSync(DateTime threshold, CancellationToken cancellationToken)

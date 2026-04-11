@@ -14,7 +14,7 @@ namespace EnableBanking.Services
             var requestUri = $"{request.AccountId}/transactions?";
             if (request.DateFrom != null)
             {
-                requestUri += $"date_from={request.DateFrom}&";
+                requestUri += $"date_from={request.DateFrom.Value.ToString("yyyy-MM-dd")}&";
             }
             if (request.DateTo != null)
             {

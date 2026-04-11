@@ -116,6 +116,7 @@ public class Program
 
         builder.Services.AddTransient<ICategorizeTransactionsUseCase, CategorizeTransactionsUseCase>();
         builder.Services.AddTransient<IGetUncategorizedTransactionsUseCase, GetUncategorizedTransactionsUseCase>();
+        builder.Services.AddTransient<IRemoveConnectedBankBySessionIdUseCase, RemoveConnectedBankBySessionIdUseCase>();
 
 
         builder.Services.AddTransient<IBankSyncWorker, BankSyncWorker>();

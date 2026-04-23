@@ -5,6 +5,7 @@
         ReceivedInvite,
         InviteResponse,
         SpendingAdd,
-        SpendingDelete
+        SpendingDelete,
+        BudgetCategoryUpdate
     }
 }

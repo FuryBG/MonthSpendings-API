@@ -2,6 +2,7 @@
 using Application.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace MonthSpendings.Controllers
 {
@@ -11,10 +12,12 @@ namespace MonthSpendings.Controllers
     {
         private ICreateBudgetCategoryUseCase _CreateBudgetCategoryUseCase;
         private IDeleteBudgetCategoryUseCase _DeleteBudgetCategoryUseCase;
-        public BudgetCategoryController(ICreateBudgetCategoryUseCase createBudgetCategoryUseCase, IDeleteBudgetCategoryUseCase deleteBudgetCategoryUseCase)
+        private IUpdateBudgetCategoryNameUseCase _UpdateBudgetCategoryNameUseCase;
+        public BudgetCategoryController(ICreateBudgetCategoryUseCase createBudgetCategoryUseCase, IDeleteBudgetCategoryUseCase deleteBudgetCategoryUseCase, IUpdateBudgetCategoryNameUseCase updateBudgetCategoryNameUseCase)
         {
             _CreateBudgetCategoryUseCase = createBudgetCategoryUseCase;
             _DeleteBudgetCategoryUseCase = deleteBudgetCategoryUseCase;
+            _UpdateBudgetCategoryNameUseCase = updateBudgetCategoryNameUseCase;
         }
 
         [Authorize]
@@ -38,6 +41,22 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Delete([FromQuery] int budgetCategoryId)
         {
             var result = await _DeleteBudgetCategoryUseCase.InvokeAsync(budgetCategoryId);
+
+            if (result.Successful)
+            {
+                return Ok(result.Data);
+            }
+            else
+            {
+                return BadRequest(result.ErrorMessage);
+            }
+        }
+
+        [Authorize]
+        [HttpPatch("{id}/name")]
+        public async Task<IActionResult> UpdateCategoryName(int id, [FromBody] string newName)
+        {
+            var result = await _UpdateBudgetCategoryNameUseCase.InvokeAsync(id, newName);
 
             if (result.Successful)
             {

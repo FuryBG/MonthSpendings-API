@@ -76,6 +76,7 @@ public class Program
 
         builder.Services.AddTransient<ICreateBudgetCategoryUseCase, CreateBudgetCategoryUseCase>();
         builder.Services.AddTransient<IDeleteBudgetCategoryUseCase, DeleteBudgetCategoryUseCase>();
+        builder.Services.AddTransient<IUpdateBudgetCategoryNameUseCase, UpdateBudgetCategoryNameUseCase>();
 
         builder.Services.AddTransient<ICreateSpendingUseCase, CreateSpendingUseCase>();
         builder.Services.AddTransient<IDeleteSpendingUseCase, DeleteSpendingUseCase>();

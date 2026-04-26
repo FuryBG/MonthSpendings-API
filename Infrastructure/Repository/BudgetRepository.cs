@@ -33,6 +33,7 @@ namespace Infrastructure.Repository
             foreach (BudgetCategory budgetCategory in budget.BudgetCategories)
             {
                 var spendings = await _DbContext.Spendings
+                    .Include(s => s.CreatedBy)
                     .Where(s => s.BudgetCategoryId == budgetCategory.Id && s.Date >= activePeriod.StartDate)
                     .ToListAsync();
 
@@ -50,6 +51,7 @@ namespace Infrastructure.Repository
                 .Include(budget => budget.BudgetPeriods.Where(budgetPeriod => budgetPeriod.EndDate == null))
                 .Include(budget => budget.BudgetCategories)
                 .ThenInclude(budgetCategory => budgetCategory.Spendings.Where(spending => spending.BudgetPeriod.EndDate == null))
+                .ThenInclude(spending => spending.CreatedBy)
                 .Where(b => b.Users.Any(u => u.Id == userId))
                 .ToListAsync();
         }

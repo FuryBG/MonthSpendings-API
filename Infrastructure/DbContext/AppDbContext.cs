@@ -59,6 +59,12 @@ namespace Infrastructure
             .HasForeignKey(bi => bi.ReceiverId)
             .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Spending>()
+            .HasOne(s => s.CreatedBy)
+            .WithMany(u => u.CreatedSpendings)
+            .HasForeignKey(s => s.CreatedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Currency>().HasData(
                 new Currency { Id = 1, Code = "USD", Name = "US Dollar", Symbol = "$" },
                 new Currency { Id = 2, Code = "EUR", Name = "Euro", Symbol = "€" },

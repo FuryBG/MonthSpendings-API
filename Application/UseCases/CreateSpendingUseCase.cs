@@ -58,7 +58,9 @@ namespace Application.UseCases
 
                 await _UnitOfWork.BeginTransactionAsync();
 
-                Spending addedSpending = _UnitOfWork.CategorySpendingsRepository.AddSpending(spendingDto.ToEntity());
+                Spending newSpending = spendingDto.ToEntity();
+                newSpending.CreatedByUserId = userId;
+                Spending addedSpending = _UnitOfWork.CategorySpendingsRepository.AddSpending(newSpending);
 
                 await _UnitOfWork.CommitAsync();
 
@@ -68,10 +70,12 @@ namespace Application.UseCases
                 }
 
                 await _UnitOfWork.CommitTransactionAsync();
-                result.Data = addedSpending.ToDto();
 
                 List<string> budgetUsersNotificationTokens = budgetCategory.Budget.Users.Where(u => u.Id != userId).Select(u => u.NotificationToken).ToList();
                 AppUser currentUser = budgetCategory.Budget.Users.Where(u => u.Id == userId).First();
+                result.Data = addedSpending.ToDto();
+                result.Data.CreatedByEmail = currentUser.Email;
+                result.Data.CreatedByName = $"{currentUser.FirstName} {currentUser.LastName}".Trim();
                 await SendSpendingNotification(budgetUsersNotificationTokens, currentUser.Email, budgetCategory.Budget.Name, budgetCategory.Name, spendingDto.Amount);
             }
             catch (Exception ex)

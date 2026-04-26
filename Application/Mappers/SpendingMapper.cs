@@ -17,6 +17,9 @@ namespace Application.Mappers
                 BudgetPeriodId = spending.BudgetPeriodId,
                 BankTransactionId = spending.BankTransactionId,
                 BankTransaction = spending.BankTransaction != null ? spending.BankTransaction.ToDto() : null,
+                CreatedByUserId = spending.CreatedByUserId,
+                CreatedByEmail = spending.CreatedBy?.Email,
+                CreatedByName = $"{spending.CreatedBy?.FirstName} {spending.CreatedBy?.LastName}".Trim(),
             };
         }
         public static Spending ToEntity(this SpendingDto dto)

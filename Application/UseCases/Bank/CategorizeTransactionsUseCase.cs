@@ -42,6 +42,8 @@ namespace Application.UseCases.Bank
                     return result;
                 }
 
+                AppUser currentUser = category.Budget.Users.First(u => u.Id == userId);
+
                 BudgetPeriod? budgetPeriod = category.Budget.BudgetPeriods.FirstOrDefault();
 
                 if (budgetPeriod == null)
@@ -61,6 +63,7 @@ namespace Application.UseCases.Bank
                     Date = DateTime.SpecifyKind(dto.BookingDate, DateTimeKind.Utc),
                     BudgetCategoryId = category.Id,
                     BudgetPeriodId = budgetPeriod.Id,
+                    CreatedByUserId = userId,
                 });
 
                 await _UnitOfWork.CommitAsync();
@@ -68,6 +71,8 @@ namespace Application.UseCases.Bank
                 await _UnitOfWork.CommitTransactionAsync();
                 result.Data = spending.ToDto();
                 result.Data.BankTransaction = dto;
+                result.Data.CreatedByEmail = currentUser.Email;
+                result.Data.CreatedByName = $"{currentUser.FirstName} {currentUser.LastName}".Trim();
             }
             catch (Exception ex)
             {

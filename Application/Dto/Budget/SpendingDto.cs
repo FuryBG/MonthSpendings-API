@@ -21,5 +21,11 @@ namespace Application.Dto.Budget
         public int? BankTransactionId { get; set; }
         [JsonPropertyName("bankTransaction")]
         public BankTransactionDto? BankTransaction { get; set; }
+        [JsonPropertyName("createdByUserId")]
+        public int CreatedByUserId { get; set; }
+        [JsonPropertyName("createdByEmail")]
+        public string? CreatedByEmail { get; set; }
+        [JsonPropertyName("createdByName")]
+        public string? CreatedByName { get; set; }
     }
 }

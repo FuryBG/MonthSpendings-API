@@ -1,4 +1,4 @@
-﻿using Application.Contracts;
+using Application.Contracts;
 using Application.Dto.Budget;
 using Application.Interfaces;
 using Application.Mappers;
@@ -9,7 +9,7 @@ namespace Application.UseCases
 {
     public interface IFinishBudgetPeriodUseCase
     {
-        Task<CaseResult<BudgetDto?>> InvokeAsync(BudgetDto budgetDto);
+        Task<CaseResult<BudgetDto?>> InvokeAsync(BudgetDto budgetDto, int? savingsPotId = null);
     }
 
     public class FinishBudgetPeriodUseCase : IFinishBudgetPeriodUseCase
@@ -21,7 +21,7 @@ namespace Application.UseCases
             _UnitOfWork = unitOfWork;
             _UserService = userService;
         }
-        public async Task<CaseResult<BudgetDto?>> InvokeAsync(BudgetDto budgetDto)
+        public async Task<CaseResult<BudgetDto?>> InvokeAsync(BudgetDto budgetDto, int? savingsPotId = null)
         {
             var result = new CaseResult<BudgetDto?>();
             result.Successful = true;
@@ -45,17 +45,47 @@ namespace Application.UseCases
                 BudgetPeriod newBudgetPeriod = new BudgetPeriod() { StartDate = DateTime.UtcNow };
                 budget.BudgetPeriods.Add(newBudgetPeriod);
 
-                foreach (var budgetCategory in budget.BudgetCategories)
+                if (savingsPotId.HasValue)
                 {
-                    var dtoCategory = budgetDto.BudgetCategories
-                        .FirstOrDefault(bc => bc.Id == budgetCategory.Id);
-
-                    if (dtoCategory?.Spendings?.Any() == true)
+                    var pot = await _UnitOfWork.SavingsPotRepository.GetByIdForUser(savingsPotId.Value, userId);
+                    if (pot == null)
                     {
-                        Spending spending = dtoCategory.Spendings.First().ToEntity();
-                        spending.Date = DateTime.UtcNow.AddSeconds(5);
-                        spending.BudgetPeriod = newBudgetPeriod;
-                        budgetCategory.Spendings!.Add(spending);
+                        result.Successful = false;
+                        result.ErrorMessage = "Savings pot not found or you don't have access.";
+                        return result;
+                    }
+
+                    decimal totalCarryover = budgetDto.BudgetCategories
+                        .Where(bc => bc.Spendings?.Any() == true)
+                        .Sum(bc => bc.Spendings!.First().Amount);
+
+                    if (totalCarryover > 0)
+                    {
+                        var contribution = new SavingsContribution
+                        {
+                            SavingsPotId = pot.Id,
+                            Amount = totalCarryover,
+                            Date = DateTime.UtcNow,
+                            Note = $"Transferred from {budget.Name} period end",
+                            AddedByUserId = userId,
+                        };
+                        _UnitOfWork.SavingsPotRepository.AddContribution(contribution);
+                    }
+                }
+                else
+                {
+                    foreach (var budgetCategory in budget.BudgetCategories)
+                    {
+                        var dtoCategory = budgetDto.BudgetCategories
+                            .FirstOrDefault(bc => bc.Id == budgetCategory.Id);
+
+                        if (dtoCategory?.Spendings?.Any() == true)
+                        {
+                            Spending spending = dtoCategory.Spendings.First().ToEntity();
+                            spending.Date = DateTime.UtcNow.AddSeconds(5);
+                            spending.BudgetPeriod = newBudgetPeriod;
+                            budgetCategory.Spendings!.Add(spending);
+                        }
                     }
                 }
 

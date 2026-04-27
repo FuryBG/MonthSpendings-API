@@ -5,6 +5,8 @@ using Application.Interfaces.Repository.Bank;
 using Application.Services;
 using Application.UseCases;
 using Application.UseCases.Bank;
+using Application.UseCases.Savings;
+using Application.UseCases.Statistics;
 using EnableBanking;
 using Infrastructure;
 using Infrastructure.Repository;
@@ -85,6 +87,20 @@ public class Program
         builder.Services.AddTransient<IUpdateBudgetInviteResponseUseCase, UpdateBudgetInviteResponseUseCase>();
 
         builder.Services.AddTransient<IGetAllCurrenciesUseCase, GetAllCurrenciesUseCase>();
+
+        builder.Services.AddTransient<IStatisticsRepository, StatisticsRepository>();
+        builder.Services.AddTransient<IGetPeriodComparisonUseCase, GetPeriodComparisonUseCase>();
+
+        builder.Services.AddTransient<ISavingsPotRepository, SavingsPotRepository>();
+        builder.Services.AddTransient<ISavingsPotInviteRepository, SavingsPotInviteRepository>();
+        builder.Services.AddTransient<IGetAllSavingsPotsUseCase, GetAllSavingsPotsUseCase>();
+        builder.Services.AddTransient<ICreateSavingsPotUseCase, CreateSavingsPotUseCase>();
+        builder.Services.AddTransient<IDeleteSavingsPotUseCase, DeleteSavingsPotUseCase>();
+        builder.Services.AddTransient<IAddSavingsContributionUseCase, AddSavingsContributionUseCase>();
+        builder.Services.AddTransient<IRemoveSavingsContributionUseCase, RemoveSavingsContributionUseCase>();
+        builder.Services.AddTransient<IGetSavingsHistoryUseCase, GetSavingsHistoryUseCase>();
+        builder.Services.AddTransient<ISendSavingsPotInviteUseCase, SendSavingsPotInviteUseCase>();
+        builder.Services.AddTransient<IUpdateSavingsPotInviteResponseUseCase, UpdateSavingsPotInviteResponseUseCase>();
 
         // INTEGRATIONS
         string? bankingCertificatePath = builder.Configuration.GetSection("EnableBanking:AppCertPath").Value;

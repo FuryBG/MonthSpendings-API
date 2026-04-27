@@ -18,8 +18,11 @@ namespace Infrastructure
         public IBankConsentRepository BankConsentRepository { get; private set; }
         public IBankAccountRepository BankAccountRepository { get; private set; }
         public IBankTransactionRepository BankTransactionRepository { get; private set; }
+        public ISavingsPotRepository SavingsPotRepository { get; private set; }
+        public ISavingsPotInviteRepository SavingsPotInviteRepository { get; private set; }
+        public IStatisticsRepository StatisticsRepository { get; private set; }
 
-        public UnitOfWork(AppDbContext dbContext, IUserRepository userRepository, IBudgetRepository budgetRepository, IBudgetCategoryRepository budgetCategoryRepository, ICategorySpendingsRepository categorySpendingsRepository, IBudgetInviteRepository budgetInviteRepository, ICurrencyRepository currencyRepository, IBankConsentRepository bankConsentRepository, IBankAccountRepository bankAccountRepository, IBankTransactionRepository bankTransactionRepository)
+        public UnitOfWork(AppDbContext dbContext, IUserRepository userRepository, IBudgetRepository budgetRepository, IBudgetCategoryRepository budgetCategoryRepository, ICategorySpendingsRepository categorySpendingsRepository, IBudgetInviteRepository budgetInviteRepository, ICurrencyRepository currencyRepository, IBankConsentRepository bankConsentRepository, IBankAccountRepository bankAccountRepository, IBankTransactionRepository bankTransactionRepository, ISavingsPotRepository savingsPotRepository, ISavingsPotInviteRepository savingsPotInviteRepository, IStatisticsRepository statisticsRepository)
         {
             _DbContext = dbContext;
             UserRepository = userRepository;
@@ -31,6 +34,9 @@ namespace Infrastructure
             BankConsentRepository = bankConsentRepository;
             BankAccountRepository = bankAccountRepository;
             BankTransactionRepository = bankTransactionRepository;
+            SavingsPotRepository = savingsPotRepository;
+            SavingsPotInviteRepository = savingsPotInviteRepository;
+            StatisticsRepository = statisticsRepository;
         }
 
         public async Task CommitAsync()

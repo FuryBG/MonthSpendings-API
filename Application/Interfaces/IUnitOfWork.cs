@@ -14,6 +14,9 @@ namespace Application.Interfaces
         IBankConsentRepository BankConsentRepository { get; }
         IBankAccountRepository BankAccountRepository { get; }
         IBankTransactionRepository BankTransactionRepository { get; }
+        ISavingsPotRepository SavingsPotRepository { get; }
+        ISavingsPotInviteRepository SavingsPotInviteRepository { get; }
+        IStatisticsRepository StatisticsRepository { get; }
 
         Task CommitAsync();
         Task BeginTransactionAsync();

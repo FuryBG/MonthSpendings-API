@@ -2,6 +2,7 @@
 using Application.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Serialization;
 
 namespace MonthSpendings.Controllers
 {
@@ -72,10 +73,10 @@ namespace MonthSpendings.Controllers
 
         [Authorize]
         [HttpPost("finish")]
-        public async Task<IActionResult> FinishPeriod([FromBody] BudgetDto budgetDto)
+        public async Task<IActionResult> FinishPeriod([FromBody] FinishPeriodRequest request)
         {
             Console.WriteLine(ModelState);
-            var result = await _FinishBudgetPeriodUseCase.InvokeAsync(budgetDto);
+            var result = await _FinishBudgetPeriodUseCase.InvokeAsync(request.Budget, request.SavingsPotId);
 
             if (result.Successful)
             {
@@ -86,5 +87,13 @@ namespace MonthSpendings.Controllers
                 return BadRequest(result.ErrorMessage);
             }
         }
+    }
+
+    public class FinishPeriodRequest
+    {
+        [JsonPropertyName("budget")]
+        public BudgetDto Budget { get; set; } = null!;
+        [JsonPropertyName("savingsPotId")]
+        public int? SavingsPotId { get; set; }
     }
 }

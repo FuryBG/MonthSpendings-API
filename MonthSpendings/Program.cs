@@ -2,15 +2,18 @@ using Application.BackgroundWorkers;
 using Application.Interfaces;
 using Application.Interfaces.Repository;
 using Application.Interfaces.Repository.Bank;
+using Application.Interfaces.Repository.SaltEdge;
 using Application.Services;
 using Application.UseCases;
 using Application.UseCases.Bank;
+using Application.UseCases.SaltEdge;
 using Application.UseCases.Savings;
 using Application.UseCases.Statistics;
 using EnableBanking;
 using Infrastructure;
 using Infrastructure.Repository;
 using Infrastructure.Repository.Bank;
+using Infrastructure.Repository.SaltEdge;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +21,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using MonthSpendings.BackgroundServices;
+using SaltEdge;
 using System.Text;
 
 namespace MonthSpendings;
@@ -37,8 +41,6 @@ public class Program
             options.SuppressModelStateInvalidFilter = true;
         });
 
-        // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-        //builder.Services.AddOpenApi();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         builder.Services.AddSwaggerGen(options =>
@@ -57,7 +59,6 @@ public class Program
         builder.Services.AddHttpContextAccessor();
 
         builder.Services.AddTransient<ITokenService, TokenService>();
-
         builder.Services.AddScoped<IUserService, UserService>();
 
         builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
@@ -67,32 +68,25 @@ public class Program
         builder.Services.AddTransient<ICategorySpendingsRepository, CategorySpendingsRepository>();
         builder.Services.AddTransient<IBudgetInviteRepository, BudgetInviteRepository>();
         builder.Services.AddTransient<ICurrencyRepository, CurrencyRepository>();
+        builder.Services.AddTransient<IStatisticsRepository, StatisticsRepository>();
+        builder.Services.AddTransient<ISavingsPotRepository, SavingsPotRepository>();
+        builder.Services.AddTransient<ISavingsPotInviteRepository, SavingsPotInviteRepository>();
 
         builder.Services.AddTransient<IRegisterUserUseCase, RegisterUserUseCase>();
         builder.Services.AddTransient<IGetUserByIdUseCase, GetUserByIdUseCase>();
-
         builder.Services.AddTransient<ICreateBudgetUseCase, CreateBudgetUseCase>();
         builder.Services.AddTransient<IGetAllBudgetsUseCase, GetAllBudgetsUseCase>();
         builder.Services.AddTransient<IDeleteBudgetUseCase, DeleteBudgetUseCase>();
         builder.Services.AddTransient<IFinishBudgetPeriodUseCase, FinishBudgetPeriodUseCase>();
-
         builder.Services.AddTransient<ICreateBudgetCategoryUseCase, CreateBudgetCategoryUseCase>();
         builder.Services.AddTransient<IDeleteBudgetCategoryUseCase, DeleteBudgetCategoryUseCase>();
         builder.Services.AddTransient<IUpdateBudgetCategoryNameUseCase, UpdateBudgetCategoryNameUseCase>();
-
         builder.Services.AddTransient<ICreateSpendingUseCase, CreateSpendingUseCase>();
         builder.Services.AddTransient<IDeleteSpendingUseCase, DeleteSpendingUseCase>();
-
         builder.Services.AddTransient<ICreateBudgetInviteUseCase, CreateBudgetInviteUseCase>();
         builder.Services.AddTransient<IUpdateBudgetInviteResponseUseCase, UpdateBudgetInviteResponseUseCase>();
-
         builder.Services.AddTransient<IGetAllCurrenciesUseCase, GetAllCurrenciesUseCase>();
-
-        builder.Services.AddTransient<IStatisticsRepository, StatisticsRepository>();
         builder.Services.AddTransient<IGetPeriodComparisonUseCase, GetPeriodComparisonUseCase>();
-
-        builder.Services.AddTransient<ISavingsPotRepository, SavingsPotRepository>();
-        builder.Services.AddTransient<ISavingsPotInviteRepository, SavingsPotInviteRepository>();
         builder.Services.AddTransient<IGetAllSavingsPotsUseCase, GetAllSavingsPotsUseCase>();
         builder.Services.AddTransient<ICreateSavingsPotUseCase, CreateSavingsPotUseCase>();
         builder.Services.AddTransient<IDeleteSavingsPotUseCase, DeleteSavingsPotUseCase>();
@@ -102,7 +96,6 @@ public class Program
         builder.Services.AddTransient<ISendSavingsPotInviteUseCase, SendSavingsPotInviteUseCase>();
         builder.Services.AddTransient<IUpdateSavingsPotInviteResponseUseCase, UpdateSavingsPotInviteResponseUseCase>();
 
-        // INTEGRATIONS
         string? bankingCertificatePath = builder.Configuration.GetSection("EnableBanking:AppCertPath").Value;
         string? bankingAppKeyId = builder.Configuration.GetSection("EnableBanking:AppKeyId").Value;
 
@@ -115,6 +108,26 @@ public class Program
         {
             throw new InvalidOperationException("EnableBanking:AppKeyId is not configured in appsettings.json or environment variables.");
         }
+
+        string? saltEdgeAppId = builder.Configuration.GetSection("SaltEdge:AppId").Value;
+        string? saltEdgeSecret = builder.Configuration.GetSection("SaltEdge:Secret").Value;
+        string? saltEdgeBaseUrl = builder.Configuration.GetSection("SaltEdge:BaseUrl").Value;
+
+        if (string.IsNullOrWhiteSpace(saltEdgeAppId))
+        {
+            throw new InvalidOperationException("SaltEdge:AppId is not configured in appsettings.json or environment variables.");
+        }
+
+        if (string.IsNullOrWhiteSpace(saltEdgeSecret))
+        {
+            throw new InvalidOperationException("SaltEdge:Secret is not configured in appsettings.json or environment variables.");
+        }
+
+        if (string.IsNullOrWhiteSpace(saltEdgeBaseUrl))
+        {
+            throw new InvalidOperationException("SaltEdge:BaseUrl is not configured in appsettings.json or environment variables.");
+        }
+
         builder.Services.AddTransient<IPushNotificationService, PushNotificationsService>();
 
         builder.Services.AddEnableBankingApi(options =>
@@ -123,24 +136,40 @@ public class Program
             options.AppKid = bankingAppKeyId;
         });
 
+        builder.Services.AddSaltEdgeApi(options =>
+        {
+            options.AppId = saltEdgeAppId;
+            options.Secret = saltEdgeSecret;
+            options.BaseUrl = saltEdgeBaseUrl;
+        });
+
         builder.Services.AddTransient<IGetBanksUseCase, GetBanksUseCase>();
         builder.Services.AddTransient<IStartBankConnectionUseCase, StartBankConnectionUseCase>();
         builder.Services.AddTransient<IFinishBankConnectionUseCase, FinishBankConnectionUseCase>();
+        builder.Services.AddTransient<ICategorizeTransactionsUseCase, CategorizeTransactionsUseCase>();
+        builder.Services.AddTransient<IGetUncategorizedTransactionsUseCase, GetUncategorizedTransactionsUseCase>();
+        builder.Services.AddTransient<IRemoveConnectedBankBySessionIdUseCase, RemoveConnectedBankBySessionIdUseCase>();
+        builder.Services.AddTransient<IBankSyncWorker, BankSyncWorker>();
+
+        builder.Services.AddTransient<IGetSaltEdgeBanksUseCase, GetSaltEdgeBanksUseCase>();
+        builder.Services.AddTransient<IGetConnectedSaltEdgeBanksByUserUseCase, GetConnectedSaltEdgeBanksByUserUseCase>();
+        builder.Services.AddTransient<IGetSaltEdgeConnectionStatusUseCase, GetSaltEdgeConnectionStatusUseCase>();
+        builder.Services.AddTransient<IStartSaltEdgeConnectionUseCase, StartSaltEdgeConnectionUseCase>();
+        builder.Services.AddTransient<IFinishSaltEdgeConnectionUseCase, FinishSaltEdgeConnectionUseCase>();
+        builder.Services.AddTransient<IFailSaltEdgeConnectionUseCase, FailSaltEdgeConnectionUseCase>();
+        builder.Services.AddTransient<IRemoveSaltEdgeConnectionUseCase, RemoveSaltEdgeConnectionUseCase>();
+        builder.Services.AddTransient<ISaltEdgeSyncWorker, SaltEdgeSyncWorker>();
 
         builder.Services.AddTransient<IBankConsentRepository, BankConsentRepository>();
         builder.Services.AddTransient<IBankAccountRepository, BankAccountRepository>();
         builder.Services.AddTransient<IBankTransactionRepository, BankTransactionRepository>();
-
-        builder.Services.AddTransient<ICategorizeTransactionsUseCase, CategorizeTransactionsUseCase>();
-        builder.Services.AddTransient<IGetUncategorizedTransactionsUseCase, GetUncategorizedTransactionsUseCase>();
-        builder.Services.AddTransient<IRemoveConnectedBankBySessionIdUseCase, RemoveConnectedBankBySessionIdUseCase>();
-
-
-        builder.Services.AddTransient<IBankSyncWorker, BankSyncWorker>();
+        builder.Services.AddTransient<ISaltEdgeCustomerRepository, SaltEdgeCustomerRepository>();
+        builder.Services.AddTransient<ISaltEdgeConnectionRepository, SaltEdgeConnectionRepository>();
+        builder.Services.AddTransient<ISaltEdgeAccountRepository, SaltEdgeAccountRepository>();
+        builder.Services.AddTransient<ISaltEdgeTransactionRepository, SaltEdgeTransactionRepository>();
 
         builder.Services.AddHostedService<TransactionSyncBackgroundService>();
-
-        // END INTEGRATIONS
+        builder.Services.AddHostedService<SaltEdgeTransactionSyncBackgroundService>();
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(jwtOptions =>
@@ -160,14 +189,7 @@ public class Program
             };
         });
 
-
         var app = builder.Build();
-
-        // Configure the HTTP request pipeline.
-        //if (app.Environment.IsDevelopment())
-        //{
-        //    app.MapOpenApi();
-        //}
 
         if (app.Environment.IsDevelopment())
         {
@@ -175,15 +197,12 @@ public class Program
             app.UseSwaggerUI();
         }
 
-        //app.UseHttpsRedirection();
-
         app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapSwagger();
         app.MapControllers();
 
-        // --- Database Migration Logic ---
         using (var scope = app.Services.CreateScope())
         {
             var services = scope.ServiceProvider;
@@ -199,6 +218,7 @@ public class Program
                 Console.WriteLine($"An error occurred during migration: {ex.Message}");
             }
         }
+
         app.Run();
     }
 }

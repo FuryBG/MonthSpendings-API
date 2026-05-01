@@ -1,5 +1,6 @@
-﻿using Domain;
+using Domain;
 using Domain.Bank;
+using Domain.SaltEdge;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure
@@ -16,12 +17,16 @@ namespace Infrastructure
         public DbSet<BankConsent> BankConsent { get; set; }
         public DbSet<BankAccount> BankAccounts { get; set; }
         public DbSet<BankTransaction> BankTransactions { get; set; }
+        public DbSet<SaltEdgeCustomer> SaltEdgeCustomers { get; set; }
+        public DbSet<SaltEdgeConnection> SaltEdgeConnections { get; set; }
+        public DbSet<SaltEdgeAccount> SaltEdgeAccounts { get; set; }
+        public DbSet<SaltEdgeTransaction> SaltEdgeTransactions { get; set; }
         public DbSet<SavingsPot> SavingsPots { get; set; }
         public DbSet<SavingsContribution> SavingsContributions { get; set; }
         public DbSet<SavingsPotInvite> SavingsPotInvites { get; set; }
+
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
-
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -38,6 +43,36 @@ namespace Infrastructure
                 .HasIndex(b => b.TransactionId)
                 .IsUnique();
 
+            modelBuilder.Entity<SaltEdgeTransaction>()
+            .HasOne(t => t.Spending)
+            .WithOne()
+            .HasForeignKey<SaltEdgeTransaction>(t => t.SpendingId)
+            .IsRequired(false);
+
+            modelBuilder.Entity<SaltEdgeCustomer>()
+                .HasIndex(c => c.UserId)
+                .IsUnique();
+
+            modelBuilder.Entity<SaltEdgeCustomer>()
+                .HasIndex(c => c.CustomerId)
+                .IsUnique();
+
+            modelBuilder.Entity<SaltEdgeConnection>()
+                .HasIndex(c => c.LocalSessionId)
+                .IsUnique();
+
+            modelBuilder.Entity<SaltEdgeConnection>()
+                .HasIndex(c => c.ConnectionId)
+                .IsUnique();
+
+            modelBuilder.Entity<SaltEdgeAccount>()
+                .HasIndex(a => a.AccountId)
+                .IsUnique();
+
+            modelBuilder.Entity<SaltEdgeTransaction>()
+                .HasIndex(t => t.TransactionId)
+                .IsUnique();
+
             modelBuilder.Entity<BudgetPeriod>()
             .Property(i => i.StartDate)
             .HasDefaultValueSql("timezone('utc', now())");
@@ -47,6 +82,10 @@ namespace Infrastructure
            .HasDefaultValueSql("timezone('utc', now()) + INTERVAL '2 days'");
 
             modelBuilder.Entity<BankConsent>()
+            .Property(i => i.LastSync)
+            .HasDefaultValueSql("timezone('utc', now())");
+
+            modelBuilder.Entity<SaltEdgeConnection>()
             .Property(i => i.LastSync)
             .HasDefaultValueSql("timezone('utc', now())");
 

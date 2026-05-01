@@ -2,7 +2,6 @@
 using Application.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace MonthSpendings.Controllers
 {
@@ -25,15 +24,7 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Create(BudgetCategoryDto budgetCategoryDto)
         {
             var result = await _CreateBudgetCategoryUseCase.InvokeAsync(budgetCategoryDto);
-
-            if (result.Successful)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
 
         [Authorize]
@@ -41,15 +32,7 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Delete([FromQuery] int budgetCategoryId)
         {
             var result = await _DeleteBudgetCategoryUseCase.InvokeAsync(budgetCategoryId);
-
-            if (result.Successful)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
 
         [Authorize]
@@ -57,15 +40,7 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> UpdateCategoryName(int id, [FromBody] string newName)
         {
             var result = await _UpdateBudgetCategoryNameUseCase.InvokeAsync(id, newName);
-
-            if (result.Successful)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
     }
 }

@@ -19,15 +19,7 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> GetPeriodComparison([FromQuery] int budgetId)
         {
             var result = await _GetPeriodComparisonUseCase.InvokeAsync(budgetId);
-
-            if (result.Successful)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
     }
 }

@@ -23,15 +23,7 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> GetBanks(CancellationToken cancellationToken)
         {
             var result = await _GetUncategorizedTransactionsUseCase.InvokeAsync(cancellationToken);
-
-            if (result.Successful)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
 
         [Authorize]
@@ -39,15 +31,7 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> UpdateTransaction([FromBody] BankTransactionDto transactionDto, CancellationToken cancellationToken)
         {
             var result = await _CategorizeTransactionsUseCase.InvokeAsync(transactionDto, cancellationToken);
-
-            if (result.Successful)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
     }
 }

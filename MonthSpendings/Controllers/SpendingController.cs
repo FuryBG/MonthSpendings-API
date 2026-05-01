@@ -22,15 +22,7 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Create([FromBody] SpendingDto spendingDto)
         {
             var result = await _CreateSpendingUseCase.InvokeAsync(spendingDto);
-
-            if (result.Successful)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
 
         [Authorize]
@@ -38,15 +30,7 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Delete([FromQuery] int spendingId)
         {
             var result = await _DeleteSpendingUseCase.InvokeAsync(spendingId);
-
-            if (result.Successful)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
     }
 }

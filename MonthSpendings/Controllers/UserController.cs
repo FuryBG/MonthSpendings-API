@@ -20,30 +20,14 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> GetAuthenticatedUser()
         {
             var result = await _GetUserByIdUseCase.InvokeAsync();
-
-            if (result.Successful)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] GoogleUserDto googleUserDto)
         {
             var result = await _RegisterUseCase.InvokeAsync(googleUserDto);
-
-            if (result.Successful)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
     }
 }

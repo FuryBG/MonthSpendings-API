@@ -17,15 +17,7 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> GetAllCurrencies()
         {
             var result = await _GetAllCurrenciesUseCase.InvokeAsync();
-
-            if (result.Successful)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
     }
 }

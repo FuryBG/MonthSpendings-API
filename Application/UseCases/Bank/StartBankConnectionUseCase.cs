@@ -52,7 +52,7 @@ namespace Application.UseCases.Bank
                     PsuType = "personal",
                     State = sessionId.ToString(),
                     Language = "en",
-                    RedirectUrl = new Uri($"https://89ab-88-203-208-219.ngrok-free.app/api/Bank/connect-callback"),
+                    RedirectUrl = new Uri($"https://355d-88-203-208-219.ngrok-free.app/api/Bank/connect-callback"),
                     CredentialsAutosubmit = true,
                     Aspsp = new Aspsp()
                     {

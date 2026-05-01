@@ -22,15 +22,7 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Create(BudgetInviteDto budgetInviteDto)
         {
             var result = await _CreateBudgetInviteUseCase.InvokeAsync(budgetInviteDto);
-
-            if (result.Successful)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
 
         [Authorize]
@@ -38,15 +30,7 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Update(int inviteId, [FromBody] bool response)
         {
             var result = await _UpdateBudgetInviteResponseUseCase.InvokeAsync(inviteId, response);
-
-            if (result.Successful)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
 
         //[Authorize]

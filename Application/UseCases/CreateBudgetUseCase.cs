@@ -47,7 +47,11 @@ namespace Application.UseCases
 
                 budget.BudgetCategories.ForEach(budgetCategory =>
                 {
-                    budgetCategory.Spendings.ForEach(spending => spending.BudgetPeriod = newBudgetPeriod);
+                    budgetCategory.Spendings.ForEach(spending =>
+                    {
+                        spending.BudgetPeriod = newBudgetPeriod;
+                        spending.CreatedByUserId = userId;
+                    });
                 });
 
                 Budget newBudget = _UnitOfWork.BudgetRepository.CreateBudget(budget);

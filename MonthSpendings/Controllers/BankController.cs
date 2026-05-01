@@ -58,15 +58,7 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Delete(Guid sessionId, CancellationToken cancellationToken)
         {
             var result = await _RemoveBankConnectionBySessionIdUseCase.InvokeAsync(sessionId, cancellationToken);
-
-            if (result.Successful)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
 
         [HttpGet("connect-callback")]

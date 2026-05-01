@@ -2,6 +2,7 @@
 using Application.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MonthSpendings.Contracts.Requests;
 using System.Text.Json.Serialization;
 
 namespace MonthSpendings.Controllers
@@ -27,15 +28,7 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> GetAllForUser()
         {
             var result = await _GetAllBudgetsUseCase.InvokeAsync();
-
-            if (result.Successful)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
 
         [Authorize]
@@ -44,15 +37,7 @@ namespace MonthSpendings.Controllers
         {
             Console.WriteLine(ModelState);
             var result = await _CreateBudgetUseCase.InvokeAsync(budgetDto);
-
-            if (result.Successful)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
 
         [Authorize]
@@ -60,15 +45,7 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Delete([FromQuery] int budgetId)
         {
             var result = await _DeleteBudgetUseCase.InvokeAsync(budgetId);
-
-            if (result.Successful)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
 
         [Authorize]
@@ -77,23 +54,7 @@ namespace MonthSpendings.Controllers
         {
             Console.WriteLine(ModelState);
             var result = await _FinishBudgetPeriodUseCase.InvokeAsync(request.Budget, request.SavingsPotId);
-
-            if (result.Successful)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.ErrorMessage);
-            }
+            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
         }
-    }
-
-    public class FinishPeriodRequest
-    {
-        [JsonPropertyName("budget")]
-        public BudgetDto Budget { get; set; } = null!;
-        [JsonPropertyName("savingsPotId")]
-        public int? SavingsPotId { get; set; }
     }
 }

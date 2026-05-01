@@ -657,6 +657,207 @@ namespace Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Domain.SaltEdge.SaltEdgeAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccountId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ConnectionDbId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ConnectionId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("HolderName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Iban")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId")
+                        .IsUnique();
+
+                    b.HasIndex("ConnectionId");
+
+                    b.ToTable("SaltEdgeAccounts");
+                });
+
+            modelBuilder.Entity("Domain.SaltEdge.SaltEdgeConnection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BankImgUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ConnectionId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CountryCode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ExpiresOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastErrorClass")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LastErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LastStage")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastSync")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("timezone('utc', now())");
+
+                    b.Property<Guid>("LocalSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProviderCode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SaltEdgeCustomerId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("State")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("SyncStartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConnectionId")
+                        .IsUnique();
+
+                    b.HasIndex("LocalSessionId")
+                        .IsUnique();
+
+                    b.HasIndex("SaltEdgeCustomerId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SaltEdgeConnections");
+                });
+
+            modelBuilder.Entity("Domain.SaltEdge.SaltEdgeCustomer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CustomerId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("SaltEdgeCustomers");
+                });
+
+            modelBuilder.Entity("Domain.SaltEdge.SaltEdgeTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime>("BookingDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Categorized")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ExternalTransactionId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("MerchantCode")
+                        .HasColumnType("text");
+
+                    b.Property<int>("SaltEdgeAccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SpendingId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SaltEdgeAccountId");
+
+                    b.HasIndex("SpendingId")
+                        .IsUnique();
+
+                    b.HasIndex("TransactionId")
+                        .IsUnique();
+
+                    b.ToTable("SaltEdgeTransactions");
+                });
+
             modelBuilder.Entity("Domain.SavingsContribution", b =>
                 {
                     b.Property<int>("Id")
@@ -926,6 +1127,62 @@ namespace Infrastructure.Migrations
                     b.Navigation("Budget");
                 });
 
+            modelBuilder.Entity("Domain.SaltEdge.SaltEdgeAccount", b =>
+                {
+                    b.HasOne("Domain.SaltEdge.SaltEdgeConnection", "Connection")
+                        .WithMany("Accounts")
+                        .HasForeignKey("ConnectionId");
+
+                    b.Navigation("Connection");
+                });
+
+            modelBuilder.Entity("Domain.SaltEdge.SaltEdgeConnection", b =>
+                {
+                    b.HasOne("Domain.SaltEdge.SaltEdgeCustomer", "Customer")
+                        .WithMany("Connections")
+                        .HasForeignKey("SaltEdgeCustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.SaltEdge.SaltEdgeCustomer", b =>
+                {
+                    b.HasOne("Domain.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.SaltEdge.SaltEdgeTransaction", b =>
+                {
+                    b.HasOne("Domain.SaltEdge.SaltEdgeAccount", "SaltEdgeAccount")
+                        .WithMany("Transactions")
+                        .HasForeignKey("SaltEdgeAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Spending", "Spending")
+                        .WithOne()
+                        .HasForeignKey("Domain.SaltEdge.SaltEdgeTransaction", "SpendingId");
+
+                    b.Navigation("SaltEdgeAccount");
+
+                    b.Navigation("Spending");
+                });
+
             modelBuilder.Entity("Domain.SavingsContribution", b =>
                 {
                     b.HasOne("Domain.AppUser", "AddedBy")
@@ -1048,6 +1305,21 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.BudgetCategory", b =>
                 {
                     b.Navigation("Spendings");
+                });
+
+            modelBuilder.Entity("Domain.SaltEdge.SaltEdgeAccount", b =>
+                {
+                    b.Navigation("Transactions");
+                });
+
+            modelBuilder.Entity("Domain.SaltEdge.SaltEdgeConnection", b =>
+                {
+                    b.Navigation("Accounts");
+                });
+
+            modelBuilder.Entity("Domain.SaltEdge.SaltEdgeCustomer", b =>
+                {
+                    b.Navigation("Connections");
                 });
 
             modelBuilder.Entity("Domain.SavingsPot", b =>

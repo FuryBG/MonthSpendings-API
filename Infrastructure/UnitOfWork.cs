@@ -1,6 +1,7 @@
-﻿using Application.Interfaces;
+using Application.Interfaces;
 using Application.Interfaces.Repository;
 using Application.Interfaces.Repository.Bank;
+using Application.Interfaces.Repository.SaltEdge;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Infrastructure
@@ -18,11 +19,32 @@ namespace Infrastructure
         public IBankConsentRepository BankConsentRepository { get; private set; }
         public IBankAccountRepository BankAccountRepository { get; private set; }
         public IBankTransactionRepository BankTransactionRepository { get; private set; }
+        public ISaltEdgeCustomerRepository SaltEdgeCustomerRepository { get; private set; }
+        public ISaltEdgeConnectionRepository SaltEdgeConnectionRepository { get; private set; }
+        public ISaltEdgeAccountRepository SaltEdgeAccountRepository { get; private set; }
+        public ISaltEdgeTransactionRepository SaltEdgeTransactionRepository { get; private set; }
         public ISavingsPotRepository SavingsPotRepository { get; private set; }
         public ISavingsPotInviteRepository SavingsPotInviteRepository { get; private set; }
         public IStatisticsRepository StatisticsRepository { get; private set; }
 
-        public UnitOfWork(AppDbContext dbContext, IUserRepository userRepository, IBudgetRepository budgetRepository, IBudgetCategoryRepository budgetCategoryRepository, ICategorySpendingsRepository categorySpendingsRepository, IBudgetInviteRepository budgetInviteRepository, ICurrencyRepository currencyRepository, IBankConsentRepository bankConsentRepository, IBankAccountRepository bankAccountRepository, IBankTransactionRepository bankTransactionRepository, ISavingsPotRepository savingsPotRepository, ISavingsPotInviteRepository savingsPotInviteRepository, IStatisticsRepository statisticsRepository)
+        public UnitOfWork(
+            AppDbContext dbContext,
+            IUserRepository userRepository,
+            IBudgetRepository budgetRepository,
+            IBudgetCategoryRepository budgetCategoryRepository,
+            ICategorySpendingsRepository categorySpendingsRepository,
+            IBudgetInviteRepository budgetInviteRepository,
+            ICurrencyRepository currencyRepository,
+            IBankConsentRepository bankConsentRepository,
+            IBankAccountRepository bankAccountRepository,
+            IBankTransactionRepository bankTransactionRepository,
+            ISaltEdgeCustomerRepository saltEdgeCustomerRepository,
+            ISaltEdgeConnectionRepository saltEdgeConnectionRepository,
+            ISaltEdgeAccountRepository saltEdgeAccountRepository,
+            ISaltEdgeTransactionRepository saltEdgeTransactionRepository,
+            ISavingsPotRepository savingsPotRepository,
+            ISavingsPotInviteRepository savingsPotInviteRepository,
+            IStatisticsRepository statisticsRepository)
         {
             _DbContext = dbContext;
             UserRepository = userRepository;
@@ -34,6 +56,10 @@ namespace Infrastructure
             BankConsentRepository = bankConsentRepository;
             BankAccountRepository = bankAccountRepository;
             BankTransactionRepository = bankTransactionRepository;
+            SaltEdgeCustomerRepository = saltEdgeCustomerRepository;
+            SaltEdgeConnectionRepository = saltEdgeConnectionRepository;
+            SaltEdgeAccountRepository = saltEdgeAccountRepository;
+            SaltEdgeTransactionRepository = saltEdgeTransactionRepository;
             SavingsPotRepository = savingsPotRepository;
             SavingsPotInviteRepository = savingsPotInviteRepository;
             StatisticsRepository = statisticsRepository;
@@ -50,6 +76,7 @@ namespace Infrastructure
             {
                 return;
             }
+
             _CurrentTransaction = await _DbContext.Database.BeginTransactionAsync();
         }
 

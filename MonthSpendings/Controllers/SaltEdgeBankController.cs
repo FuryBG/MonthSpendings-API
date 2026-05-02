@@ -1,6 +1,7 @@
 using Application.UseCases.SaltEdge;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using SaltEdge.Models.Callbacks;
 
 namespace MonthSpendings.Controllers
@@ -17,6 +18,7 @@ namespace MonthSpendings.Controllers
         private readonly IFailSaltEdgeConnectionUseCase _FailSaltEdgeConnectionUseCase;
         private readonly IRemoveSaltEdgeConnectionUseCase _RemoveSaltEdgeConnectionUseCase;
         private readonly IConfiguration _Configuration;
+        private readonly ILogger<SaltEdgeBankController> _Logger;
 
         public SaltEdgeBankController(
             IGetSaltEdgeBanksUseCase getSaltEdgeBanksUseCase,
@@ -26,7 +28,8 @@ namespace MonthSpendings.Controllers
             IFinishSaltEdgeConnectionUseCase finishSaltEdgeConnectionUseCase,
             IFailSaltEdgeConnectionUseCase failSaltEdgeConnectionUseCase,
             IRemoveSaltEdgeConnectionUseCase removeSaltEdgeConnectionUseCase,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ILogger<SaltEdgeBankController> logger)
         {
             _GetSaltEdgeBanksUseCase = getSaltEdgeBanksUseCase;
             _GetConnectedSaltEdgeBanksByUserUseCase = getConnectedSaltEdgeBanksByUserUseCase;
@@ -36,6 +39,7 @@ namespace MonthSpendings.Controllers
             _FailSaltEdgeConnectionUseCase = failSaltEdgeConnectionUseCase;
             _RemoveSaltEdgeConnectionUseCase = removeSaltEdgeConnectionUseCase;
             _Configuration = configuration;
+            _Logger = logger;
         }
 
         [Authorize]
@@ -43,7 +47,9 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> GetBanks(string? bankName, CancellationToken cancellationToken)
         {
             var result = await _GetSaltEdgeBanksUseCase.InvokeAsync(bankName, cancellationToken);
-            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
+            if (result.Successful) return Ok(result.Data);
+            _Logger.LogWarning("GetSaltEdgeBanks failed: {Error}", result.ErrorMessage);
+            return BadRequest(result.ErrorMessage);
         }
 
         [Authorize]
@@ -51,7 +57,9 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> GetConnectedBanks(CancellationToken cancellationToken)
         {
             var result = await _GetConnectedSaltEdgeBanksByUserUseCase.InvokeAsync(cancellationToken);
-            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
+            if (result.Successful) return Ok(result.Data);
+            _Logger.LogWarning("GetConnectedSaltEdgeBanks failed: {Error}", result.ErrorMessage);
+            return BadRequest(result.ErrorMessage);
         }
 
         [Authorize]
@@ -59,7 +67,9 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> GetConnectionStatus(Guid localSessionId, CancellationToken cancellationToken)
         {
             var result = await _GetSaltEdgeConnectionStatusUseCase.InvokeAsync(localSessionId, cancellationToken);
-            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
+            if (result.Successful) return Ok(result.Data);
+            _Logger.LogWarning("GetSaltEdgeConnectionStatus failed: {Error}", result.ErrorMessage);
+            return BadRequest(result.ErrorMessage);
         }
 
         [Authorize]
@@ -67,7 +77,9 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Connect(string providerCode, string providerName, string countryCode, string bankImageUrl, int consentDays = 90, CancellationToken cancellationToken = default)
         {
             var result = await _StartSaltEdgeConnectionUseCase.InvokeAsync(providerCode, providerName, countryCode, bankImageUrl, consentDays, cancellationToken);
-            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
+            if (result.Successful) return Ok(result.Data);
+            _Logger.LogWarning("StartSaltEdgeConnection failed: {Error}", result.ErrorMessage);
+            return BadRequest(result.ErrorMessage);
         }
 
         [HttpGet("connect-callback")]
@@ -85,20 +97,26 @@ namespace MonthSpendings.Controllers
                 return BadRequest();
             }
 
+            _Logger.LogInformation("SaltEdge success callback received for localSessionId {LocalSessionId}", localSessionId);
             var result = await _FinishSaltEdgeConnectionUseCase.InvokeAsync(request.Data.ConnectionId, localSessionId, request.Data.Stage, cancellationToken);
-            return result.Successful ? Ok() : BadRequest(result.ErrorMessage);
+            if (result.Successful) return Ok();
+            _Logger.LogWarning("FinishSaltEdgeConnection failed for localSessionId {LocalSessionId}: {Error}", localSessionId, result.ErrorMessage);
+            return BadRequest(result.ErrorMessage);
         }
 
         [HttpPost("callback/fail")]
         public async Task<IActionResult> FailCallback([FromBody] SaltEdgeCallbackRequest request, CancellationToken cancellationToken)
         {
+            _Logger.LogInformation("SaltEdge fail callback received");
             if (!TryGetLocalSessionId(request, out Guid localSessionId))
             {
                 return BadRequest();
             }
 
             var result = await _FailSaltEdgeConnectionUseCase.InvokeAsync(localSessionId, request.Data?.ConnectionId, request.Data?.ErrorClass, request.Data?.ErrorMessage, cancellationToken);
-            return result.Successful ? Ok() : BadRequest(result.ErrorMessage);
+            if (result.Successful) return Ok();
+            _Logger.LogWarning("FailSaltEdgeConnection failed for localSessionId {LocalSessionId}: {Error}", localSessionId, result.ErrorMessage);
+            return BadRequest(result.ErrorMessage);
         }
 
         [Authorize]
@@ -106,7 +124,9 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Delete(int connectionDbId, CancellationToken cancellationToken)
         {
             var result = await _RemoveSaltEdgeConnectionUseCase.InvokeAsync(connectionDbId, cancellationToken);
-            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
+            if (result.Successful) return Ok(result.Data);
+            _Logger.LogWarning("RemoveSaltEdgeConnection failed: {Error}", result.ErrorMessage);
+            return BadRequest(result.ErrorMessage);
         }
 
         private static bool TryGetLocalSessionId(SaltEdgeCallbackRequest request, out Guid localSessionId)

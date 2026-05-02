@@ -1,6 +1,7 @@
 using Application.Contracts;
 using Application.Interfaces;
 using Application.Services;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Savings
 {
@@ -13,10 +14,12 @@ namespace Application.UseCases.Savings
     {
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
-        public DeleteSavingsPotUseCase(IUnitOfWork unitOfWork, IUserService userService)
+        private readonly ILogger<DeleteSavingsPotUseCase> _Logger;
+        public DeleteSavingsPotUseCase(IUnitOfWork unitOfWork, IUserService userService, ILogger<DeleteSavingsPotUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<int>> InvokeAsync(int potId)
@@ -46,10 +49,11 @@ namespace Application.UseCases.Savings
                 _UnitOfWork.SavingsPotRepository.Delete(pot);
                 await _UnitOfWork.CommitAsync();
                 result.Data = potId;
+                _Logger.LogInformation("Savings pot {PotId} deleted by user {UserId}", potId, userId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error deleting savings pot {PotId}", potId);
                 result.Successful = false;
                 result.ErrorMessage = "Something went wrong while deleting the savings pot.";
             }

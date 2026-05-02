@@ -13,7 +13,10 @@ namespace Application.Mappers
                 ReceiverEmail = budgetInvite.Receiver.Email,
                 BudgetId = budgetInvite.BudgetId,
                 Accepted = budgetInvite.Accepted,
-                ValidTo = budgetInvite.ValidTo
+                ValidTo = budgetInvite.ValidTo,
+                BudgetName = budgetInvite.Budget?.Name ?? string.Empty,
+                SenderEmail = budgetInvite.Sender?.Email ?? string.Empty,
+                SenderName = $"{budgetInvite.Sender?.FirstName} {budgetInvite.Sender?.LastName}".Trim()
             };
         }
 

@@ -6,6 +6,7 @@ using Domain;
 using Domain.SaltEdge;
 using Domain.SaltEdge.Enums;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using SaltEdge.Interfaces;
 using SaltEdge.Models.Connections;
 using SaltEdge.Models.Customers;
@@ -25,28 +26,32 @@ namespace Application.UseCases.SaltEdge
         private readonly ICustomersService _CustomersService;
         private readonly IConnectionsService _ConnectionsService;
         private readonly IConfiguration _Configuration;
+        private readonly ILogger<StartSaltEdgeConnectionUseCase> _Logger;
 
         public StartSaltEdgeConnectionUseCase(
             IUnitOfWork unitOfWork,
             IUserService userService,
             ICustomersService customersService,
             IConnectionsService connectionsService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ILogger<StartSaltEdgeConnectionUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
             _CustomersService = customersService;
             _ConnectionsService = connectionsService;
             _Configuration = configuration;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<SaltEdgeStartConnectionDto>> InvokeAsync(string providerCode, string providerName, string countryCode, string bankImageUrl, int consentDays, CancellationToken cancellationToken)
         {
             var result = new CaseResult<SaltEdgeStartConnectionDto>() { Successful = true };
+            int userId = 0;
 
             try
             {
-                int userId = _UserService.GetUserId();
+                userId = _UserService.GetUserId();
 
                 if (userId == 0)
                 {
@@ -130,10 +135,12 @@ namespace Application.UseCases.SaltEdge
                     ConnectUrl = response.Data.ConnectUrl,
                     LocalSessionId = localSessionId,
                 };
+
+                _Logger.LogInformation("SaltEdge connection initiated for user {UserId}", userId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error starting SaltEdge connection for user {UserId}", userId);
                 result.Successful = false;
                 result.ErrorMessage = "Something got wrong during starting Salt Edge bank connection. Please try again later.";
             }

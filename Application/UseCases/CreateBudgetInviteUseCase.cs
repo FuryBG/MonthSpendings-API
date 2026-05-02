@@ -1,4 +1,4 @@
-﻿using Application.Contracts;
+using Application.Contracts;
 using Application.Dto;
 using Application.Dto.Notification;
 using Application.Enums;
@@ -6,6 +6,7 @@ using Application.Interfaces;
 using Application.Mappers;
 using Application.Services;
 using Domain;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases
 {
@@ -19,11 +20,13 @@ namespace Application.UseCases
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
         private IPushNotificationService _PushNotificationService { get; set; }
-        public CreateBudgetInviteUseCase(IUnitOfWork unitOfWork, IUserService userService, IPushNotificationService pushNotificationService)
+        private readonly ILogger<CreateBudgetInviteUseCase> _Logger;
+        public CreateBudgetInviteUseCase(IUnitOfWork unitOfWork, IUserService userService, IPushNotificationService pushNotificationService, ILogger<CreateBudgetInviteUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
             _PushNotificationService = pushNotificationService;
+            _Logger = logger;
         }
         public async Task<CaseResult<BudgetInviteDto?>> InvokeAsync(BudgetInviteDto budgetInviteDto)
         {
@@ -37,7 +40,7 @@ namespace Application.UseCases
 
                 if (budget == null)
                 {
-                    Console.WriteLine($"Can't find budget with id {budgetInviteDto.BudgetId} and user id {userId} to create invite.");
+                    _Logger.LogWarning("Budget {BudgetId} not found when creating invite", budgetInviteDto.BudgetId);
                     result.Successful = false;
                     result.ErrorMessage = "Can't find the Budget to send Invite.";
                     return result;
@@ -47,7 +50,7 @@ namespace Application.UseCases
 
                 if (sender == null)
                 {
-                    Console.WriteLine($"Can't find sender user with id {userId} to create invite.");
+                    _Logger.LogWarning("Sender {SenderId} not found when creating budget invite", userId);
                     result.Successful = false;
                     result.ErrorMessage = "Corrupted user, please log in again, and send invite again.";
                     return result;
@@ -57,7 +60,7 @@ namespace Application.UseCases
 
                 if (receiver == null || receiver.NotificationToken == null || receiver.NotificationToken == string.Empty)
                 {
-                    Console.WriteLine($"Can't find receiver user with id {userId} to create invite.");
+                    _Logger.LogWarning("Receiver {ReceiverId} not found when creating budget invite", budgetInviteDto.ReceiverEmail);
                     result.Successful = false;
                     result.ErrorMessage = "User with this email doesn't exist.";
                     return result;
@@ -73,10 +76,11 @@ namespace Application.UseCases
                 await SendBudgetInviteNotification(receiver.NotificationToken);
 
                 result.Data = createdInvite.ToDto();
+                _Logger.LogInformation("Budget invite {InviteId} sent from {SenderId} to {ReceiverId} for budget {BudgetId}", result.Data!.Id, userId, budgetInviteDto.ReceiverEmail, budgetInviteDto.BudgetId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error creating budget invite for budget {BudgetId}", budgetInviteDto.BudgetId);
                 result.Successful = false;
                 result.ErrorMessage = "Something got wrong during creating Invite. Please try again later.";
             }

@@ -14,5 +14,11 @@ namespace Application.Dto
         public DateTime? ValidTo { get; set; }
         [JsonPropertyName("accepted")]
         public bool? Accepted { get; set; }
+        [JsonPropertyName("budgetName")]
+        public string BudgetName { get; set; } = string.Empty;
+        [JsonPropertyName("senderEmail")]
+        public string SenderEmail { get; set; } = string.Empty;
+        [JsonPropertyName("senderName")]
+        public string SenderName { get; set; } = string.Empty;
     }
 }

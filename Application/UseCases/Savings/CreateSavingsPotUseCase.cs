@@ -4,6 +4,7 @@ using Application.Interfaces;
 using Application.Mappers;
 using Application.Services;
 using Domain;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Savings
 {
@@ -16,20 +17,23 @@ namespace Application.UseCases.Savings
     {
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
-        public CreateSavingsPotUseCase(IUnitOfWork unitOfWork, IUserService userService)
+        private readonly ILogger<CreateSavingsPotUseCase> _Logger;
+        public CreateSavingsPotUseCase(IUnitOfWork unitOfWork, IUserService userService, ILogger<CreateSavingsPotUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<SavingsPotDto?>> InvokeAsync(SavingsPotDto dto)
         {
             var result = new CaseResult<SavingsPotDto?>();
             result.Successful = true;
+            int userId = 0;
 
             try
             {
-                int userId = _UserService.GetUserId();
+                userId = _UserService.GetUserId();
                 AppUser? user = await _UnitOfWork.UserRepository.GetUserById(userId);
 
                 if (user == null)
@@ -52,10 +56,11 @@ namespace Application.UseCases.Savings
                 var created = _UnitOfWork.SavingsPotRepository.Create(pot);
                 await _UnitOfWork.CommitAsync();
                 result.Data = created.ToDto();
+                _Logger.LogInformation("Savings pot {PotId} created by user {UserId}", created.Id, userId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error creating savings pot for user {UserId}", userId);
                 result.Successful = false;
                 result.ErrorMessage = "Something went wrong while creating the savings pot.";
             }

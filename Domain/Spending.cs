@@ -14,6 +14,7 @@ namespace Domain
         public BudgetPeriod BudgetPeriod { get; set; } = null!;
         public int? BankTransactionId { get; set; }
         public BankTransaction? BankTransaction { get; set; }
+        public DateTime? TransactionDate { get; set; }
         public int CreatedByUserId { get; set; }
         public AppUser CreatedBy { get; set; } = null!;
     }

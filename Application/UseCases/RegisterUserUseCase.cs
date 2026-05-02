@@ -1,7 +1,8 @@
-﻿using Application.Contracts;
+using Application.Contracts;
 using Application.Dto;
 using Application.Interfaces;
 using Domain;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases
 {
@@ -14,10 +15,12 @@ namespace Application.UseCases
     {
         private ITokenService _TokenService { get; set; }
         private IUnitOfWork _UnitOfWork { get; set; }
-        public RegisterUserUseCase(ITokenService tokenService, IUnitOfWork unitOfWork)
+        private readonly ILogger<RegisterUserUseCase> _Logger;
+        public RegisterUserUseCase(ITokenService tokenService, IUnitOfWork unitOfWork, ILogger<RegisterUserUseCase> logger)
         {
             _TokenService = tokenService;
             _UnitOfWork = unitOfWork;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<string?>> InvokeAsync(GoogleUserDto googleUserDto)
@@ -47,11 +50,11 @@ namespace Application.UseCases
 
                 string jwtToken = _TokenService.CreateToken(user);
                 result.Data = jwtToken;
-
+                _Logger.LogInformation("User registered/logged in, token issued");
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error registering user with Google ID {GoogleId}", googleUserDto?.Id);
                 result.Successful = false;
                 result.ErrorMessage = "Something got wrong during login. Please try again later.";
             }

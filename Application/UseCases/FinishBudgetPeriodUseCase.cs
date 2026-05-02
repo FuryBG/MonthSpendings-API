@@ -4,6 +4,7 @@ using Application.Interfaces;
 using Application.Mappers;
 using Application.Services;
 using Domain;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases
 {
@@ -16,10 +17,12 @@ namespace Application.UseCases
     {
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
-        public FinishBudgetPeriodUseCase(IUnitOfWork unitOfWork, IUserService userService)
+        private readonly ILogger<FinishBudgetPeriodUseCase> _Logger;
+        public FinishBudgetPeriodUseCase(IUnitOfWork unitOfWork, IUserService userService, ILogger<FinishBudgetPeriodUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
+            _Logger = logger;
         }
         public async Task<CaseResult<BudgetDto?>> InvokeAsync(BudgetDto budgetDto, int? savingsPotId = null)
         {
@@ -83,6 +86,7 @@ namespace Application.UseCases
                         {
                             Spending spending = dtoCategory.Spendings.First().ToEntity();
                             spending.Date = DateTime.UtcNow.AddSeconds(5);
+                            spending.CreatedByUserId = userId;
                             spending.BudgetPeriod = newBudgetPeriod;
                             budgetCategory.Spendings!.Add(spending);
                         }
@@ -91,10 +95,11 @@ namespace Application.UseCases
 
                 await _UnitOfWork.CommitAsync();
                 result.Data = budget.ToDto();
+                _Logger.LogInformation("Budget period finished for budget {BudgetId} by user {UserId}", budgetDto.Id, userId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error finishing budget period for user {UserId}", _UserService.GetUserId());
                 result.Successful = false;
                 result.ErrorMessage = $"Something got wrong during finish budget period on budget with id {budgetDto.Id}. Please try again later.";
             }

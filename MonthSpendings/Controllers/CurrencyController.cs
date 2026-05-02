@@ -8,16 +8,23 @@ namespace MonthSpendings.Controllers
     public class CurrencyController : ControllerBase
     {
         private IGetAllCurrenciesUseCase _GetAllCurrenciesUseCase { get; set; }
-        public CurrencyController(IGetAllCurrenciesUseCase getAllCurrenciesUseCase)
+        private readonly ILogger<CurrencyController> _Logger;
+        public CurrencyController(IGetAllCurrenciesUseCase getAllCurrenciesUseCase, ILogger<CurrencyController> logger)
         {
             _GetAllCurrenciesUseCase = getAllCurrenciesUseCase;
+            _Logger = logger;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllCurrencies()
         {
             var result = await _GetAllCurrenciesUseCase.InvokeAsync();
-            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
+            if (!result.Successful)
+            {
+                _Logger.LogWarning("GetAllCurrencies failed: {Error}", result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
+            }
+            return Ok(result.Data);
         }
     }
 }

@@ -1,9 +1,10 @@
-﻿using Application.Contracts;
+using Application.Contracts;
 using Application.Dto.Budget;
 using Application.Interfaces;
 using Application.Mappers;
 using Application.Services;
 using Domain;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases
 {
@@ -16,10 +17,12 @@ namespace Application.UseCases
     {
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
-        public DeleteBudgetCategoryUseCase(IUnitOfWork unitOfWork, IUserService userService)
+        private readonly ILogger<DeleteBudgetCategoryUseCase> _Logger;
+        public DeleteBudgetCategoryUseCase(IUnitOfWork unitOfWork, IUserService userService, ILogger<DeleteBudgetCategoryUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
+            _Logger = logger;
         }
         public async Task<CaseResult<int?>> InvokeAsync(int budgetCategoryId)
         {
@@ -33,7 +36,7 @@ namespace Application.UseCases
 
                 if (budgetCategory == null)
                 {
-                    Console.WriteLine($"Can't find budget category with id {budgetCategoryId} to delete.");
+                    _Logger.LogWarning("Budget category {CategoryId} not found for deletion", budgetCategoryId);
                     result.Successful = false;
                     result.ErrorMessage = "Can't find the Budget to delete.";
                     return result;
@@ -43,10 +46,11 @@ namespace Application.UseCases
                 BudgetCategory addedCategory = _UnitOfWork.BudgetCategoryRepository.DeleteCategory(budgetCategory);
                 await _UnitOfWork.CommitAsync();
                 result.Data = budgetCategoryId;
+                _Logger.LogInformation("Budget category {CategoryId} deleted by user {UserId}", budgetCategoryId, userId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error deleting budget category {CategoryId}", budgetCategoryId);
                 result.Successful = false;
                 result.ErrorMessage = "Something got wrong during deleting category. Please try again later.";
             }

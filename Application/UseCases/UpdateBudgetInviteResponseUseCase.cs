@@ -1,4 +1,4 @@
-﻿using Application.Contracts;
+using Application.Contracts;
 using Application.Dto;
 using Application.Dto.Notification;
 using Application.Enums;
@@ -6,6 +6,7 @@ using Application.Interfaces;
 using Application.Mappers;
 using Application.Services;
 using Domain;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases
 {
@@ -19,11 +20,13 @@ namespace Application.UseCases
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
         private IPushNotificationService _PushNotificationService { get; set; }
-        public UpdateBudgetInviteResponseUseCase(IUnitOfWork unitOfWork, IUserService userService, IPushNotificationService pushNotificationService)
+        private readonly ILogger<UpdateBudgetInviteResponseUseCase> _Logger;
+        public UpdateBudgetInviteResponseUseCase(IUnitOfWork unitOfWork, IUserService userService, IPushNotificationService pushNotificationService, ILogger<UpdateBudgetInviteResponseUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
             _PushNotificationService = pushNotificationService;
+            _Logger = logger;
         }
         public async Task<CaseResult<BudgetInviteDto?>> InvokeAsync(int budgetInviteId, bool accepted)
         {
@@ -38,7 +41,7 @@ namespace Application.UseCases
 
                 if (budgetInvite == null)
                 {
-                    Console.WriteLine($"Can't find budget invite with id {budgetInviteId} to respond for invite.");
+                    _Logger.LogWarning("Budget invite {InviteId} not found", budgetInviteId);
                     result.Successful = false;
                     result.ErrorMessage = "Can't find the Budget invite to.";
                     return result;
@@ -46,7 +49,7 @@ namespace Application.UseCases
 
                 if (budgetInvite.ReceiverId != userId)
                 {
-                    Console.WriteLine($"Logged user id is different than the budget invite receiver id. Logged user id: {userId} -- Invite receiver id: {budgetInvite.ReceiverId}");
+                    _Logger.LogWarning("User {UserId} attempted to respond to invite {InviteId} but is not the receiver", userId, budgetInviteId);
                     result.Successful = false;
                     result.ErrorMessage = "Can't find the Budget invite to respond.";
                     return result;
@@ -56,7 +59,7 @@ namespace Application.UseCases
 
                 if (budget == null)
                 {
-                    Console.WriteLine($"Can't find budget with id {budgetInvite.BudgetId} to create invite.");
+                    _Logger.LogWarning("Budget {BudgetId} not found when responding to invite {InviteId}", budgetInvite.BudgetId, budgetInviteId);
                     result.Successful = false;
                     result.ErrorMessage = "Can't find the Budget invite to respond.";
                     return result;
@@ -75,10 +78,11 @@ namespace Application.UseCases
                 await SendBudgetInviteNotification(budgetInvite.Sender.NotificationToken, budgetInvite.Receiver.Email, budgetInvite.Accepted.Value);
 
                 result.Data = createdInvite.ToDto();
+                _Logger.LogInformation("Budget invite {InviteId} responded by user {UserId}", budgetInviteId, userId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error updating budget invite {InviteId} response", budgetInviteId);
                 result.Successful = false;
                 result.ErrorMessage = "Something got wrong during respond to Invite. Please try again later.";
             }

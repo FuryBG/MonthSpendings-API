@@ -3,6 +3,7 @@ using Application.Dto.SaltEdge;
 using Application.Interfaces;
 using Application.Services;
 using Domain.SaltEdge;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.SaltEdge
 {
@@ -15,20 +16,23 @@ namespace Application.UseCases.SaltEdge
     {
         private readonly IUnitOfWork _UnitOfWork;
         private readonly IUserService _UserService;
+        private readonly ILogger<GetSaltEdgeConnectionStatusUseCase> _Logger;
 
-        public GetSaltEdgeConnectionStatusUseCase(IUnitOfWork unitOfWork, IUserService userService)
+        public GetSaltEdgeConnectionStatusUseCase(IUnitOfWork unitOfWork, IUserService userService, ILogger<GetSaltEdgeConnectionStatusUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<SaltEdgeConnectionStatusDto>> InvokeAsync(Guid localSessionId, CancellationToken cancellationToken)
         {
             var result = new CaseResult<SaltEdgeConnectionStatusDto>() { Successful = true };
+            int userId = 0;
 
             try
             {
-                int userId = _UserService.GetUserId();
+                userId = _UserService.GetUserId();
                 SaltEdgeConnection? connection = await _UnitOfWork.SaltEdgeConnectionRepository.GetByLocalSessionIdAsync(localSessionId, cancellationToken);
 
                 if (connection == null || connection.UserId != userId)
@@ -48,7 +52,7 @@ namespace Application.UseCases.SaltEdge
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error retrieving SaltEdge connection status for user {UserId}", userId);
                 result.Successful = false;
                 result.ErrorMessage = "Something got wrong during loading Salt Edge connection status. Please try again later.";
             }

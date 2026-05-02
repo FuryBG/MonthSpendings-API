@@ -6,12 +6,12 @@ namespace MonthSpendings.BackgroundServices
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly double _intervalInMinutes;
-        private readonly ILogger _logger;
+        private readonly ILogger _Logger;
 
         public SaltEdgeTransactionSyncBackgroundService(IServiceScopeFactory scopeFactory, ILogger<SaltEdgeTransactionSyncBackgroundService> logger, IConfiguration configuration)
         {
             _scopeFactory = scopeFactory;
-            _logger = logger;
+            _Logger = logger;
             bool intervalSet = double.TryParse(configuration.GetSection("SaltEdge:TransactionSyncIntervalInMinutes").Value, out double updateInterval);
 
             if (!intervalSet)
@@ -24,6 +24,7 @@ namespace MonthSpendings.BackgroundServices
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _Logger.LogInformation("SaltEdgeTransactionSyncBackgroundService started — interval: {IntervalMinutes} min", _intervalInMinutes);
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
@@ -39,7 +40,7 @@ namespace MonthSpendings.BackgroundServices
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Exception during Salt Edge bank sync.");
+                    _Logger.LogError(ex, "Exception during Salt Edge bank sync.");
                 }
             }
         }

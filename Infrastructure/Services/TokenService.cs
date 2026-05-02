@@ -1,6 +1,7 @@
 ﻿using Application.Interfaces;
 using Domain;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -11,10 +12,12 @@ namespace Infrastructure.Services
     public class TokenService : ITokenService
     {
         private readonly IConfiguration _config;
+        private readonly ILogger<TokenService> _Logger;
 
-        public TokenService(IConfiguration config)
+        public TokenService(IConfiguration config, ILogger<TokenService> logger)
         {
             _config = config;
+            _Logger = logger;
         }
 
         public string CreateToken(AppUser user)
@@ -38,6 +41,7 @@ namespace Infrastructure.Services
                 signingCredentials: creds
             );
 
+            _Logger.LogInformation("JWT token issued for user {UserId}", user.Id);
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }

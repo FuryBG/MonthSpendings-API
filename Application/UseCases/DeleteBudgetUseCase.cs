@@ -1,7 +1,8 @@
-﻿using Application.Contracts;
+using Application.Contracts;
 using Application.Interfaces;
 using Application.Services;
 using Domain;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases
 {
@@ -14,10 +15,12 @@ namespace Application.UseCases
     {
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
-        public DeleteBudgetUseCase(IUnitOfWork unitOfWork, IUserService userService)
+        private readonly ILogger<DeleteBudgetUseCase> _Logger;
+        public DeleteBudgetUseCase(IUnitOfWork unitOfWork, IUserService userService, ILogger<DeleteBudgetUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<int?>> InvokeAsync(int budgetId)
@@ -40,10 +43,11 @@ namespace Application.UseCases
                 _UnitOfWork.BudgetRepository.DeleteBudget(budget);
                 await _UnitOfWork.CommitAsync();
                 result.Data = budgetId;
+                _Logger.LogInformation("Budget {BudgetId} deleted by user {UserId}", budgetId, userId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error deleting budget {BudgetId}", budgetId);
                 result.Successful = false;
                 result.ErrorMessage = $"Something got wrong during deleting budget with id {budgetId}. Please try again later.";
             }

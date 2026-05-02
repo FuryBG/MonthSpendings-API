@@ -11,13 +11,16 @@ namespace MonthSpendings.Controllers
     {
         private ISendSavingsPotInviteUseCase _SendInviteUseCase;
         private IUpdateSavingsPotInviteResponseUseCase _RespondUseCase;
+        private readonly ILogger<SavingsPotInviteController> _Logger;
 
         public SavingsPotInviteController(
             ISendSavingsPotInviteUseCase sendInviteUseCase,
-            IUpdateSavingsPotInviteResponseUseCase respondUseCase)
+            IUpdateSavingsPotInviteResponseUseCase respondUseCase,
+            ILogger<SavingsPotInviteController> logger)
         {
             _SendInviteUseCase = sendInviteUseCase;
             _RespondUseCase = respondUseCase;
+            _Logger = logger;
         }
 
         [Authorize]
@@ -25,7 +28,12 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Send([FromBody] SavingsPotInviteDto dto)
         {
             var result = await _SendInviteUseCase.InvokeAsync(dto);
-            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
+            if (!result.Successful)
+            {
+                _Logger.LogWarning("SendSavingsPotInvite failed: {Error}", result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
+            }
+            return Ok(result.Data);
         }
 
         [Authorize]
@@ -33,7 +41,12 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Respond(int inviteId, [FromBody] bool accepted)
         {
             var result = await _RespondUseCase.InvokeAsync(inviteId, accepted);
-            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
+            if (!result.Successful)
+            {
+                _Logger.LogWarning("UpdateSavingsPotInviteResponse failed for invite {InviteId}: {Error}", inviteId, result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
+            }
+            return Ok(result.Data);
         }
     }
 }

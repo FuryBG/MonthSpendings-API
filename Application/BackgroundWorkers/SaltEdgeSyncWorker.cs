@@ -23,7 +23,7 @@ namespace Application.BackgroundWorkers
         private readonly IAccountsService _accountsService;
         private readonly ITransactionsService _transactionsService;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger<SaltEdgeSyncWorker> _logger;
+        private readonly ILogger<SaltEdgeSyncWorker> _Logger;
         private readonly IConfiguration _configuration;
 
         public SaltEdgeSyncWorker(
@@ -39,7 +39,7 @@ namespace Application.BackgroundWorkers
             _transactionsService = transactionsService;
             _unitOfWork = unitOfWork;
             _configuration = configuration;
-            _logger = logger;
+            _Logger = logger;
         }
 
         public async Task SyncBankAccountsAsync(CancellationToken cancellationToken)
@@ -71,7 +71,7 @@ namespace Application.BackgroundWorkers
                     var connectionResponse = await _connectionsService.GetAsync(connection.ConnectionId, cancellationToken);
                     if (connectionResponse.StatusCode != HttpStatusCode.OK || connectionResponse.Data == null)
                     {
-                        _logger.LogWarning("Cannot load Salt Edge connection {ConnectionId}.", connection.ConnectionId);
+                        _Logger.LogWarning("Cannot load Salt Edge connection {ConnectionId}.", connection.ConnectionId);
                         continue;
                     }
 
@@ -83,7 +83,7 @@ namespace Application.BackgroundWorkers
                     var accountsResponse = await _accountsService.GetAsync(connection.ConnectionId, cancellationToken);
                     if (accountsResponse.StatusCode != HttpStatusCode.OK || accountsResponse.Data == null)
                     {
-                        _logger.LogWarning("Cannot load Salt Edge accounts for connection {ConnectionId}.", connection.ConnectionId);
+                        _Logger.LogWarning("Cannot load Salt Edge accounts for connection {ConnectionId}.", connection.ConnectionId);
                         continue;
                     }
 
@@ -98,7 +98,7 @@ namespace Application.BackgroundWorkers
                         var postedTransactionsResponse = await _transactionsService.GetAsync(connection.ConnectionId, null, false, cancellationToken);
                         if (postedTransactionsResponse.StatusCode != HttpStatusCode.OK || postedTransactionsResponse.Data == null)
                         {
-                            _logger.LogWarning("Cannot load Salt Edge transactions for connection {ConnectionId}.", connection.ConnectionId);
+                            _Logger.LogWarning("Cannot load Salt Edge transactions for connection {ConnectionId}.", connection.ConnectionId);
                             continue;
                         }
 
@@ -150,7 +150,7 @@ namespace Application.BackgroundWorkers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
+                _Logger.LogError(ex, ex.Message);
                 await _unitOfWork.RollbackTransactionAsync();
             }
         }

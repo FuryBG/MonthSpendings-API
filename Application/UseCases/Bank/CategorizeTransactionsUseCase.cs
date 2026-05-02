@@ -1,10 +1,11 @@
-﻿using Application.Contracts;
+using Application.Contracts;
 using Application.Dto.Bank;
 using Application.Dto.Budget;
 using Application.Interfaces;
 using Application.Mappers;
 using Application.Services;
 using Domain;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Bank
 {
@@ -17,11 +18,13 @@ namespace Application.UseCases.Bank
     {
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
+        private readonly ILogger<CategorizeTransactionsUseCase> _Logger;
 
-        public CategorizeTransactionsUseCase(IUnitOfWork unitOfWork, IUserService userService)
+        public CategorizeTransactionsUseCase(IUnitOfWork unitOfWork, IUserService userService, ILogger<CategorizeTransactionsUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<SpendingDto?>> InvokeAsync(BankTransactionDto dto, CancellationToken cancellationToken)
@@ -29,14 +32,15 @@ namespace Application.UseCases.Bank
             var result = new CaseResult<SpendingDto?>();
             result.Successful = true;
 
+            int userId = 0;
             try
             {
-                int userId = _UserService.GetUserId();
+                userId = _UserService.GetUserId();
                 BudgetCategory? category = await _UnitOfWork.BudgetCategoryRepository.GetBudgetCategoryById(dto.CategoryId, userId);
 
                 if (category == null)
                 {
-                    Console.WriteLine($"Can't find category with id {dto.CategoryId} for user with Id: {userId}");
+                    _Logger.LogWarning("Category {CategoryId} not found for user {UserId} when categorizing transaction", dto.CategoryId, userId);
                     result.Successful = false;
                     result.ErrorMessage = "Something got wrong during categorize the transaction. Please try again later.";
                     return result;
@@ -48,7 +52,7 @@ namespace Application.UseCases.Bank
 
                 if (budgetPeriod == null)
                 {
-                    Console.WriteLine($"Can't find budget period for budget with id {category.Budget.Id} for user with Id: {userId}");
+                    _Logger.LogWarning("Active budget period not found for category {CategoryId}", dto.CategoryId);
                     result.Successful = false;
                     result.ErrorMessage = "Something got wrong during categorize the transaction. Please try again later.";
                     return result;
@@ -73,11 +77,12 @@ namespace Application.UseCases.Bank
                 result.Data.BankTransaction = dto;
                 result.Data.CreatedByEmail = currentUser.Email;
                 result.Data.CreatedByName = $"{currentUser.FirstName} {currentUser.LastName}".Trim();
+                _Logger.LogInformation("Transaction {TransactionId} categorized into category {CategoryId} by user {UserId}", dto.Id, dto.CategoryId, userId);
             }
             catch (Exception ex)
             {
                 await _UnitOfWork.RollbackTransactionAsync();
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error categorizing transaction for user {UserId}", userId);
                 result.Successful = false;
                 result.ErrorMessage = "Something got wrong during getting banks. Please try again later.";
             }

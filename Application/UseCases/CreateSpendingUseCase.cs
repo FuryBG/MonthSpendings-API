@@ -1,4 +1,4 @@
-﻿using Application.Contracts;
+using Application.Contracts;
 using Application.Dto.Budget;
 using Application.Dto.Notification;
 using Application.Enums;
@@ -6,6 +6,7 @@ using Application.Interfaces;
 using Application.Mappers;
 using Application.Services;
 using Domain;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases
 {
@@ -19,11 +20,14 @@ namespace Application.UseCases
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
         private IPushNotificationService _PushNotificationService { get; set; }
-        public CreateSpendingUseCase(IUnitOfWork unitOfWork, IUserService userService, IPushNotificationService pushNotificationService)
+        private readonly ILogger<CreateSpendingUseCase> _Logger;
+
+        public CreateSpendingUseCase(IUnitOfWork unitOfWork, IUserService userService, IPushNotificationService pushNotificationService, ILogger<CreateSpendingUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
             _PushNotificationService = pushNotificationService;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<SpendingDto?>> InvokeAsync(SpendingDto spendingDto)
@@ -31,14 +35,15 @@ namespace Application.UseCases
             var result = new CaseResult<SpendingDto?>();
             result.Successful = true;
 
+            int userId = 0;
             try
             {
-                int userId = _UserService.GetUserId();
+                userId = _UserService.GetUserId();
                 BudgetCategory? budgetCategory = await _UnitOfWork.BudgetCategoryRepository.GetBudgetCategoryById(spendingDto.BudgetCategoryId, userId);
 
                 if (budgetCategory == null)
                 {
-                    Console.WriteLine($"Can't find category with id {spendingDto.Id} to add spending.");
+                    _Logger.LogWarning("Category {CategoryId} not found for user {UserId} when creating spending", spendingDto.Id, userId);
                     result.Successful = false;
                     result.ErrorMessage = "Can't find the category to add spending.";
                     return result;
@@ -50,7 +55,7 @@ namespace Application.UseCases
 
                 if (spendingDto.Amount < 0 && newBalance < 0)
                 {
-                    Console.WriteLine($"Trying to spend: {spendingDto.Amount} but the balance is: {categoryBalance}");
+                    _Logger.LogWarning("Insufficient balance: attempted {Attempted}, available {Available} in category {CategoryId}", spendingDto.Amount, categoryBalance, spendingDto.Id);
                     result.Successful = false;
                     result.ErrorMessage = "Trying to spend more than the category balance.";
                     return result;
@@ -77,11 +82,12 @@ namespace Application.UseCases
                 result.Data.CreatedByEmail = currentUser.Email;
                 result.Data.CreatedByName = $"{currentUser.FirstName} {currentUser.LastName}".Trim();
                 await SendSpendingNotification(budgetUsersNotificationTokens, currentUser.Email, budgetCategory.Budget.Name, budgetCategory.Name, spendingDto.Amount);
+                _Logger.LogInformation("Spending {SpendingId} created: {Amount} in category {CategoryId} by user {UserId}", result.Data!.Id, spendingDto.Amount, spendingDto.Id, userId);
             }
             catch (Exception ex)
             {
                 await _UnitOfWork.RollbackTransactionAsync();
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error creating spending for user {UserId}", userId);
                 result.Successful = false;
                 result.ErrorMessage = "Something got wrong during getting budgets. Please try again later.";
             }

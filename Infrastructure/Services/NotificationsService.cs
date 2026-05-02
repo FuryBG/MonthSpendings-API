@@ -2,6 +2,7 @@
 using Application.Interfaces;
 using Expo.Server.Client;
 using Expo.Server.Models;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace Infrastructure.Services
@@ -9,9 +10,11 @@ namespace Infrastructure.Services
     public class PushNotificationsService : IPushNotificationService
     {
         private PushApiClient _Client { get; set; }
-        public PushNotificationsService()
+        private readonly ILogger<PushNotificationsService> _Logger;
+        public PushNotificationsService(ILogger<PushNotificationsService> logger)
         {
             _Client = new PushApiClient();
+            _Logger = logger;
         }
 
         public async Task<bool> SendNotification(List<string> expoPushNotificationTokens, string title, string body, NotificationDto notificationDto)
@@ -31,11 +34,12 @@ namespace Infrastructure.Services
             try
             {
                 var result = await _Client.PushSendAsync(pushTicketReq);
-                success = result.PushTicketErrors != null;
+                success = result.PushTicketErrors == null;
+                if (success) _Logger.LogInformation("Push notification sent to {TokenCount} device(s)", expoPushNotificationTokens.Count);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                _Logger.LogError(e, "Push notification send failed");
 
             }
             return success;

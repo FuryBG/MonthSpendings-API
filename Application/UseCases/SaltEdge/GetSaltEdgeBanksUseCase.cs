@@ -1,6 +1,7 @@
 using Application.Contracts;
 using Application.Dto.SaltEdge;
 using Application.Mappers;
+using Microsoft.Extensions.Logging;
 using SaltEdge.Interfaces;
 using SaltEdge.Models.Providers;
 
@@ -14,10 +15,12 @@ namespace Application.UseCases.SaltEdge
     public class GetSaltEdgeBanksUseCase : IGetSaltEdgeBanksUseCase
     {
         private readonly IProvidersService _ProvidersService;
+        private readonly ILogger<GetSaltEdgeBanksUseCase> _Logger;
 
-        public GetSaltEdgeBanksUseCase(IProvidersService providersService)
+        public GetSaltEdgeBanksUseCase(IProvidersService providersService, ILogger<GetSaltEdgeBanksUseCase> logger)
         {
             _ProvidersService = providersService;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<List<SaltEdgeProviderDto>>> InvokeAsync(string? bankName, CancellationToken cancellationToken)
@@ -46,10 +49,12 @@ namespace Application.UseCases.SaltEdge
                     .Where(p => string.Equals(p.Status, "active", StringComparison.OrdinalIgnoreCase))
                     .Select(p => p.ToDto())
                     .ToList();
+
+                _Logger.LogInformation("Retrieved {Count} SaltEdge providers for query '{Query}'", result.Data!.Count, bankName);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error retrieving SaltEdge providers");
                 result.Successful = false;
                 result.ErrorMessage = "Something got wrong during getting Salt Edge banks. Please try again later.";
             }

@@ -1,4 +1,4 @@
-﻿using Application.Contracts;
+using Application.Contracts;
 using Application.Dto.Budget;
 using Application.Dto.Notification;
 using Application.Enums;
@@ -6,6 +6,7 @@ using Application.Interfaces;
 using Application.Mappers;
 using Application.Services;
 using Domain;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases
 {
@@ -19,11 +20,13 @@ namespace Application.UseCases
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
         private IPushNotificationService _PushNotificationService { get; set; }
-        public UpdateBudgetCategoryNameUseCase(IUnitOfWork unitOfWork, IUserService userService, IPushNotificationService pushNotificationService)
+        private readonly ILogger<UpdateBudgetCategoryNameUseCase> _Logger;
+        public UpdateBudgetCategoryNameUseCase(IUnitOfWork unitOfWork, IUserService userService, IPushNotificationService pushNotificationService, ILogger<UpdateBudgetCategoryNameUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
             _PushNotificationService = pushNotificationService;
+            _Logger = logger;
         }
         public async Task<CaseResult<BudgetCategoryDto?>> InvokeAsync(int budgetCategoryId, string newName)
         {
@@ -37,7 +40,7 @@ namespace Application.UseCases
 
                 if (user == null)
                 {
-                    Console.WriteLine($"Can't find user with id {userId} to update name.");
+                    _Logger.LogWarning("User {UserId} not found when updating category name", userId);
                     result.Successful = false;
                     result.ErrorMessage = "Can't update the Budget Category.";
                     return result;
@@ -47,7 +50,7 @@ namespace Application.UseCases
 
                 if (budgetCategory == null)
                 {
-                    Console.WriteLine($"Can't find budget category with id {budgetCategoryId} to update name.");
+                    _Logger.LogWarning("Budget category {CategoryId} not found for name update", budgetCategoryId);
                     result.Successful = false;
                     result.ErrorMessage = "Can't find the Budget Category.";
                     return result;
@@ -59,13 +62,14 @@ namespace Application.UseCases
 
                 await _UnitOfWork.CommitAsync();
                 result.Data = budgetCategory.ToDto();
+                _Logger.LogInformation("Category {CategoryId} renamed to {NewName} by user {UserId}", budgetCategoryId, newName, userId);
 
                 List<string> notificationReceiversTokens = budgetCategory.Budget.Users.Select(u => u.NotificationToken).ToList();
                 await SendBudgetUpdateNotification(notificationReceiversTokens, user.Email, oldName, newName);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error updating category {CategoryId} name", budgetCategoryId);
                 result.Successful = false;
                 result.ErrorMessage = "Something got wrong during respond to Invite. Please try again later.";
             }

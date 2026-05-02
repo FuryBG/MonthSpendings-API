@@ -11,10 +11,12 @@ namespace MonthSpendings.Controllers
     {
         private ICreateBudgetInviteUseCase _CreateBudgetInviteUseCase;
         private IUpdateBudgetInviteResponseUseCase _UpdateBudgetInviteResponseUseCase;
-        public BudgetInviteController(ICreateBudgetInviteUseCase createBudgetInviteUseCase, IUpdateBudgetInviteResponseUseCase updateBudgetInviteResponseUseCase)
+        private readonly ILogger<BudgetInviteController> _Logger;
+        public BudgetInviteController(ICreateBudgetInviteUseCase createBudgetInviteUseCase, IUpdateBudgetInviteResponseUseCase updateBudgetInviteResponseUseCase, ILogger<BudgetInviteController> logger)
         {
             _CreateBudgetInviteUseCase = createBudgetInviteUseCase;
             _UpdateBudgetInviteResponseUseCase = updateBudgetInviteResponseUseCase;
+            _Logger = logger;
         }
 
         [Authorize]
@@ -22,7 +24,12 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Create(BudgetInviteDto budgetInviteDto)
         {
             var result = await _CreateBudgetInviteUseCase.InvokeAsync(budgetInviteDto);
-            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
+            if (!result.Successful)
+            {
+                _Logger.LogWarning("CreateBudgetInvite failed: {Error}", result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
+            }
+            return Ok(result.Data);
         }
 
         [Authorize]
@@ -30,7 +37,12 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Update(int inviteId, [FromBody] bool response)
         {
             var result = await _UpdateBudgetInviteResponseUseCase.InvokeAsync(inviteId, response);
-            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
+            if (!result.Successful)
+            {
+                _Logger.LogWarning("UpdateBudgetInviteResponse failed for invite {InviteId}: {Error}", inviteId, result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
+            }
+            return Ok(result.Data);
         }
 
         //[Authorize]

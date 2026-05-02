@@ -17,8 +17,12 @@ namespace Infrastructure.Repository
             return await _DbContext.Users
                 .Include(u => u.SentBudgetInvites)
                 .ThenInclude(bi => bi.Receiver)
+                .Include(u => u.SentBudgetInvites)
+                .ThenInclude(bi => bi.Budget)
                 .Include(u => u.ReceivedBudgetInvites)
                 .ThenInclude(bi => bi.Sender)
+                .Include(u => u.ReceivedBudgetInvites)
+                .ThenInclude(bi => bi.Budget)
                 .Where(u => u.Id == userId).FirstOrDefaultAsync();
         }
 

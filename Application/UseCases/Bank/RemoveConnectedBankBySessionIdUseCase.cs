@@ -1,7 +1,8 @@
-﻿using Application.Contracts;
+using Application.Contracts;
 using Application.Interfaces;
 using Application.Services;
 using Domain.Bank;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Bank
 {
@@ -14,11 +15,13 @@ namespace Application.UseCases.Bank
     {
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
+        private readonly ILogger<RemoveConnectedBankBySessionIdUseCase> _Logger;
 
-        public RemoveConnectedBankBySessionIdUseCase(IUnitOfWork unitOfWork, IUserService userService)
+        public RemoveConnectedBankBySessionIdUseCase(IUnitOfWork unitOfWork, IUserService userService, ILogger<RemoveConnectedBankBySessionIdUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<bool>> InvokeAsync(Guid sessionId, CancellationToken cancellationToken)
@@ -26,24 +29,27 @@ namespace Application.UseCases.Bank
             var result = new CaseResult<bool>();
             result.Successful = true;
 
+            int userId = 0;
             try
             {
-                int userId = _UserService.GetUserId();
+                userId = _UserService.GetUserId();
                 int deleted = await _UnitOfWork.BankConsentRepository.Delete(((BankConsent bankConsent) =>
                     bankConsent.SessionId == sessionId &&
                     bankConsent.UserId == userId), cancellationToken);
 
                 if (deleted <= 0)
                 {
-                    Console.WriteLine($"Can't delete bank consent with session id:  {sessionId} for user with Id: {userId}");
+                    _Logger.LogWarning("BankConsent with sessionId {SessionId} not found for user {UserId}", sessionId, userId);
                     result.Successful = false;
                     result.ErrorMessage = "Something got wrong during remove bank account. Please try again later.";
                     return result;
                 }
+
+                _Logger.LogInformation("Bank connection {SessionId} removed for user {UserId}", sessionId, userId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error removing bank connection {SessionId} for user {UserId}", sessionId, userId);
                 result.Successful = false;
                 result.ErrorMessage = "Something got wrong during remove bank account. Please try again later.";
             }

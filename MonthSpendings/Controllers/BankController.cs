@@ -2,6 +2,7 @@
 using EnableBanking.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace MonthSpendings.Controllers
 {
@@ -13,12 +14,14 @@ namespace MonthSpendings.Controllers
         private IStartBankConnectionUseCase _StartBankConnectionUseCase;
         private IRemoveConnectedBankBySessionIdUseCase _RemoveBankConnectionBySessionIdUseCase;
         private IGetBanksUseCase _GetBanksUseCase;
-        public BankController(IGetBanksUseCase getBanksUseCase, IStartBankConnectionUseCase startBankConnectionUseCase, IRemoveConnectedBankBySessionIdUseCase removeConnectedBankBySessionIdUseCase, IFinishBankConnectionUseCase finishBankConnectionUseCase, ISessionsService sessionsService)
+        private readonly ILogger<BankController> _Logger;
+        public BankController(IGetBanksUseCase getBanksUseCase, IStartBankConnectionUseCase startBankConnectionUseCase, IRemoveConnectedBankBySessionIdUseCase removeConnectedBankBySessionIdUseCase, IFinishBankConnectionUseCase finishBankConnectionUseCase, ISessionsService sessionsService, ILogger<BankController> logger)
         {
             _StartBankConnectionUseCase = startBankConnectionUseCase;
             _FinishBankConnectionUseCase = finishBankConnectionUseCase;
             _RemoveBankConnectionBySessionIdUseCase = removeConnectedBankBySessionIdUseCase;
             _GetBanksUseCase = getBanksUseCase;
+            _Logger = logger;
         }
 
         [Authorize]
@@ -33,6 +36,7 @@ namespace MonthSpendings.Controllers
             }
             else
             {
+                _Logger.LogWarning("GetBanks failed: {Error}", result.ErrorMessage);
                 return BadRequest(result.ErrorMessage);
             }
         }
@@ -49,6 +53,7 @@ namespace MonthSpendings.Controllers
             }
             else
             {
+                _Logger.LogWarning("StartBankConnection failed: {Error}", result.ErrorMessage);
                 return BadRequest(result.ErrorMessage);
             }
         }
@@ -58,7 +63,15 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Delete(Guid sessionId, CancellationToken cancellationToken)
         {
             var result = await _RemoveBankConnectionBySessionIdUseCase.InvokeAsync(sessionId, cancellationToken);
-            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
+            if (result.Successful)
+            {
+                return Ok(result.Data);
+            }
+            else
+            {
+                _Logger.LogWarning("RemoveBankConnection failed: {Error}", result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
+            }
         }
 
         [HttpGet("connect-callback")]
@@ -72,6 +85,7 @@ namespace MonthSpendings.Controllers
             }
             else
             {
+                _Logger.LogWarning("FinishBankConnection failed for state {State}", state);
                 return Redirect(result.Data!);
             }
         }

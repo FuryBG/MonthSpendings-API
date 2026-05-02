@@ -1,4 +1,4 @@
-﻿using Application.Contracts;
+using Application.Contracts;
 using Application.Interfaces;
 using Application.Services;
 using Domain.Bank;
@@ -6,6 +6,7 @@ using Domain.Bank.Enums;
 using EnableBanking.Interfaces;
 using EnableBanking.Models;
 using EnableBanking.Models.Sessions;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Bank
 {
@@ -17,14 +18,14 @@ namespace Application.UseCases.Bank
     public class FinishBankConnectionUseCase : IFinishBankConnectionUseCase
     {
         private IUnitOfWork _UnitOfWork { get; set; }
-        private IUserService _UserService { get; set; }
         private ISessionsService _SessionsService { get; set; }
+        private readonly ILogger<FinishBankConnectionUseCase> _Logger;
 
-        public FinishBankConnectionUseCase(IUnitOfWork unitOfWork, IUserService userService, ISessionsService sessionsService)
+        public FinishBankConnectionUseCase(IUnitOfWork unitOfWork, ISessionsService sessionsService, ILogger<FinishBankConnectionUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
-            _UserService = userService;
             _SessionsService = sessionsService;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<string>> InvokeAsync(Guid sessionId, string code)
@@ -38,7 +39,7 @@ namespace Application.UseCases.Bank
 
                 if (bankConsent == null)
                 {
-                    Console.WriteLine($"Cant find Bank Consent with id: {sessionId}.");
+                    _Logger.LogWarning("BankConsent not found for sessionId {SessionId}", sessionId);
                     result.Successful = false;
                     result.Data = "monthspendings://(main)/ConnectBankFail";
                     result.ErrorMessage = "Can't find initiated bank connection. Please try again.";
@@ -49,7 +50,7 @@ namespace Application.UseCases.Bank
 
                 if (authSessionResponse.StatusCode != System.Net.HttpStatusCode.OK || authSessionResponse.Data == null)
                 {
-                    Console.WriteLine(authSessionResponse.Error?.Detail);
+                    _Logger.LogError("EnableBanking AuthorizeSession failed: {ErrorDetail}", authSessionResponse.Error?.Detail);
                     result.Successful = false;
                     result.Data = "monthspendings://(main)/ConnectBankFail";
                     result.ErrorMessage = authSessionResponse.Error?.Message;
@@ -58,7 +59,7 @@ namespace Application.UseCases.Bank
 
                 if (authSessionResponse.Data.Accounts != null && authSessionResponse.Data.Accounts.All(account => account.Uid == null))
                 {
-                    Console.WriteLine("All accounts are with null AccountId.");
+                    _Logger.LogError("All accounts returned from EnableBanking have null AccountId for sessionId {SessionId}", sessionId);
                     result.Successful = false;
                     result.Data = "monthspendings://(main)/ConnectBankFail";
                     result.ErrorMessage = authSessionResponse.Error?.Message;
@@ -67,7 +68,7 @@ namespace Application.UseCases.Bank
 
                 if (authSessionResponse.StatusCode != System.Net.HttpStatusCode.OK || authSessionResponse.Data == null || authSessionResponse.Data.Accounts == null)
                 {
-                    Console.WriteLine(authSessionResponse.Error?.Detail);
+                    _Logger.LogError("EnableBanking account details failed: {ErrorDetail}", authSessionResponse.Error?.Detail);
                     bankConsent.State = BankAccountStatus.ConnectionFailed;
                     await _UnitOfWork.BankConsentRepository.Update(bankConsent);
                     result.Successful = false;
@@ -90,10 +91,11 @@ namespace Application.UseCases.Bank
                 await _UnitOfWork.BankConsentRepository.Update(bankConsent);
                 await _UnitOfWork.CommitAsync();
                 result.Data = "monthspendings://(main)/ConnectBankSuccess";
+                _Logger.LogInformation("Bank connection finished for sessionId {SessionId}: {AccountCount} accounts linked", sessionId, bankConsent.Accounts.Count);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error finishing bank connection for sessionId {SessionId}", sessionId);
                 result.Successful = false;
                 result.ErrorMessage = "Something got wrong during finish bank connection. Please try again later.";
             }

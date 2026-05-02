@@ -1,7 +1,8 @@
-﻿using Application.Contracts;
+using Application.Contracts;
 using EnableBanking.Interfaces;
 using EnableBanking.Models;
 using EnableBanking.Models.General;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Bank
 {
@@ -13,10 +14,12 @@ namespace Application.UseCases.Bank
     public class GetBanksUseCase : IGetBanksUseCase
     {
         private IGeneralService _GeneralService;
+        private readonly ILogger<GetBanksUseCase> _Logger;
 
-        public GetBanksUseCase(IGeneralService generalService)
+        public GetBanksUseCase(IGeneralService generalService, ILogger<GetBanksUseCase> logger)
         {
             _GeneralService = generalService;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<List<Aspsp>?>> InvokeAsync(string? bankName)
@@ -30,7 +33,7 @@ namespace Application.UseCases.Bank
 
                 if (aspsResponse.Error != null)
                 {
-                    Console.WriteLine($"Get Banks wrong response: {aspsResponse.Error.Detail}");
+                    _Logger.LogError("EnableBanking GetBanks failed: {ErrorDetail}", aspsResponse.Error.Detail);
                     result.ErrorMessage = aspsResponse.Error.Message;
                     result.Successful = false;
                     return result;
@@ -46,10 +49,12 @@ namespace Application.UseCases.Bank
                 {
                     result.Data = aspsResponse.Data?.Aspsps?.ToList();
                 }
+
+                _Logger.LogInformation("Retrieved {Count} banks for query '{Query}'", result.Data!.Count, bankName);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error retrieving banks");
                 result.Successful = false;
                 result.ErrorMessage = "Something got wrong during getting banks. Please try again later.";
             }

@@ -3,6 +3,7 @@ using Application.UseCases.Bank;
 using EnableBanking.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace MonthSpendings.Controllers
 {
@@ -12,10 +13,12 @@ namespace MonthSpendings.Controllers
     {
         private ICategorizeTransactionsUseCase _CategorizeTransactionsUseCase;
         private IGetUncategorizedTransactionsUseCase _GetUncategorizedTransactionsUseCase;
-        public TransactionsController(IGetUncategorizedTransactionsUseCase getUncategorizedTransactionsUseCase, ICategorizeTransactionsUseCase categorizeTransactionsUseCase)
+        private readonly ILogger<TransactionsController> _Logger;
+        public TransactionsController(IGetUncategorizedTransactionsUseCase getUncategorizedTransactionsUseCase, ICategorizeTransactionsUseCase categorizeTransactionsUseCase, ILogger<TransactionsController> logger)
         {
             _GetUncategorizedTransactionsUseCase = getUncategorizedTransactionsUseCase;
             _CategorizeTransactionsUseCase = categorizeTransactionsUseCase;
+            _Logger = logger;
         }
 
         [Authorize]
@@ -23,7 +26,9 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> GetBanks(CancellationToken cancellationToken)
         {
             var result = await _GetUncategorizedTransactionsUseCase.InvokeAsync(cancellationToken);
-            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
+            if (result.Successful) return Ok(result.Data);
+            _Logger.LogWarning("GetUncategorizedTransactions failed: {Error}", result.ErrorMessage);
+            return BadRequest(result.ErrorMessage);
         }
 
         [Authorize]
@@ -31,7 +36,9 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> UpdateTransaction([FromBody] BankTransactionDto transactionDto, CancellationToken cancellationToken)
         {
             var result = await _CategorizeTransactionsUseCase.InvokeAsync(transactionDto, cancellationToken);
-            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
+            if (result.Successful) return Ok(result.Data);
+            _Logger.LogWarning("CategorizeTransaction failed: {Error}", result.ErrorMessage);
+            return BadRequest(result.ErrorMessage);
         }
     }
 }

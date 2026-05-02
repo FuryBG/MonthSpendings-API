@@ -3,6 +3,7 @@ using Application.Dto.Savings;
 using Application.Interfaces;
 using Application.Mappers;
 using Application.Services;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Savings
 {
@@ -15,10 +16,12 @@ namespace Application.UseCases.Savings
     {
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
-        public GetSavingsHistoryUseCase(IUnitOfWork unitOfWork, IUserService userService)
+        private readonly ILogger<GetSavingsHistoryUseCase> _Logger;
+        public GetSavingsHistoryUseCase(IUnitOfWork unitOfWork, IUserService userService, ILogger<GetSavingsHistoryUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<SavingsHistoryDto?>> InvokeAsync(int potId)
@@ -57,10 +60,11 @@ namespace Application.UseCases.Savings
                     RunningTotal = allContributions.Sum(c => c.Amount),
                     Months = months,
                 };
+                _Logger.LogInformation("Savings history retrieved for pot {PotId} by user {UserId}", potId, userId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error getting savings history for pot {PotId}", potId);
                 result.Successful = false;
                 result.ErrorMessage = "Something went wrong while fetching savings history.";
             }

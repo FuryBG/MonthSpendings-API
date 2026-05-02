@@ -15,12 +15,14 @@ namespace MonthSpendings.Controllers
         private IGetAllBudgetsUseCase _GetAllBudgetsUseCase;
         private IDeleteBudgetUseCase _DeleteBudgetUseCase;
         private IFinishBudgetPeriodUseCase _FinishBudgetPeriodUseCase;
-        public BudgetController(ICreateBudgetUseCase createBudgetUseCase, IGetAllBudgetsUseCase getAllBudgetsUseCase, IDeleteBudgetUseCase deleteBudgetUseCase, IFinishBudgetPeriodUseCase finishBudgetPeriodUseCase)
+        private readonly ILogger<BudgetController> _Logger;
+        public BudgetController(ICreateBudgetUseCase createBudgetUseCase, IGetAllBudgetsUseCase getAllBudgetsUseCase, IDeleteBudgetUseCase deleteBudgetUseCase, IFinishBudgetPeriodUseCase finishBudgetPeriodUseCase, ILogger<BudgetController> logger)
         {
             _CreateBudgetUseCase = createBudgetUseCase;
             _GetAllBudgetsUseCase = getAllBudgetsUseCase;
             _DeleteBudgetUseCase = deleteBudgetUseCase;
             _FinishBudgetPeriodUseCase = finishBudgetPeriodUseCase;
+            _Logger = logger;
         }
 
         [Authorize]
@@ -28,16 +30,25 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> GetAllForUser()
         {
             var result = await _GetAllBudgetsUseCase.InvokeAsync();
-            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
+            if (!result.Successful)
+            {
+                _Logger.LogWarning("GetAllBudgets failed: {Error}", result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
+            }
+            return Ok(result.Data);
         }
 
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] BudgetDto budgetDto)
         {
-            Console.WriteLine(ModelState);
             var result = await _CreateBudgetUseCase.InvokeAsync(budgetDto);
-            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
+            if (!result.Successful)
+            {
+                _Logger.LogWarning("CreateBudget failed: {Error}", result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
+            }
+            return Ok(result.Data);
         }
 
         [Authorize]
@@ -45,16 +56,25 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> Delete([FromQuery] int budgetId)
         {
             var result = await _DeleteBudgetUseCase.InvokeAsync(budgetId);
-            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
+            if (!result.Successful)
+            {
+                _Logger.LogWarning("DeleteBudget failed for budget {BudgetId}: {Error}", budgetId, result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
+            }
+            return Ok(result.Data);
         }
 
         [Authorize]
         [HttpPost("finish")]
         public async Task<IActionResult> FinishPeriod([FromBody] FinishPeriodRequest request)
         {
-            Console.WriteLine(ModelState);
             var result = await _FinishBudgetPeriodUseCase.InvokeAsync(request.Budget, request.SavingsPotId);
-            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
+            if (!result.Successful)
+            {
+                _Logger.LogWarning("FinishBudgetPeriod failed: {Error}", result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
+            }
+            return Ok(result.Data);
         }
     }
 }

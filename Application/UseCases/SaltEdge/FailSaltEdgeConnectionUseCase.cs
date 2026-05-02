@@ -1,6 +1,7 @@
 using Application.Contracts;
 using Application.Interfaces;
 using Domain.SaltEdge.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.SaltEdge
 {
@@ -12,10 +13,12 @@ namespace Application.UseCases.SaltEdge
     public class FailSaltEdgeConnectionUseCase : IFailSaltEdgeConnectionUseCase
     {
         private readonly IUnitOfWork _UnitOfWork;
+        private readonly ILogger<FailSaltEdgeConnectionUseCase> _Logger;
 
-        public FailSaltEdgeConnectionUseCase(IUnitOfWork unitOfWork)
+        public FailSaltEdgeConnectionUseCase(IUnitOfWork unitOfWork, ILogger<FailSaltEdgeConnectionUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<bool>> InvokeAsync(Guid localSessionId, string? connectionId, string? errorClass, string? errorMessage, CancellationToken cancellationToken)
@@ -41,10 +44,12 @@ namespace Application.UseCases.SaltEdge
 
                 await _UnitOfWork.SaltEdgeConnectionRepository.UpdateAsync(connection, cancellationToken);
                 await _UnitOfWork.CommitAsync();
+
+                _Logger.LogInformation("SaltEdge connection marked as failed");
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error recording SaltEdge connection failure");
                 result.Successful = false;
                 result.Data = false;
                 result.ErrorMessage = "Something got wrong during failing Salt Edge bank connection. Please try again later.";

@@ -1,4 +1,4 @@
-﻿using Application.Contracts;
+using Application.Contracts;
 using Application.Interfaces;
 using Application.Services;
 using Domain;
@@ -6,6 +6,7 @@ using Domain.Bank;
 using EnableBanking.Interfaces;
 using EnableBanking.Models;
 using EnableBanking.Models.General;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Bank
 {
@@ -19,12 +20,14 @@ namespace Application.UseCases.Bank
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
         private IGeneralService _GeneralService;
+        private readonly ILogger<StartBankConnectionUseCase> _Logger;
 
-        public StartBankConnectionUseCase(IUnitOfWork unitOfWork, IUserService userService, IGeneralService generalService)
+        public StartBankConnectionUseCase(IUnitOfWork unitOfWork, IUserService userService, IGeneralService generalService, ILogger<StartBankConnectionUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
             _GeneralService = generalService;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<string?>> InvokeAsync(string bankName, string countryCode, string bankImageUrl, int maximumConsentValidity)
@@ -32,15 +35,16 @@ namespace Application.UseCases.Bank
             var result = new CaseResult<string?>();
             result.Successful = true;
 
+            int userId = 0;
             try
             {
-                int userId = _UserService.GetUserId();
+                userId = _UserService.GetUserId();
                 AppUser? existingUser = await _UnitOfWork.UserRepository.GetUserById(userId);
                 Guid sessionId = Guid.NewGuid();
 
                 if (existingUser == null)
                 {
-                    Console.WriteLine($"Unauthorized user tries to connect bank.");
+                    _Logger.LogWarning("Unauthorized bank connection attempt — no user ID");
                     result.Successful = false;
                     result.ErrorMessage = "Can't find your personal information. Please first login, to connect youyr bank.";
                     return result;
@@ -63,7 +67,7 @@ namespace Application.UseCases.Bank
 
                 if (resp.StatusCode != System.Net.HttpStatusCode.OK || resp.Data == null || resp.Data.Url == null || resp.Data.AuthorizationId == null)
                 {
-                    Console.WriteLine(resp.Error?.Detail);
+                    _Logger.LogError("EnableBanking StartAuthorization failed: {ErrorDetail}", resp.Error?.Detail);
                     result.Successful = false;
                     result.ErrorMessage = resp.Error?.Message;
                     return result;
@@ -82,10 +86,11 @@ namespace Application.UseCases.Bank
                 await _UnitOfWork.BankConsentRepository.CreateBankConsent(consent);
                 await _UnitOfWork.CommitAsync();
                 result.Data = resp.Data.Url.ToString();
+                _Logger.LogInformation("Bank connection initiated for user {UserId}", userId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error starting bank connection for user {UserId}", userId);
                 result.Successful = false;
                 result.ErrorMessage = "Something got wrong during starting bank connection. Please try again later.";
             }

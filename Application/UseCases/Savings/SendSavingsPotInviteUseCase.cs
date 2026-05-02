@@ -6,6 +6,7 @@ using Application.Interfaces;
 using Application.Mappers;
 using Application.Services;
 using Domain;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Savings
 {
@@ -19,11 +20,13 @@ namespace Application.UseCases.Savings
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
         private IPushNotificationService _PushNotificationService { get; set; }
-        public SendSavingsPotInviteUseCase(IUnitOfWork unitOfWork, IUserService userService, IPushNotificationService pushNotificationService)
+        private readonly ILogger<SendSavingsPotInviteUseCase> _Logger;
+        public SendSavingsPotInviteUseCase(IUnitOfWork unitOfWork, IUserService userService, IPushNotificationService pushNotificationService, ILogger<SendSavingsPotInviteUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
             _PushNotificationService = pushNotificationService;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<SavingsPotInviteDto?>> InvokeAsync(SavingsPotInviteDto dto)
@@ -70,10 +73,11 @@ namespace Application.UseCases.Savings
 
                 var loaded = await _UnitOfWork.SavingsPotInviteRepository.GetById(created.Id);
                 result.Data = loaded?.ToDto() ?? created.ToDto();
+                _Logger.LogInformation("Savings pot invite {InviteId} sent from user {SenderId}", created.Id, userId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error sending savings pot invite");
                 result.Successful = false;
                 result.ErrorMessage = "Something went wrong while sending the invite.";
             }

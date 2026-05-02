@@ -9,9 +9,11 @@ namespace MonthSpendings.Controllers
     public class StatisticsController : ControllerBase
     {
         private IGetPeriodComparisonUseCase _GetPeriodComparisonUseCase;
-        public StatisticsController(IGetPeriodComparisonUseCase getPeriodComparisonUseCase)
+        private readonly ILogger<StatisticsController> _Logger;
+        public StatisticsController(IGetPeriodComparisonUseCase getPeriodComparisonUseCase, ILogger<StatisticsController> logger)
         {
             _GetPeriodComparisonUseCase = getPeriodComparisonUseCase;
+            _Logger = logger;
         }
 
         [Authorize]
@@ -19,7 +21,12 @@ namespace MonthSpendings.Controllers
         public async Task<IActionResult> GetPeriodComparison([FromQuery] int budgetId)
         {
             var result = await _GetPeriodComparisonUseCase.InvokeAsync(budgetId);
-            return result.Successful ? Ok(result.Data) : BadRequest(result.ErrorMessage);
+            if (!result.Successful)
+            {
+                _Logger.LogWarning("GetPeriodComparison failed: {Error}", result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
+            }
+            return Ok(result.Data);
         }
     }
 }

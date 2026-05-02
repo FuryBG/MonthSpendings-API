@@ -2,6 +2,7 @@ using Application.Contracts;
 using Application.Interfaces;
 using Application.Services;
 using Domain;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Savings
 {
@@ -14,10 +15,12 @@ namespace Application.UseCases.Savings
     {
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
-        public UpdateSavingsPotInviteResponseUseCase(IUnitOfWork unitOfWork, IUserService userService)
+        private readonly ILogger<UpdateSavingsPotInviteResponseUseCase> _Logger;
+        public UpdateSavingsPotInviteResponseUseCase(IUnitOfWork unitOfWork, IUserService userService, ILogger<UpdateSavingsPotInviteResponseUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<bool>> InvokeAsync(int inviteId, bool accepted)
@@ -55,10 +58,11 @@ namespace Application.UseCases.Savings
 
                 await _UnitOfWork.CommitAsync();
                 result.Data = accepted;
+                _Logger.LogInformation("Savings pot invite {InviteId} {Response} by user {UserId}", inviteId, accepted ? "accepted" : "declined", userId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error updating savings pot invite {InviteId} response", inviteId);
                 result.Successful = false;
                 result.ErrorMessage = "Something went wrong while responding to the invite.";
             }

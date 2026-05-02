@@ -2,6 +2,7 @@ using Application.Contracts;
 using Application.Interfaces;
 using Domain.SaltEdge;
 using Domain.SaltEdge.Enums;
+using Microsoft.Extensions.Logging;
 using SaltEdge.Interfaces;
 using SaltEdge.Models.Accounts;
 using System.Net;
@@ -18,12 +19,14 @@ namespace Application.UseCases.SaltEdge
         private readonly IUnitOfWork _UnitOfWork;
         private readonly IConnectionsService _ConnectionsService;
         private readonly IAccountsService _AccountsService;
+        private readonly ILogger<FinishSaltEdgeConnectionUseCase> _Logger;
 
-        public FinishSaltEdgeConnectionUseCase(IUnitOfWork unitOfWork, IConnectionsService connectionsService, IAccountsService accountsService)
+        public FinishSaltEdgeConnectionUseCase(IUnitOfWork unitOfWork, IConnectionsService connectionsService, IAccountsService accountsService, ILogger<FinishSaltEdgeConnectionUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _ConnectionsService = connectionsService;
             _AccountsService = accountsService;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<bool>> InvokeAsync(string connectionId, Guid localSessionId, string? stage, CancellationToken cancellationToken)
@@ -91,10 +94,12 @@ namespace Application.UseCases.SaltEdge
 
                 await _UnitOfWork.SaltEdgeConnectionRepository.UpdateAsync(connection, cancellationToken);
                 await _UnitOfWork.CommitAsync();
+
+                _Logger.LogInformation("SaltEdge connection finished: {AccountCount} accounts linked", accounts.Count);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error finishing SaltEdge connection");
                 result.Successful = false;
                 result.Data = false;
                 result.ErrorMessage = "Something got wrong during finish Salt Edge bank connection. Please try again later.";

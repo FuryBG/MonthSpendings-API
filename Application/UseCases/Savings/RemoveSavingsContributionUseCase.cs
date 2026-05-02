@@ -1,6 +1,7 @@
 using Application.Contracts;
 using Application.Interfaces;
 using Application.Services;
+using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Savings
 {
@@ -13,10 +14,12 @@ namespace Application.UseCases.Savings
     {
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
-        public RemoveSavingsContributionUseCase(IUnitOfWork unitOfWork, IUserService userService)
+        private readonly ILogger<RemoveSavingsContributionUseCase> _Logger;
+        public RemoveSavingsContributionUseCase(IUnitOfWork unitOfWork, IUserService userService, ILogger<RemoveSavingsContributionUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
+            _Logger = logger;
         }
 
         public async Task<CaseResult<int>> InvokeAsync(int potId, int contributionId)
@@ -47,10 +50,11 @@ namespace Application.UseCases.Savings
                 _UnitOfWork.SavingsPotRepository.RemoveContribution(contribution);
                 await _UnitOfWork.CommitAsync();
                 result.Data = contributionId;
+                _Logger.LogInformation("Contribution {ContributionId} removed from pot {PotId} by user {UserId}", contributionId, potId, userId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _Logger.LogError(ex, "Error removing contribution {ContributionId}", contributionId);
                 result.Successful = false;
                 result.ErrorMessage = "Something went wrong while removing the contribution.";
             }

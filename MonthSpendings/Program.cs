@@ -218,8 +218,8 @@ public class Program
             builder.Services.AddTransient<ISaltEdgeAccountRepository, SaltEdgeAccountRepository>();
             builder.Services.AddTransient<ISaltEdgeTransactionRepository, SaltEdgeTransactionRepository>();
 
-            builder.Services.AddHostedService<TransactionSyncBackgroundService>();
-            builder.Services.AddHostedService<SaltEdgeTransactionSyncBackgroundService>();
+            //builder.Services.AddHostedService<TransactionSyncBackgroundService>();
+            //builder.Services.AddHostedService<SaltEdgeTransactionSyncBackgroundService>();
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(jwtOptions =>

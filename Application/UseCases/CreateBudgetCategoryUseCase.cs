@@ -42,8 +42,9 @@ namespace Application.UseCases
                     return result;
 
                 }
-
-                BudgetCategory addedCategory = _UnitOfWork.BudgetCategoryRepository.CreateCategory(budgetcategoryDto.ToEntity());
+                BudgetCategory newCategory = budgetcategoryDto.ToEntity();
+                newCategory.Spendings.ForEach(spending => spending.CreatedByUserId = userId);
+                BudgetCategory addedCategory = _UnitOfWork.BudgetCategoryRepository.CreateCategory(newCategory);
                 await _UnitOfWork.CommitAsync();
                 result.Data = addedCategory.ToDto();
                 _Logger.LogInformation("Category {CategoryId} created in budget {BudgetId} by user {UserId}", result.Data!.Id, budgetcategoryDto.BudgetId, userId);

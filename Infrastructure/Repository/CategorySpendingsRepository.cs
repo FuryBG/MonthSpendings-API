@@ -24,7 +24,7 @@ namespace Infrastructure.Repository
                 .Include(spending => spending.BudgetCategory)
                 .ThenInclude(category => category.Budget)
                 .ThenInclude(budget => budget.Users)
-                .Where(spending => spending.BudgetCategory.Budget.Users.Any(user => user.Id == userId) && spending.Id == spendingId)
+                .Where(spending => spending.BudgetCategory.Budget.Users.Any(user => user.Id == userId) && spending.Id == spendingId && !spending.BudgetCategory.IsDeleted)
                 .FirstOrDefaultAsync();
 
             return spending;

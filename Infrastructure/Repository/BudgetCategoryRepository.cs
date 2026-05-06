@@ -37,7 +37,8 @@ namespace Infrastructure.Repository
 
         public BudgetCategory DeleteCategory(BudgetCategory budgetCategory)
         {
-            _DbContext.BudgetCategories.Remove(budgetCategory);
+            budgetCategory.IsDeleted = true;
+            _DbContext.BudgetCategories.Update(budgetCategory);
             return budgetCategory;
         }
     }

@@ -28,8 +28,9 @@ namespace Infrastructure.Repository
             if (periods.Count == 0) return null;
 
             var categories = await _DbContext.BudgetCategories
+                .IgnoreQueryFilters()
                 .Where(c => c.BudgetId == budgetId)
-                .Select(c => new { c.Id, c.Name })
+                .Select(c => new { c.Id, c.Name, c.IsDeleted })
                 .ToListAsync();
 
             var currentPeriod = periods[0];
@@ -42,6 +43,7 @@ namespace Infrastructure.Repository
                 CategoryId = c.Id,
                 CategoryName = c.Name,
                 Amount = currentSpendingMap.GetValueOrDefault(c.Id, 0),
+                IsDeleted = c.IsDeleted,
             }).ToList();
 
             decimal currentTotal = currentCategoryDtos.Sum(c => c.Amount);
@@ -58,6 +60,7 @@ namespace Infrastructure.Repository
                     CategoryId = c.Id,
                     CategoryName = c.Name,
                     Amount = previousSpendingMap.GetValueOrDefault(c.Id, 0),
+                    IsDeleted = c.IsDeleted,
                 }).ToList();
 
                 previousTotal = previousCategoryDtos.Sum(c => c.Amount);

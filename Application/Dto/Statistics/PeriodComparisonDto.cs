@@ -36,5 +36,7 @@ namespace Application.Dto.Statistics
         public string CategoryName { get; set; } = "";
         [JsonPropertyName("amount")]
         public decimal Amount { get; set; }
+        [JsonPropertyName("isDeleted")]
+        public bool IsDeleted { get; set; }
     }
 }

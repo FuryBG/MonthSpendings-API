@@ -12,5 +12,6 @@ namespace Domain
         public int BudgetId { get; set; }
         public Budget Budget { get; set; } = null!;
         public required List<Spending> Spendings { get; set; }
+        public bool IsDeleted { get; set; }
     }
 }

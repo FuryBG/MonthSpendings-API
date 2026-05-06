@@ -33,6 +33,9 @@ namespace Infrastructure
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<BudgetCategory>()
+                .HasQueryFilter(c => !c.IsDeleted);
+
             modelBuilder.Entity<BankTransaction>()
             .HasOne(b => b.Spending)
             .WithOne(s => s.BankTransaction)

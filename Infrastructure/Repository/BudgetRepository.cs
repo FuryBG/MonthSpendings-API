@@ -71,7 +71,12 @@ namespace Infrastructure.Repository
 
         public Budget DeleteBudget(Budget budget)
         {
-            _DbContext.Budgets.Remove(budget);
+            budget.IsDeleted = true;
+            foreach (var category in budget.BudgetCategories)
+            {
+                category.IsDeleted = true;
+            }
+            _DbContext.Budgets.Update(budget);
             return budget;
         }
 

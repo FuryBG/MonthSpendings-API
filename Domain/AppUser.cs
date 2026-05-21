@@ -13,6 +13,9 @@ namespace Domain
         public string? LastName { get; set; }
         public string NotificationToken { get; set; } = "";
         public string GoogleId { get; set; } = "";
+        public DateTime LastVisited { get; set; } = DateTime.UtcNow;
+        public string Timezone { get; set; } = "UTC";
+        public DateTime? LastInactivityNotificationSentAt { get; set; }
         public string? GooglePhotoAddress { get; set; }
         public List<Budget> Budgets { get; set; } = [];
         public List<BudgetInvite> SentBudgetInvites { get; set; } = new();

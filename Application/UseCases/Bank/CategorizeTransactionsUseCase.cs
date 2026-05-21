@@ -5,6 +5,7 @@ using Application.Interfaces;
 using Application.Mappers;
 using Application.Services;
 using Domain;
+using Domain.Bank;
 using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Bank
@@ -73,6 +74,24 @@ namespace Application.UseCases.Bank
                 await _UnitOfWork.CommitAsync();
                 await _UnitOfWork.BankTransactionRepository.CategorizeAsync([dto.Id], spending.Id, cancellationToken);
                 await _UnitOfWork.CommitTransactionAsync();
+
+                if (dto.CreateRule)
+                {
+                    string? keyword = dto.CreditorName ?? dto.Description;
+                    if (!string.IsNullOrWhiteSpace(keyword))
+                    {
+                        TransactionCategoryRule rule = new TransactionCategoryRule
+                        {
+                            UserId = userId,
+                            Keyword = keyword.Trim(),
+                            CategoryId = dto.CategoryId,
+                        };
+                        await _UnitOfWork.TransactionCategoryRuleRepository.AddAsync(rule, cancellationToken);
+                        await _UnitOfWork.CommitAsync();
+                        _Logger.LogInformation("Created auto-categorization rule for keyword '{Keyword}' and category {CategoryId}", keyword, dto.CategoryId);
+                    }
+                }
+
                 result.Data = spending.ToDto();
                 result.Data.BankTransaction = dto;
                 result.Data.CreatedByEmail = currentUser.Email;

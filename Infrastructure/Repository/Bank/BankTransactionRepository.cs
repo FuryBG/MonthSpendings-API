@@ -42,6 +42,12 @@ namespace Infrastructure.Repository.Bank
                     && transaction.BankAccount.Consent.UserId == userId, cancellationToken);
         }
 
+        public Task<BankTransaction?> GetTransactionByTransactionId(string transactionId, CancellationToken cancellationToken)
+        {
+            return _DbContext.BankTransactions
+                .FirstOrDefaultAsync(t => t.TransactionId == transactionId, cancellationToken);
+        }
+
         public Task<int> CategorizeAsync(List<int> transactionIds, int spendingId, CancellationToken cancellationToken)
         {
             return _DbContext.BankTransactions

@@ -13,6 +13,8 @@ namespace Domain.Bank
         public required string Currency { get; set; }
         public decimal Amount { get; set; }
         public string? MerchantCode { get; set; }
+        public string? CreditorName { get; set; }
+        public string? Description { get; set; }
         public required TransactionStatus Status { get; set; }
         public DateTime BookingDate { get; set; }
         public bool Categorized { get; set; }

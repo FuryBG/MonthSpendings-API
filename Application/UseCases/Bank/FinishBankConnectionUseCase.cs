@@ -78,6 +78,7 @@ namespace Application.UseCases.Bank
                 }
 
                 bankConsent.State = BankAccountStatus.Connected;
+                bankConsent.LastSync = DateTime.UtcNow;
                 bankConsent.Accounts = authSessionResponse.Data.Accounts.Where(acc => acc.Uid.HasValue).Select(ba => new BankAccount()
                 {
                     AccountUuid = ba.Uid!.Value,

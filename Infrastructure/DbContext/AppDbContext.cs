@@ -17,6 +17,7 @@ namespace Infrastructure
         public DbSet<BankConsent> BankConsent { get; set; }
         public DbSet<BankAccount> BankAccounts { get; set; }
         public DbSet<BankTransaction> BankTransactions { get; set; }
+        public DbSet<TransactionCategoryRule> TransactionCategoryRules { get; set; }
         public DbSet<SaltEdgeCustomer> SaltEdgeCustomers { get; set; }
         public DbSet<SaltEdgeConnection> SaltEdgeConnections { get; set; }
         public DbSet<SaltEdgeAccount> SaltEdgeAccounts { get; set; }
@@ -44,6 +45,12 @@ namespace Infrastructure
             .WithOne(s => s.BankTransaction)
             .HasForeignKey<BankTransaction>(b => b.SpendingId)
             .IsRequired(false);
+
+            modelBuilder.Entity<TransactionCategoryRule>()
+            .HasOne(r => r.Category)
+            .WithMany()
+            .HasForeignKey(r => r.CategoryId)
+            .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<BankTransaction>()
                 .HasIndex(b => b.TransactionId)

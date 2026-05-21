@@ -19,6 +19,7 @@ namespace Infrastructure
         public IBankConsentRepository BankConsentRepository { get; private set; }
         public IBankAccountRepository BankAccountRepository { get; private set; }
         public IBankTransactionRepository BankTransactionRepository { get; private set; }
+        public ITransactionCategoryRuleRepository TransactionCategoryRuleRepository { get; private set; }
         public ISaltEdgeCustomerRepository SaltEdgeCustomerRepository { get; private set; }
         public ISaltEdgeConnectionRepository SaltEdgeConnectionRepository { get; private set; }
         public ISaltEdgeAccountRepository SaltEdgeAccountRepository { get; private set; }
@@ -38,6 +39,7 @@ namespace Infrastructure
             IBankConsentRepository bankConsentRepository,
             IBankAccountRepository bankAccountRepository,
             IBankTransactionRepository bankTransactionRepository,
+            ITransactionCategoryRuleRepository transactionCategoryRuleRepository,
             ISaltEdgeCustomerRepository saltEdgeCustomerRepository,
             ISaltEdgeConnectionRepository saltEdgeConnectionRepository,
             ISaltEdgeAccountRepository saltEdgeAccountRepository,
@@ -56,6 +58,7 @@ namespace Infrastructure
             BankConsentRepository = bankConsentRepository;
             BankAccountRepository = bankAccountRepository;
             BankTransactionRepository = bankTransactionRepository;
+            TransactionCategoryRuleRepository = transactionCategoryRuleRepository;
             SaltEdgeCustomerRepository = saltEdgeCustomerRepository;
             SaltEdgeConnectionRepository = saltEdgeConnectionRepository;
             SaltEdgeAccountRepository = saltEdgeAccountRepository;

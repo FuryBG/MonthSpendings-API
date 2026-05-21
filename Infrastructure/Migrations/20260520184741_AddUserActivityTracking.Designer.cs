@@ -3,6 +3,7 @@ using System;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260520184741_AddUserActivityTracking")]
+    partial class AddUserActivityTracking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -34,7 +37,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("UsersId");
 
-                    b.ToTable("AppUserBudget", (string)null);
+                    b.ToTable("AppUserBudget");
                 });
 
             modelBuilder.Entity("AppUserSavingsPot", b =>
@@ -49,7 +52,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("UsersId");
 
-                    b.ToTable("AppUserSavingsPot", (string)null);
+                    b.ToTable("AppUserSavingsPot");
                 });
 
             modelBuilder.Entity("Domain.AppUser", b =>
@@ -93,7 +96,7 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Domain.Bank.BankAccount", b =>
@@ -126,7 +129,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("ConsentId");
 
-                    b.ToTable("BankAccounts", (string)null);
+                    b.ToTable("BankAccounts");
                 });
 
             modelBuilder.Entity("Domain.Bank.BankConsent", b =>
@@ -173,7 +176,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("BankConsent", (string)null);
+                    b.ToTable("BankConsent");
                 });
 
             modelBuilder.Entity("Domain.Bank.BankTransaction", b =>
@@ -196,14 +199,8 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("Categorized")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("CreditorName")
-                        .HasColumnType("text");
-
                     b.Property<string>("Currency")
                         .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Description")
                         .HasColumnType("text");
 
                     b.Property<string>("MerchantCode")
@@ -229,34 +226,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex("TransactionId")
                         .IsUnique();
 
-                    b.ToTable("BankTransactions", (string)null);
-                });
-
-            modelBuilder.Entity("Domain.Bank.TransactionCategoryRule", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Keyword")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CategoryId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("TransactionCategoryRules", (string)null);
+                    b.ToTable("BankTransactions");
                 });
 
             modelBuilder.Entity("Domain.Budget", b =>
@@ -281,7 +251,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("CurrencyId");
 
-                    b.ToTable("Budgets", (string)null);
+                    b.ToTable("Budgets");
                 });
 
             modelBuilder.Entity("Domain.BudgetCategory", b =>
@@ -306,7 +276,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("BudgetId");
 
-                    b.ToTable("BudgetCategories", (string)null);
+                    b.ToTable("BudgetCategories");
                 });
 
             modelBuilder.Entity("Domain.BudgetInvite", b =>
@@ -342,7 +312,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("BudgetInvites", (string)null);
+                    b.ToTable("BudgetInvites");
                 });
 
             modelBuilder.Entity("Domain.BudgetPeriod", b =>
@@ -368,7 +338,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("BudgetId");
 
-                    b.ToTable("BudgetPeriods", (string)null);
+                    b.ToTable("BudgetPeriods");
                 });
 
             modelBuilder.Entity("Domain.Currency", b =>
@@ -393,7 +363,7 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Currencies", (string)null);
+                    b.ToTable("Currencies");
 
                     b.HasData(
                         new
@@ -743,7 +713,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("ConnectionId");
 
-                    b.ToTable("SaltEdgeAccounts", (string)null);
+                    b.ToTable("SaltEdgeAccounts");
                 });
 
             modelBuilder.Entity("Domain.SaltEdge.SaltEdgeConnection", b =>
@@ -817,7 +787,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SaltEdgeConnections", (string)null);
+                    b.ToTable("SaltEdgeConnections");
                 });
 
             modelBuilder.Entity("Domain.SaltEdge.SaltEdgeCustomer", b =>
@@ -847,7 +817,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("SaltEdgeCustomers", (string)null);
+                    b.ToTable("SaltEdgeCustomers");
                 });
 
             modelBuilder.Entity("Domain.SaltEdge.SaltEdgeTransaction", b =>
@@ -904,7 +874,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex("TransactionId")
                         .IsUnique();
 
-                    b.ToTable("SaltEdgeTransactions", (string)null);
+                    b.ToTable("SaltEdgeTransactions");
                 });
 
             modelBuilder.Entity("Domain.SavingsContribution", b =>
@@ -936,7 +906,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("SavingsPotId");
 
-                    b.ToTable("SavingsContributions", (string)null);
+                    b.ToTable("SavingsContributions");
                 });
 
             modelBuilder.Entity("Domain.SavingsPot", b =>
@@ -968,7 +938,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("CurrencyId");
 
-                    b.ToTable("SavingsPots", (string)null);
+                    b.ToTable("SavingsPots");
                 });
 
             modelBuilder.Entity("Domain.SavingsPotInvite", b =>
@@ -1004,7 +974,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("SavingsPotInvites", (string)null);
+                    b.ToTable("SavingsPotInvites");
                 });
 
             modelBuilder.Entity("Domain.Spending", b =>
@@ -1047,7 +1017,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("CreatedByUserId");
 
-                    b.ToTable("Spendings", (string)null);
+                    b.ToTable("Spendings");
                 });
 
             modelBuilder.Entity("AppUserBudget", b =>
@@ -1117,25 +1087,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("BankAccount");
 
                     b.Navigation("Spending");
-                });
-
-            modelBuilder.Entity("Domain.Bank.TransactionCategoryRule", b =>
-                {
-                    b.HasOne("Domain.BudgetCategory", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Domain.AppUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Domain.Budget", b =>

@@ -44,6 +44,7 @@ namespace Application.UseCases
                 }
 
                 BudgetCategory addedCategory = _UnitOfWork.BudgetCategoryRepository.DeleteCategory(budgetCategory);
+                await _UnitOfWork.TransactionCategoryRuleRepository.DeleteByCategoryIdAsync(budgetCategoryId, new CancellationToken());
                 await _UnitOfWork.CommitAsync();
                 result.Data = budgetCategoryId;
                 _Logger.LogInformation("Budget category {CategoryId} deleted by user {UserId}", budgetCategoryId, userId);

@@ -15,6 +15,7 @@ namespace Application.Interfaces
         IBankConsentRepository BankConsentRepository { get; }
         IBankAccountRepository BankAccountRepository { get; }
         IBankTransactionRepository BankTransactionRepository { get; }
+        ITransactionCategoryRuleRepository TransactionCategoryRuleRepository { get; }
         ISaltEdgeCustomerRepository SaltEdgeCustomerRepository { get; }
         ISaltEdgeConnectionRepository SaltEdgeConnectionRepository { get; }
         ISaltEdgeAccountRepository SaltEdgeAccountRepository { get; }

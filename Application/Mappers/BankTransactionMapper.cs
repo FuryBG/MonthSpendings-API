@@ -15,6 +15,8 @@ namespace Application.Mappers
                 Currency = transaction.Currency,
                 Amount = transaction.Amount,
                 MerchantCode = transaction.MerchantCode,
+                CreditorName = transaction.CreditorName,
+                Description = transaction.Description,
                 Status = transaction.Status.ToString(),
                 BookingDate = transaction.BookingDate,
                 Categorized = transaction.Categorized,

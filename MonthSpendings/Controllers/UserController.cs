@@ -1,5 +1,6 @@
 ﻿using Application.Dto;
 using Application.UseCases;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MonthSpendings.Controllers
@@ -10,11 +11,13 @@ namespace MonthSpendings.Controllers
     {
         private IRegisterUserUseCase _RegisterUseCase { get; set; }
         private IGetUserByIdUseCase _GetUserByIdUseCase { get; set; }
+        private IUpdateLastUserActivityUseCase _UpdateLastUserActivityUseCase { get; set; }
         private readonly ILogger<UserController> _Logger;
-        public UserController(IRegisterUserUseCase registerUseCase, IGetUserByIdUseCase getUserByIdUseCase, ILogger<UserController> logger)
+        public UserController(IRegisterUserUseCase registerUseCase, IGetUserByIdUseCase getUserByIdUseCase, IUpdateLastUserActivityUseCase updateLastUserActivityUseCase, ILogger<UserController> logger)
         {
             _RegisterUseCase = registerUseCase;
             _GetUserByIdUseCase = getUserByIdUseCase;
+            _UpdateLastUserActivityUseCase = updateLastUserActivityUseCase;
             _Logger = logger;
         }
 
@@ -41,6 +44,19 @@ namespace MonthSpendings.Controllers
             }
             _Logger.LogInformation("User registered successfully: {UserInfo}", result.Data);
             return Ok(result.Data);
+        }
+
+        [HttpPut("activity")]
+        [Authorize]
+        public async Task<IActionResult> UpdateActivity([FromBody] UpdateUserActivityDto dto)
+        {
+            var result = await _UpdateLastUserActivityUseCase.InvokeAsync(dto);
+            if (!result.Successful)
+            {
+                _Logger.LogWarning("UpdateActivity failed: {Error}", result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
+            }
+            return Ok();
         }
     }
 }

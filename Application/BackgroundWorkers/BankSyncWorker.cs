@@ -1,10 +1,10 @@
-﻿using Application.Interfaces;
+using Application.Interfaces;
+using Domain;
 using Domain.Bank;
 using Domain.Bank.Enums;
 using EnableBanking.Interfaces;
 using EnableBanking.Models;
 using EnableBanking.Models.Accounts;
-using EnableBanking.Models.Payments;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net;
@@ -52,51 +52,14 @@ namespace Application.BackgroundWorkers
                         break;
                     }
 
+                    List<TransactionCategoryRule> rules = await _UnitOfWork.TransactionCategoryRuleRepository
+                        .GetByUserIdAsync(bankConsent.UserId, cancellationToken);
+
                     foreach (BankAccount account in bankConsent.Accounts)
                     {
-                        GetTransactionsRequest request = new GetTransactionsRequest() { AccountId = account.AccountUuid, TransactionStatus = TransactionStatus.BOOK.ToString(), DateFrom = bankConsent.LastSync.AddDays(-5) };
-                        ApiResponse<GetTransactionsResponse> response = await _AccountService.GetTransactionsAsync(request, cancellationToken);
-
-                        if (response.StatusCode != HttpStatusCode.OK || response.Error != null ||
-                            response.Data == null || response.Data.Transactions == null)
-                        {
-                            _Logger.LogCritical($"Cannot get transactions for account with id: {account.Id}. Error message: {response.Error?.Message}");
-                            continue;
-                        }
-
-                        await _UnitOfWork.BeginTransactionAsync();
-
-                        Transaction[] expenseTransactions = response.Data.Transactions.Where(transaction => transaction.CreditDebitIndicator == "DBIT").ToArray();
-
-                        foreach (Transaction transaction in expenseTransactions)
-                        {
-                            bool isAmountParsed = decimal.TryParse(transaction.TransactionAmount?.Amount, out decimal amount);
-                            bool bookingDateParsed = DateTime.TryParse(transaction.BookingDate, out DateTime bookingDate);
-                            bool statusParsed = Enum.TryParse(transaction.Status, ignoreCase: true, out TransactionStatus transactionStatus);
-
-                            if (!isAmountParsed || !bookingDateParsed || !statusParsed)
-                            {
-                                _Logger.LogWarning($"Cannot parse transaction details amount: {transaction.TransactionAmount?.Amount}, bookingDate: {transaction.BookingDate}, status: {transaction.Status}");
-                                continue;
-                            }
-
-                            string transactionId = CalculateTransactionId(transaction, amount, bookingDate);
-
-                            BankTransaction bankTransaction = new BankTransaction()
-                            {
-                                Currency = account.Currency,
-                                Amount = amount,
-                                MerchantCode = transaction.MerchantCategoryCode,
-                                BookingDate = DateTime.SpecifyKind(bookingDate, DateTimeKind.Utc),
-                                TransactionId = transactionId,
-                                Status = transactionStatus,
-                                BankAccountId = account.Id,
-                            };
-
-                            await _UnitOfWork.BankTransactionRepository.AddTransaction(bankTransaction, cancellationToken);
-                        }
-                        await _UnitOfWork.CommitTransactionAsync();
+                        await SyncAccountAsync(bankConsent, account, rules, cancellationToken);
                     }
+
                     await _UnitOfWork.BankConsentRepository.MarkConsentsAsSyncedAsync([bankConsent.Id], DateTime.UtcNow, cancellationToken);
                 }
             }
@@ -107,27 +70,169 @@ namespace Application.BackgroundWorkers
             }
         }
 
-        private string CalculateTransactionId(Transaction transaction, decimal amount, DateTime bookingDate)
+        private async Task SyncAccountAsync(BankConsent bankConsent, BankAccount account, List<TransactionCategoryRule> rules, CancellationToken cancellationToken)
         {
-            string transactionId = "";
+            string? continuationKey = null;
+            do
+            {
+                GetTransactionsRequest request = new GetTransactionsRequest
+                {
+                    AccountId = account.AccountUuid,
+                    TransactionStatus = TransactionStatus.BOOK.ToString(),
+                    DateFrom = bankConsent.LastSync.AddDays(-5),
+                    ContinuationKey = continuationKey,
+                };
+
+                ApiResponse<GetTransactionsResponse> response = await _AccountService.GetTransactionsAsync(request, cancellationToken);
+
+                if (response.StatusCode != HttpStatusCode.OK || response.Error != null || response.Data == null)
+                {
+                    _Logger.LogCritical("Cannot get transactions for account {AccountId}. Error: {Error}", account.Id, response.Error?.Message);
+                    return;
+                }
+
+                if (response.Data.Transactions != null)
+                {
+                    await _UnitOfWork.BeginTransactionAsync();
+
+                    Transaction[] expenseTransactions = response.Data.Transactions
+                        .Where(t => t.CreditDebitIndicator == "DBIT")
+                        .ToArray();
+
+                    foreach (Transaction transaction in expenseTransactions)
+                    {
+                        bool isAmountParsed = decimal.TryParse(transaction.TransactionAmount?.Amount, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal amount);
+                        bool bookingDateParsed = DateTime.TryParse(transaction.BookingDate, out DateTime bookingDate);
+                        bool statusParsed = Enum.TryParse(transaction.Status, ignoreCase: true, out TransactionStatus transactionStatus);
+
+                        if (!isAmountParsed || !bookingDateParsed || !statusParsed)
+                        {
+                            _Logger.LogWarning("Cannot parse transaction fields — amount: {Amount}, bookingDate: {Date}, status: {Status}",
+                                transaction.TransactionAmount?.Amount, transaction.BookingDate, transaction.Status);
+                            continue;
+                        }
+
+                        string transactionId = CalculateTransactionId(transaction, amount, bookingDate);
+                        string? description = transaction.RemittanceInformation?.FirstOrDefault()
+                            ?? transaction.TransactionInformation
+                            ?? transaction.Note;
+
+                        BankTransaction bankTransaction = new BankTransaction
+                        {
+                            Currency = account.Currency,
+                            Amount = amount,
+                            MerchantCode = transaction.MerchantCategoryCode,
+                            CreditorName = transaction.Creditor?.Name,
+                            Description = description,
+                            BookingDate = DateTime.SpecifyKind(bookingDate, DateTimeKind.Utc),
+                            TransactionId = transactionId,
+                            Status = transactionStatus,
+                            BankAccountId = account.Id,
+                        };
+
+                        await _UnitOfWork.BankTransactionRepository.AddTransaction(bankTransaction, cancellationToken);
+                    }
+
+                    await _UnitOfWork.CommitTransactionAsync();
+
+                    await ApplyRulesAsync(expenseTransactions, account, bankConsent.UserId, rules, cancellationToken);
+                }
+
+                continuationKey = response.Data.ContinuationKey;
+            } while (!string.IsNullOrEmpty(continuationKey));
+        }
+
+        private async Task ApplyRulesAsync(Transaction[] transactions, BankAccount account, int userId, List<TransactionCategoryRule> rules, CancellationToken cancellationToken)
+        {
+            if (rules.Count == 0)
+            {
+                return;
+            }
+
+            foreach (Transaction transaction in transactions)
+            {
+                string searchText = string.Join(" ", new[] { transaction.Creditor?.Name, transaction.RemittanceInformation?.FirstOrDefault() ?? transaction.TransactionInformation ?? transaction.Note }
+                    .Where(s => !string.IsNullOrEmpty(s)));
+
+                if (string.IsNullOrEmpty(searchText))
+                {
+                    continue;
+                }
+
+                TransactionCategoryRule? matchedRule = rules.FirstOrDefault(r =>
+                    searchText.Contains(r.Keyword, StringComparison.OrdinalIgnoreCase));
+
+                if (matchedRule == null)
+                {
+                    continue;
+                }
+
+                bool isAmountParsed = decimal.TryParse(transaction.TransactionAmount?.Amount, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal amount);
+                bool bookingDateParsed = DateTime.TryParse(transaction.BookingDate, out DateTime bookingDate);
+
+                if (!isAmountParsed || !bookingDateParsed)
+                {
+                    continue;
+                }
+
+                string transactionId = CalculateTransactionId(transaction, amount, bookingDate);
+
+                BankTransaction? saved = await _UnitOfWork.BankTransactionRepository
+                    .GetTransactionByTransactionId(transactionId, cancellationToken);
+
+                if (saved == null || saved.Categorized)
+                {
+                    continue;
+                }
+
+                BudgetCategory? category = await _UnitOfWork.BudgetCategoryRepository
+                    .GetBudgetCategoryById(matchedRule.CategoryId, userId);
+
+                if (category == null)
+                {
+                    continue;
+                }
+
+                BudgetPeriod? period = category.Budget.BudgetPeriods.FirstOrDefault();
+                if (period == null)
+                {
+                    continue;
+                }
+
+                await _UnitOfWork.BeginTransactionAsync();
+
+                Spending spending = _UnitOfWork.CategorySpendingsRepository.AddSpending(new Spending
+                {
+                    Amount = saved.Amount,
+                    BankTransactionId = saved.Id,
+                    Date = saved.BookingDate,
+                    BudgetCategoryId = category.Id,
+                    BudgetPeriodId = period.Id,
+                    CreatedByUserId = userId,
+                });
+
+                await _UnitOfWork.CommitAsync();
+                await _UnitOfWork.BankTransactionRepository.CategorizeAsync([saved.Id], spending.Id, cancellationToken);
+                await _UnitOfWork.CommitTransactionAsync();
+
+                _Logger.LogInformation("Auto-categorized transaction {TransactionId} via rule {RuleId}", saved.Id, matchedRule.Id);
+            }
+        }
+
+        private static string CalculateTransactionId(Transaction transaction, decimal amount, DateTime bookingDate)
+        {
             if (!string.IsNullOrEmpty(transaction.EntryReference))
             {
-                transactionId += $"{transaction.EntryReference}/";
-            }
-            else if (!string.IsNullOrEmpty(transaction.ReferenceNumber))
-            {
-                transactionId = $"{transaction.ReferenceNumber}/";
-            }
-            else if (!string.IsNullOrEmpty(transaction.TransactionId))
-            {
-                transactionId = $"{transaction.TransactionId}/";
+                return $"{transaction.EntryReference}/{amount}/{transaction.TransactionAmount?.Currency}/{bookingDate:yyyy-MM-dd}";
             }
 
-            transactionId += $"{amount}/";
-            transactionId += $"{transaction.TransactionAmount?.Currency}";
-            transactionId += $"{bookingDate.ToString("yyyy/MM/dd/hh/mm/ss")}";
+            if (!string.IsNullOrEmpty(transaction.ReferenceNumber))
+            {
+                return $"{transaction.ReferenceNumber}/{amount}/{transaction.TransactionAmount?.Currency}/{bookingDate:yyyy-MM-dd}";
+            }
 
-            return transactionId;
+            // Fuzzy fingerprint per EnableBanking docs when no stable reference exists
+            return $"{bookingDate:yyyy-MM-dd}/{amount}/{transaction.TransactionAmount?.Currency}/{transaction.CreditDebitIndicator}";
         }
     }
 }

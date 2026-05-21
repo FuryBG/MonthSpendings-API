@@ -2,6 +2,7 @@ using Application.Contracts;
 using EnableBanking.Interfaces;
 using EnableBanking.Models;
 using EnableBanking.Models.General;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Bank
@@ -13,12 +14,17 @@ namespace Application.UseCases.Bank
 
     public class GetBanksUseCase : IGetBanksUseCase
     {
-        private IGeneralService _GeneralService;
+        private const string CacheKey = "enablebanking:aspsps";
+        private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(1);
+
+        private readonly IGeneralService _GeneralService;
+        private readonly IMemoryCache _Cache;
         private readonly ILogger<GetBanksUseCase> _Logger;
 
-        public GetBanksUseCase(IGeneralService generalService, ILogger<GetBanksUseCase> logger)
+        public GetBanksUseCase(IGeneralService generalService, IMemoryCache cache, ILogger<GetBanksUseCase> logger)
         {
             _GeneralService = generalService;
+            _Cache = cache;
             _Logger = logger;
         }
 
@@ -29,28 +35,27 @@ namespace Application.UseCases.Bank
 
             try
             {
-                ApiResponse<GetASPSPsResponse> aspsResponse = await _GeneralService.GetASPSPsAsync(new GetASPSPsRequest(), new CancellationToken());
-
-                if (aspsResponse.Error != null)
+                if (!_Cache.TryGetValue(CacheKey, out List<Aspsp>? allAspsps))
                 {
-                    _Logger.LogError("EnableBanking GetBanks failed: {ErrorDetail}", aspsResponse.Error.Detail);
-                    result.ErrorMessage = aspsResponse.Error.Message;
-                    result.Successful = false;
-                    return result;
+                    ApiResponse<GetASPSPsResponse> aspsResponse = await _GeneralService.GetASPSPsAsync(new GetASPSPsRequest(), new CancellationToken());
+
+                    if (aspsResponse.Error != null)
+                    {
+                        _Logger.LogError("EnableBanking GetBanks failed: {ErrorDetail}", aspsResponse.Error.Detail);
+                        result.ErrorMessage = aspsResponse.Error.Message;
+                        result.Successful = false;
+                        return result;
+                    }
+
+                    allAspsps = aspsResponse.Data?.Aspsps?.ToList() ?? [];
+                    _Cache.Set(CacheKey, allAspsps, CacheTtl);
                 }
 
-                if (bankName != null)
-                {
-                    result.Data = aspsResponse.Data?.Aspsps?
-                    .Where(bank => bank.Name != null && bank.Name.ToLower().Contains(bankName.ToLower()))
-                    .ToList();
-                }
-                else
-                {
-                    result.Data = aspsResponse.Data?.Aspsps?.ToList();
-                }
+                result.Data = bankName == null
+                    ? allAspsps
+                    : allAspsps!.Where(b => b.Name != null && b.Name.Contains(bankName, StringComparison.OrdinalIgnoreCase)).ToList();
 
-                _Logger.LogInformation("Retrieved {Count} banks for query '{Query}'", result.Data!.Count, bankName);
+                _Logger.LogInformation("Retrieved {Count} banks for query '{Query}'", result.Data?.Count, bankName);
             }
             catch (Exception ex)
             {

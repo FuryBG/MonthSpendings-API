@@ -41,5 +41,12 @@ namespace Infrastructure.Repository
             _DbContext.Users.Add(user);
             return user;
         }
+
+        public async Task<List<AppUser>> GetAllUsersWithNotificationTokenAsync()
+        {
+            return await _DbContext.Users
+                .Where(u => u.NotificationToken != "")
+                .ToListAsync();
+        }
     }
 }

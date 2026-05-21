@@ -7,6 +7,7 @@ namespace Application.Interfaces.Repository.Bank
         Task<BankTransaction> AddTransaction(BankTransaction bankTransaction, CancellationToken cancellationToken);
         Task<List<BankTransaction>> GetUncategorizedTransactionsByUser(int userId, CancellationToken cancellationToken);
         Task<BankTransaction?> GetTransactionById(int transactionId, int userId, CancellationToken cancellationToken);
+        Task<BankTransaction?> GetTransactionByTransactionId(string transactionId, CancellationToken cancellationToken);
         Task<int> CategorizeAsync(List<int> transactionIds, int spendingId, CancellationToken cancellationToken);
     }
 }

@@ -22,6 +22,12 @@ namespace Application.Dto.Bank
         [JsonPropertyName("merchantCode")]
         public string? MerchantCode { get; set; }
 
+        [JsonPropertyName("creditorName")]
+        public string? CreditorName { get; set; }
+
+        [JsonPropertyName("description")]
+        public string? Description { get; set; }
+
         [JsonPropertyName("status")]
         public string Status { get; set; } = string.Empty;
 
@@ -30,7 +36,11 @@ namespace Application.Dto.Bank
 
         [JsonPropertyName("categorized")]
         public bool Categorized { get; set; }
+
         [JsonPropertyName("categoryId")]
         public int CategoryId { get; set; }
+
+        [JsonPropertyName("createRule")]
+        public bool CreateRule { get; set; }
     }
 }

@@ -6,6 +6,7 @@
         InviteResponse,
         SpendingAdd,
         SpendingDelete,
-        BudgetCategoryUpdate
+        BudgetCategoryUpdate,
+        InactivityReminder
     }
 }

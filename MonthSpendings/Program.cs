@@ -9,6 +9,7 @@ using Application.UseCases.Bank;
 using Application.UseCases.SaltEdge;
 using Application.UseCases.Savings;
 using Application.UseCases.Statistics;
+using Application.UseCases.TransactionRules;
 using EnableBanking;
 using Infrastructure;
 using Infrastructure.Interceptors;
@@ -124,6 +125,7 @@ public class Program
 
             builder.Services.AddTransient<IRegisterUserUseCase, RegisterUserUseCase>();
             builder.Services.AddTransient<IGetUserByIdUseCase, GetUserByIdUseCase>();
+            builder.Services.AddTransient<IUpdateLastUserActivityUseCase, UpdateLastUserActivityUseCase>();
             builder.Services.AddTransient<ICreateBudgetUseCase, CreateBudgetUseCase>();
             builder.Services.AddTransient<IGetAllBudgetsUseCase, GetAllBudgetsUseCase>();
             builder.Services.AddTransient<IDeleteBudgetUseCase, DeleteBudgetUseCase>();
@@ -193,12 +195,17 @@ public class Program
                 options.BaseUrl = saltEdgeBaseUrl;
             });
 
+            builder.Services.AddMemoryCache();
+
             builder.Services.AddTransient<IGetBanksUseCase, GetBanksUseCase>();
             builder.Services.AddTransient<IStartBankConnectionUseCase, StartBankConnectionUseCase>();
             builder.Services.AddTransient<IFinishBankConnectionUseCase, FinishBankConnectionUseCase>();
             builder.Services.AddTransient<ICategorizeTransactionsUseCase, CategorizeTransactionsUseCase>();
             builder.Services.AddTransient<IGetUncategorizedTransactionsUseCase, GetUncategorizedTransactionsUseCase>();
             builder.Services.AddTransient<IRemoveConnectedBankBySessionIdUseCase, RemoveConnectedBankBySessionIdUseCase>();
+            builder.Services.AddTransient<IGetTransactionCategoryRulesUseCase, GetTransactionCategoryRulesUseCase>();
+            builder.Services.AddTransient<ICreateTransactionCategoryRuleUseCase, CreateTransactionCategoryRuleUseCase>();
+            builder.Services.AddTransient<IDeleteTransactionCategoryRuleUseCase, DeleteTransactionCategoryRuleUseCase>();
             builder.Services.AddTransient<IBankSyncWorker, BankSyncWorker>();
 
             builder.Services.AddTransient<IGetSaltEdgeBanksUseCase, GetSaltEdgeBanksUseCase>();
@@ -213,6 +220,7 @@ public class Program
             builder.Services.AddTransient<IBankConsentRepository, BankConsentRepository>();
             builder.Services.AddTransient<IBankAccountRepository, BankAccountRepository>();
             builder.Services.AddTransient<IBankTransactionRepository, BankTransactionRepository>();
+            builder.Services.AddTransient<ITransactionCategoryRuleRepository, TransactionCategoryRuleRepository>();
             builder.Services.AddTransient<ISaltEdgeCustomerRepository, SaltEdgeCustomerRepository>();
             builder.Services.AddTransient<ISaltEdgeConnectionRepository, SaltEdgeConnectionRepository>();
             builder.Services.AddTransient<ISaltEdgeAccountRepository, SaltEdgeAccountRepository>();
@@ -220,6 +228,7 @@ public class Program
 
             //builder.Services.AddHostedService<TransactionSyncBackgroundService>();
             //builder.Services.AddHostedService<SaltEdgeTransactionSyncBackgroundService>();
+            builder.Services.AddHostedService<InactivityNotificationBackgroundService>();
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(jwtOptions =>

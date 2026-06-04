@@ -28,6 +28,13 @@ namespace Application.UseCases
             var result = new CaseResult<string?>();
             result.Successful = true;
 
+            if (googleUserDto == null || string.IsNullOrEmpty(googleUserDto.Id))
+            {
+                result.Successful = false;
+                result.ErrorMessage = "Invalid Google credentials.";
+                return result;
+            }
+
             try
             {
                 AppUser? user = await _UnitOfWork.UserRepository.GetUserByGoogleId(googleUserDto.Id);

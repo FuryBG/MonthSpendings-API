@@ -58,7 +58,7 @@ namespace Application.UseCases
 
                 AppUser? receiver = await _UnitOfWork.UserRepository.GetUserByEmail(budgetInviteDto.ReceiverEmail);
 
-                if (receiver == null || receiver.NotificationToken == null || receiver.NotificationToken == string.Empty)
+                if (receiver == null)
                 {
                     _Logger.LogWarning("Receiver {ReceiverId} not found when creating budget invite", budgetInviteDto.ReceiverEmail);
                     result.Successful = false;
@@ -73,7 +73,11 @@ namespace Application.UseCases
                 BudgetInvite createdInvite = _UnitOfWork.BudgetInviteRepository.CreateInvite(budgetInvite);
 
                 await _UnitOfWork.CommitAsync();
-                await SendBudgetInviteNotification(receiver.NotificationToken);
+
+                if (receiver.NotificationToken != null && receiver.NotificationToken != string.Empty)
+                {
+                    await SendBudgetInviteNotification(receiver.NotificationToken);
+                }
 
                 result.Data = createdInvite.ToDto();
                 _Logger.LogInformation("Budget invite {InviteId} sent from {SenderId} to {ReceiverId} for budget {BudgetId}", result.Data!.Id, userId, budgetInviteDto.ReceiverEmail, budgetInviteDto.BudgetId);

@@ -10,7 +10,7 @@ services:
       ConnectionStrings__AppDb: "Host=db;Port=5432;Database=monthspendingsdb;Username=postgres;Password=postgres"
 
   db:
-    image: postgres:16
+    image: postgres:18
     restart: always
     environment:
       POSTGRES_USER: postgres

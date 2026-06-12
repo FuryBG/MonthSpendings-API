@@ -42,4 +42,8 @@
     <ProjectReference Include="..\SaltEdge\SaltEdge\SaltEdge.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Certificates\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

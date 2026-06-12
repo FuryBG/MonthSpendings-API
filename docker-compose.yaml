@@ -7,19 +7,19 @@ services:
       db:
         condition: service_healthy
     environment:
-      ConnectionStrings__AppDb: "Host=db;Port=5432;Database=monthspendingsdb;Username=postgres;Password=postgres"
+      ConnectionStrings__AppDb: "Host=db;Port=5432;Database=monthspendingsdb;Username=postgres;Password=RWRpbjRvdmVrd2VpZGlvdC4="
 
   db:
     image: postgres:18
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: "RWRpbjRvdmVrd2VpZGlvdC4="
       POSTGRES_DB: monthspendingsdb
     volumes:
       - pgdata:/var/lib/postgresql
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d monthspendingsdb"]
       interval: 5s

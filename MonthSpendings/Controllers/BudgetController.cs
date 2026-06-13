@@ -68,7 +68,7 @@ namespace MonthSpendings.Controllers
         [HttpPost("finish")]
         public async Task<IActionResult> FinishPeriod([FromBody] FinishPeriodRequest request)
         {
-            var result = await _FinishBudgetPeriodUseCase.InvokeAsync(request.Budget, request.SavingsPotId);
+            var result = await _FinishBudgetPeriodUseCase.InvokeAsync(request.Budget);
             if (!result.Successful)
             {
                 _Logger.LogWarning("FinishBudgetPeriod failed: {Error}", result.ErrorMessage);

@@ -20,8 +20,6 @@ namespace Application.Interfaces
         ISaltEdgeConnectionRepository SaltEdgeConnectionRepository { get; }
         ISaltEdgeAccountRepository SaltEdgeAccountRepository { get; }
         ISaltEdgeTransactionRepository SaltEdgeTransactionRepository { get; }
-        ISavingsPotRepository SavingsPotRepository { get; }
-        ISavingsPotInviteRepository SavingsPotInviteRepository { get; }
         IStatisticsRepository StatisticsRepository { get; }
 
         Task CommitAsync();

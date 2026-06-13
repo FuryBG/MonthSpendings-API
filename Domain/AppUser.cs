@@ -22,8 +22,5 @@ namespace Domain
         public List<BudgetInvite> ReceivedBudgetInvites { get; set; } = new();
         public List<BankConsent> BankConsents { get; set; } = new();
         public List<Spending> CreatedSpendings { get; set; } = new();
-        public List<SavingsPot> SavingsPots { get; set; } = new();
-        public List<SavingsPotInvite> SentSavingsPotInvites { get; set; } = new();
-        public List<SavingsPotInvite> ReceivedSavingsPotInvites { get; set; } = new();
     }
 }

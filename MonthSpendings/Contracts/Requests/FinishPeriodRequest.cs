@@ -7,7 +7,5 @@ namespace MonthSpendings.Contracts.Requests
     {
         [JsonPropertyName("budget")]
         public BudgetDto Budget { get; set; } = null!;
-        [JsonPropertyName("savingsPotId")]
-        public int? SavingsPotId { get; set; }
     }
 }

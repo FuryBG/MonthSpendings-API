@@ -22,9 +22,6 @@ namespace Infrastructure
         public DbSet<SaltEdgeConnection> SaltEdgeConnections { get; set; }
         public DbSet<SaltEdgeAccount> SaltEdgeAccounts { get; set; }
         public DbSet<SaltEdgeTransaction> SaltEdgeTransactions { get; set; }
-        public DbSet<SavingsPot> SavingsPots { get; set; }
-        public DbSet<SavingsContribution> SavingsContributions { get; set; }
-        public DbSet<SavingsPotInvite> SavingsPotInvites { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -118,43 +115,6 @@ namespace Infrastructure
             .HasOne(s => s.CreatedBy)
             .WithMany(u => u.CreatedSpendings)
             .HasForeignKey(s => s.CreatedByUserId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<SavingsPot>()
-            .HasMany(sp => sp.Users)
-            .WithMany(u => u.SavingsPots)
-            .UsingEntity("AppUserSavingsPot");
-
-            modelBuilder.Entity<SavingsPot>()
-            .HasOne(sp => sp.CreatedBy)
-            .WithMany()
-            .HasForeignKey(sp => sp.CreatedByUserId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<SavingsPot>()
-            .Property(sp => sp.CreatedAt)
-            .HasDefaultValueSql("timezone('utc', now())");
-
-            modelBuilder.Entity<SavingsPotInvite>()
-            .HasOne(i => i.Sender)
-            .WithMany(u => u.SentSavingsPotInvites)
-            .HasForeignKey(i => i.SenderId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<SavingsPotInvite>()
-            .HasOne(i => i.Receiver)
-            .WithMany(u => u.ReceivedSavingsPotInvites)
-            .HasForeignKey(i => i.ReceiverId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<SavingsPotInvite>()
-            .Property(i => i.ValidTo)
-            .HasDefaultValueSql("timezone('utc', now()) + INTERVAL '2 days'");
-
-            modelBuilder.Entity<SavingsContribution>()
-            .HasOne(c => c.AddedBy)
-            .WithMany()
-            .HasForeignKey(c => c.AddedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Currency>().HasData(

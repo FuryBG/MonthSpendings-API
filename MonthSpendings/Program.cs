@@ -7,7 +7,6 @@ using Application.Services;
 using Application.UseCases;
 using Application.UseCases.Bank;
 using Application.UseCases.SaltEdge;
-using Application.UseCases.Savings;
 using Application.UseCases.Statistics;
 using Application.UseCases.TransactionRules;
 using EnableBanking;
@@ -120,8 +119,6 @@ public class Program
             builder.Services.AddTransient<IBudgetInviteRepository, BudgetInviteRepository>();
             builder.Services.AddTransient<ICurrencyRepository, CurrencyRepository>();
             builder.Services.AddTransient<IStatisticsRepository, StatisticsRepository>();
-            builder.Services.AddTransient<ISavingsPotRepository, SavingsPotRepository>();
-            builder.Services.AddTransient<ISavingsPotInviteRepository, SavingsPotInviteRepository>();
 
             builder.Services.AddTransient<IRegisterUserUseCase, RegisterUserUseCase>();
             builder.Services.AddTransient<IGetUserByIdUseCase, GetUserByIdUseCase>();
@@ -139,14 +136,6 @@ public class Program
             builder.Services.AddTransient<IUpdateBudgetInviteResponseUseCase, UpdateBudgetInviteResponseUseCase>();
             builder.Services.AddTransient<IGetAllCurrenciesUseCase, GetAllCurrenciesUseCase>();
             builder.Services.AddTransient<IGetPeriodComparisonUseCase, GetPeriodComparisonUseCase>();
-            builder.Services.AddTransient<IGetAllSavingsPotsUseCase, GetAllSavingsPotsUseCase>();
-            builder.Services.AddTransient<ICreateSavingsPotUseCase, CreateSavingsPotUseCase>();
-            builder.Services.AddTransient<IDeleteSavingsPotUseCase, DeleteSavingsPotUseCase>();
-            builder.Services.AddTransient<IAddSavingsContributionUseCase, AddSavingsContributionUseCase>();
-            builder.Services.AddTransient<IRemoveSavingsContributionUseCase, RemoveSavingsContributionUseCase>();
-            builder.Services.AddTransient<IGetSavingsHistoryUseCase, GetSavingsHistoryUseCase>();
-            builder.Services.AddTransient<ISendSavingsPotInviteUseCase, SendSavingsPotInviteUseCase>();
-            builder.Services.AddTransient<IUpdateSavingsPotInviteResponseUseCase, UpdateSavingsPotInviteResponseUseCase>();
 
             string? bankingCertificatePath = builder.Configuration.GetSection("EnableBanking:AppCertPath").Value;
             string? bankingAppKeyId = builder.Configuration.GetSection("EnableBanking:AppKeyId").Value;

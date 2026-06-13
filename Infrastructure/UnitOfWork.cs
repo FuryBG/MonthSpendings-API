@@ -24,8 +24,6 @@ namespace Infrastructure
         public ISaltEdgeConnectionRepository SaltEdgeConnectionRepository { get; private set; }
         public ISaltEdgeAccountRepository SaltEdgeAccountRepository { get; private set; }
         public ISaltEdgeTransactionRepository SaltEdgeTransactionRepository { get; private set; }
-        public ISavingsPotRepository SavingsPotRepository { get; private set; }
-        public ISavingsPotInviteRepository SavingsPotInviteRepository { get; private set; }
         public IStatisticsRepository StatisticsRepository { get; private set; }
 
         public UnitOfWork(
@@ -44,8 +42,6 @@ namespace Infrastructure
             ISaltEdgeConnectionRepository saltEdgeConnectionRepository,
             ISaltEdgeAccountRepository saltEdgeAccountRepository,
             ISaltEdgeTransactionRepository saltEdgeTransactionRepository,
-            ISavingsPotRepository savingsPotRepository,
-            ISavingsPotInviteRepository savingsPotInviteRepository,
             IStatisticsRepository statisticsRepository)
         {
             _DbContext = dbContext;
@@ -63,8 +59,6 @@ namespace Infrastructure
             SaltEdgeConnectionRepository = saltEdgeConnectionRepository;
             SaltEdgeAccountRepository = saltEdgeAccountRepository;
             SaltEdgeTransactionRepository = saltEdgeTransactionRepository;
-            SavingsPotRepository = savingsPotRepository;
-            SavingsPotInviteRepository = savingsPotInviteRepository;
             StatisticsRepository = statisticsRepository;
         }
 

@@ -217,7 +217,7 @@ public class Program
 
             //builder.Services.AddHostedService<TransactionSyncBackgroundService>();
             //builder.Services.AddHostedService<SaltEdgeTransactionSyncBackgroundService>();
-            //builder.Services.AddHostedService<InactivityNotificationBackgroundService>();
+            builder.Services.AddHostedService<InactivityNotificationBackgroundService>();
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(jwtOptions =>

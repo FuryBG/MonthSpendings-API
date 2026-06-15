@@ -24,7 +24,7 @@ namespace MonthSpendings.BackgroundServices
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _Logger.LogInformation("TransactionSyncBackgroundService started — interval: {IntervalMinutes} min", _IntervalInMinutes);
-            //await Task.Delay(TimeSpan.FromSeconds(15), stoppingToken);
+            await Task.Delay(TimeSpan.FromMinutes(_IntervalInMinutes), stoppingToken);
             while (!stoppingToken.IsCancellationRequested)
             {
                 try

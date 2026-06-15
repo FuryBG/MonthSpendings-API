@@ -69,7 +69,6 @@ namespace Application.UseCases.Bank
                     State = sessionId.ToString(),
                     Language = "en",
                     RedirectUrl = new Uri(redirectUrl),
-                    CredentialsAutosubmit = true,
                     Aspsp = new Aspsp()
                     {
                         Name = bankName,

@@ -8,6 +8,7 @@ using EnableBanking.Models;
 using EnableBanking.Models.General;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace Application.UseCases.Bank
 {
@@ -78,7 +79,7 @@ namespace Application.UseCases.Bank
 
                 if (resp.StatusCode != System.Net.HttpStatusCode.OK || resp.Data == null || resp.Data.Url == null || resp.Data.AuthorizationId == null)
                 {
-                    _Logger.LogError("EnableBanking StartAuthorization failed: {ErrorDetail}", resp.Error?.Detail);
+                    _Logger.LogError("EnableBanking StartAuthorization failed: {ErrorDetail}", JsonSerializer.Serialize(resp.Error));
                     result.Successful = false;
                     result.ErrorMessage = resp.Error?.Message;
                     return result;

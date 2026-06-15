@@ -93,8 +93,9 @@ namespace MonthSpendings.Controllers
         }
 
         [HttpGet("connect-callback")]
-        public async Task<IActionResult> ConnectCallback(Guid state, string code)
+        public async Task<IActionResult> ConnectCallback(Guid state, string code, string error)
         {
+            Console.WriteLine($"CALLBACK ERROR: STATE: {state}, CODE: {code}, ERROR: {error}");
             var result = await _FinishBankConnectionUseCase.InvokeAsync(state, code);
 
             if (result.Successful)

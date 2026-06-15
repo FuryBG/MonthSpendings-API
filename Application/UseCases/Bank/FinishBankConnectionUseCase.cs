@@ -54,6 +54,18 @@ namespace Application.UseCases.Bank
                     return result;
                 }
 
+                if (string.IsNullOrEmpty(code))
+                {
+                    _Logger.LogWarning("ConnectCallback missing authorization code for sessionId {SessionId}", sessionId);
+                    bankConsent.State = BankAccountStatus.ConnectionFailed;
+                    await _UnitOfWork.BankConsentRepository.Update(bankConsent);
+                    await _UnitOfWork.CommitAsync();
+                    result.Successful = false;
+                    result.Data = errorUrl;
+                    result.ErrorMessage = "Bank did not return an authorization code. Please try again.";
+                    return result;
+                }
+
                 ApiResponse<AuthorizeSessionResponse> authSessionResponse = await _SessionsService.AuthorizeSessionAsync(new AuthorizeSessionRequest() { Code = code }, new CancellationToken());
 
                 if (authSessionResponse.StatusCode != System.Net.HttpStatusCode.OK || authSessionResponse.Data == null)

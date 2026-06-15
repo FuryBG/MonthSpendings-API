@@ -93,8 +93,13 @@ namespace MonthSpendings.Controllers
         }
 
         [HttpGet("connect-callback")]
-        public async Task<IActionResult> ConnectCallback(Guid state, string code)
+        public async Task<IActionResult> ConnectCallback(Guid state)
         {
+            // Read "code" from the raw query string instead of relying on model binding:
+            // ASP.NET Core's query parser decodes '+' as a space (form-encoding convention),
+            // which corrupts EnableBanking authorization codes that contain a literal '+'.
+            string code = GetRawQueryParam("code") ?? string.Empty;
+
             var result = await _FinishBankConnectionUseCase.InvokeAsync(state, code);
 
             if (result.Successful)
@@ -106,6 +111,27 @@ namespace MonthSpendings.Controllers
                 _Logger.LogWarning("FinishBankConnection failed for state {State}", state);
                 return Redirect(result.Data!);
             }
+        }
+
+        private string? GetRawQueryParam(string key)
+        {
+            string raw = Request.QueryString.Value?.TrimStart('?') ?? string.Empty;
+
+            foreach (var pair in raw.Split('&'))
+            {
+                int separatorIndex = pair.IndexOf('=');
+                if (separatorIndex < 0)
+                {
+                    continue;
+                }
+
+                if (pair[..separatorIndex] == key)
+                {
+                    return Uri.UnescapeDataString(pair[(separatorIndex + 1)..]);
+                }
+            }
+
+            return null;
         }
     }
 }

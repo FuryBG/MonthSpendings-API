@@ -8,6 +8,7 @@ using EnableBanking.Models;
 using EnableBanking.Models.Sessions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace Application.UseCases.Bank
 {
@@ -57,7 +58,7 @@ namespace Application.UseCases.Bank
 
                 if (authSessionResponse.StatusCode != System.Net.HttpStatusCode.OK || authSessionResponse.Data == null)
                 {
-                    _Logger.LogError("EnableBanking AuthorizeSession failed: {ErrorDetail}", authSessionResponse.Error?.Detail);
+                    _Logger.LogError("EnableBanking AuthorizeSession failed: {ErrorDetail}", JsonSerializer.Serialize(authSessionResponse.Error));
                     result.Successful = false;
                     result.Data = errorUrl;
                     result.ErrorMessage = authSessionResponse.Error?.Message;

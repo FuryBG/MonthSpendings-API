@@ -19,9 +19,14 @@ namespace EnableBanking.Services
             return await HandleResponse<T>(responseMessage, cancellationToken);
         }
 
+        private static readonly JsonSerializerSettings _SerializerSettings = new()
+        {
+            NullValueHandling = NullValueHandling.Ignore
+        };
+
         protected async Task<ApiResponse<T>> PostAsync<T>(string requestUri, object requestBody, CancellationToken cancellationToken)
         {
-            var jsonContent = JsonConvert.SerializeObject(requestBody);
+            var jsonContent = JsonConvert.SerializeObject(requestBody, _SerializerSettings);
             var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
             var responseMessage = await _httpClient.PostAsync(requestUri, httpContent, cancellationToken);

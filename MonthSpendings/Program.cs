@@ -2,11 +2,9 @@
 using Application.Interfaces;
 using Application.Interfaces.Repository;
 using Application.Interfaces.Repository.Bank;
-using Application.Interfaces.Repository.SaltEdge;
 using Application.Services;
 using Application.UseCases;
 using Application.UseCases.Bank;
-using Application.UseCases.SaltEdge;
 using Application.UseCases.Statistics;
 using Application.UseCases.TransactionRules;
 using EnableBanking;
@@ -14,7 +12,6 @@ using Infrastructure;
 using Infrastructure.Interceptors;
 using Infrastructure.Repository;
 using Infrastructure.Repository.Bank;
-using Infrastructure.Repository.SaltEdge;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
@@ -27,7 +24,6 @@ using MonthSpendings.Middleware;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using SaltEdge;
 using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
@@ -150,38 +146,12 @@ public class Program
                 throw new InvalidOperationException("EnableBanking:AppKeyId is not configured in appsettings.json or environment variables.");
             }
 
-            string? saltEdgeAppId = builder.Configuration.GetSection("SaltEdge:AppId").Value;
-            string? saltEdgeSecret = builder.Configuration.GetSection("SaltEdge:Secret").Value;
-            string? saltEdgeBaseUrl = builder.Configuration.GetSection("SaltEdge:BaseUrl").Value;
-
-            if (string.IsNullOrWhiteSpace(saltEdgeAppId))
-            {
-                throw new InvalidOperationException("SaltEdge:AppId is not configured in appsettings.json or environment variables.");
-            }
-
-            if (string.IsNullOrWhiteSpace(saltEdgeSecret))
-            {
-                throw new InvalidOperationException("SaltEdge:Secret is not configured in appsettings.json or environment variables.");
-            }
-
-            if (string.IsNullOrWhiteSpace(saltEdgeBaseUrl))
-            {
-                throw new InvalidOperationException("SaltEdge:BaseUrl is not configured in appsettings.json or environment variables.");
-            }
-
             builder.Services.AddTransient<IPushNotificationService, PushNotificationsService>();
 
             builder.Services.AddEnableBankingApi(options =>
             {
                 options.KeyPath = Path.Combine(builder.Environment.ContentRootPath, bankingCertificatePath);
                 options.AppKid = bankingAppKeyId;
-            });
-
-            builder.Services.AddSaltEdgeApi(options =>
-            {
-                options.AppId = saltEdgeAppId;
-                options.Secret = saltEdgeSecret;
-                options.BaseUrl = saltEdgeBaseUrl;
             });
 
             builder.Services.AddMemoryCache();
@@ -192,32 +162,20 @@ public class Program
             builder.Services.AddTransient<ICategorizeTransactionsUseCase, CategorizeTransactionsUseCase>();
             builder.Services.AddTransient<IGetUncategorizedTransactionsUseCase, GetUncategorizedTransactionsUseCase>();
             builder.Services.AddTransient<IRemoveConnectedBankBySessionIdUseCase, RemoveConnectedBankBySessionIdUseCase>();
+            builder.Services.AddTransient<IGetConnectedBanksByUserUseCase, GetConnectedBanksByUserUseCase>();
             builder.Services.AddTransient<IGetTransactionCategoryRulesUseCase, GetTransactionCategoryRulesUseCase>();
             builder.Services.AddTransient<ICreateTransactionCategoryRuleUseCase, CreateTransactionCategoryRuleUseCase>();
             builder.Services.AddTransient<IDeleteTransactionCategoryRuleUseCase, DeleteTransactionCategoryRuleUseCase>();
             builder.Services.AddTransient<IBankSyncWorker, BankSyncWorker>();
 
-            builder.Services.AddTransient<IGetSaltEdgeBanksUseCase, GetSaltEdgeBanksUseCase>();
-            builder.Services.AddTransient<IGetConnectedSaltEdgeBanksByUserUseCase, GetConnectedSaltEdgeBanksByUserUseCase>();
-            builder.Services.AddTransient<IGetSaltEdgeConnectionStatusUseCase, GetSaltEdgeConnectionStatusUseCase>();
-            builder.Services.AddTransient<IStartSaltEdgeConnectionUseCase, StartSaltEdgeConnectionUseCase>();
-            builder.Services.AddTransient<IFinishSaltEdgeConnectionUseCase, FinishSaltEdgeConnectionUseCase>();
-            builder.Services.AddTransient<IFailSaltEdgeConnectionUseCase, FailSaltEdgeConnectionUseCase>();
-            builder.Services.AddTransient<IRemoveSaltEdgeConnectionUseCase, RemoveSaltEdgeConnectionUseCase>();
-            builder.Services.AddTransient<ISaltEdgeSyncWorker, SaltEdgeSyncWorker>();
-
             builder.Services.AddTransient<IBankConsentRepository, BankConsentRepository>();
             builder.Services.AddTransient<IBankAccountRepository, BankAccountRepository>();
             builder.Services.AddTransient<IBankTransactionRepository, BankTransactionRepository>();
             builder.Services.AddTransient<ITransactionCategoryRuleRepository, TransactionCategoryRuleRepository>();
-            builder.Services.AddTransient<ISaltEdgeCustomerRepository, SaltEdgeCustomerRepository>();
-            builder.Services.AddTransient<ISaltEdgeConnectionRepository, SaltEdgeConnectionRepository>();
-            builder.Services.AddTransient<ISaltEdgeAccountRepository, SaltEdgeAccountRepository>();
-            builder.Services.AddTransient<ISaltEdgeTransactionRepository, SaltEdgeTransactionRepository>();
 
-            //builder.Services.AddHostedService<TransactionSyncBackgroundService>();
-            //builder.Services.AddHostedService<SaltEdgeTransactionSyncBackgroundService>();
+            builder.Services.AddHostedService<TransactionSyncBackgroundService>();
             builder.Services.AddHostedService<InactivityNotificationBackgroundService>();
+            builder.Services.AddHostedService<BankCacheWarmupService>();
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(jwtOptions =>

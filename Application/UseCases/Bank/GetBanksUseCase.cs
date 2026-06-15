@@ -1,4 +1,6 @@
 using Application.Contracts;
+using Application.Dto.Bank;
+using Application.Mappers;
 using EnableBanking.Interfaces;
 using EnableBanking.Models;
 using EnableBanking.Models.General;
@@ -9,13 +11,13 @@ namespace Application.UseCases.Bank
 {
     public interface IGetBanksUseCase
     {
-        Task<CaseResult<List<Aspsp>?>> InvokeAsync(string? bankName);
+        Task<CaseResult<List<BankOptionDto>>> InvokeAsync(string? bankName, CancellationToken cancellationToken);
     }
 
     public class GetBanksUseCase : IGetBanksUseCase
     {
-        private const string CacheKey = "enablebanking:aspsps";
-        private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(1);
+        public const string CacheKey = "enablebanking:aspsps";
+        public static readonly TimeSpan CacheTtl = TimeSpan.FromHours(1);
 
         private readonly IGeneralService _GeneralService;
         private readonly IMemoryCache _Cache;
@@ -28,16 +30,17 @@ namespace Application.UseCases.Bank
             _Logger = logger;
         }
 
-        public async Task<CaseResult<List<Aspsp>?>> InvokeAsync(string? bankName)
+        public async Task<CaseResult<List<BankOptionDto>>> InvokeAsync(string? bankName, CancellationToken cancellationToken)
         {
-            var result = new CaseResult<List<Aspsp>?>();
+            var result = new CaseResult<List<BankOptionDto>>();
             result.Successful = true;
 
             try
             {
-                if (!_Cache.TryGetValue(CacheKey, out List<Aspsp>? allAspsps))
+                if (!_Cache.TryGetValue(CacheKey, out List<BankOptionDto>? allBanks))
                 {
-                    ApiResponse<GetASPSPsResponse> aspsResponse = await _GeneralService.GetASPSPsAsync(new GetASPSPsRequest(), new CancellationToken());
+                    // Populates a shared cache, so it must not be aborted by this caller's cancellation.
+                    ApiResponse<GetASPSPsResponse> aspsResponse = await _GeneralService.GetASPSPsAsync(new GetASPSPsRequest(), CancellationToken.None);
 
                     if (aspsResponse.Error != null)
                     {
@@ -47,13 +50,13 @@ namespace Application.UseCases.Bank
                         return result;
                     }
 
-                    allAspsps = aspsResponse.Data?.Aspsps?.ToList() ?? [];
-                    _Cache.Set(CacheKey, allAspsps, CacheTtl);
+                    allBanks = aspsResponse.Data?.Aspsps?.Select(a => a.ToDto()).ToList() ?? [];
+                    _Cache.Set(CacheKey, allBanks, CacheTtl);
                 }
 
                 result.Data = bankName == null
-                    ? allAspsps
-                    : allAspsps!.Where(b => b.Name != null && b.Name.Contains(bankName, StringComparison.OrdinalIgnoreCase)).ToList();
+                    ? allBanks!.ToList()
+                    : allBanks!.Where(b => b.Name.Contains(bankName, StringComparison.OrdinalIgnoreCase)).ToList();
 
                 _Logger.LogInformation("Retrieved {Count} banks for query '{Query}'", result.Data?.Count, bankName);
             }

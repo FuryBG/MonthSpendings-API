@@ -39,7 +39,6 @@
     <ProjectReference Include="..\Application\Application.csproj" />
     <ProjectReference Include="..\EnableBanking\EnableBanking\EnableBanking.csproj" />
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
-    <ProjectReference Include="..\SaltEdge\SaltEdge\SaltEdge.csproj" />
   </ItemGroup>
 
   <ItemGroup>

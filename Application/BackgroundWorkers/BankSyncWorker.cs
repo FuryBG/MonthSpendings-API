@@ -99,7 +99,9 @@ namespace Application.BackgroundWorkers
                         .Where(t => t.CreditDebitIndicator == "DBIT")
                         .ToArray();
 
-                    foreach (Transaction transaction in expenseTransactions)
+                    List<(Transaction Transaction, decimal Amount, DateTime BookingDate, TransactionStatus Status, string TransactionId)> parsedTransactions = [];
+
+                    foreach (Transaction transaction in response.Data.Transactions)
                     {
                         bool isAmountParsed = decimal.TryParse(transaction.TransactionAmount?.Amount, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal amount);
                         bool bookingDateParsed = DateTime.TryParse(transaction.BookingDate, out DateTime bookingDate);
@@ -112,7 +114,25 @@ namespace Application.BackgroundWorkers
                             continue;
                         }
 
-                        string transactionId = CalculateTransactionId(transaction, amount, bookingDate);
+                        // Fingerprint stays based on the unsigned amount so it matches transactions
+                        // already stored before signed amounts were introduced.
+                        string transactionId = CalculateTransactionId(account.Id, transaction, amount, bookingDate);
+
+                        decimal signedAmount = IsIncoming(transaction, account) ? amount : -amount;
+                        parsedTransactions.Add((transaction, signedAmount, bookingDate, transactionStatus, transactionId));
+                    }
+
+                    HashSet<string> existingTransactionIds = await _UnitOfWork.BankTransactionRepository
+                        .GetExistingTransactionIdsAsync(parsedTransactions.Select(p => p.TransactionId), cancellationToken);
+
+                    foreach (var (transaction, amount, bookingDate, transactionStatus, transactionId) in parsedTransactions)
+                    {
+                        if (!existingTransactionIds.Add(transactionId))
+                        {
+                            _Logger.LogDebug("Skipping already-synced transaction {TransactionId}", transactionId);
+                            continue;
+                        }
+
                         string? description = transaction.RemittanceInformation?.FirstOrDefault()
                             ?? transaction.TransactionInformation
                             ?? transaction.Note;
@@ -175,7 +195,7 @@ namespace Application.BackgroundWorkers
                     continue;
                 }
 
-                string transactionId = CalculateTransactionId(transaction, amount, bookingDate);
+                string transactionId = CalculateTransactionId(account.Id, transaction, amount, bookingDate);
 
                 BankTransaction? saved = await _UnitOfWork.BankTransactionRepository
                     .GetTransactionByTransactionId(transactionId, cancellationToken);
@@ -219,20 +239,44 @@ namespace Application.BackgroundWorkers
             }
         }
 
-        private static string CalculateTransactionId(Transaction transaction, decimal amount, DateTime bookingDate)
+        // Some ASPSPs report credit_debit_indicator from the wrong perspective
+        // (e.g. an outgoing transfer tagged as "CRDT"). Whichever party account
+        // matches our own IBAN is the more reliable signal; only fall back to
+        // the indicator when neither account is populated.
+        private static bool IsIncoming(Transaction transaction, BankAccount account)
         {
+            string? creditorIban = transaction.CreditorAccount?.Iban;
+            if (!string.IsNullOrEmpty(creditorIban))
+            {
+                return string.Equals(creditorIban, account.Iban, StringComparison.OrdinalIgnoreCase);
+            }
+
+            string? debtorIban = transaction.DebtorAccount?.Iban;
+            if (!string.IsNullOrEmpty(debtorIban))
+            {
+                return !string.Equals(debtorIban, account.Iban, StringComparison.OrdinalIgnoreCase);
+            }
+
+            return transaction.CreditDebitIndicator != "DBIT";
+        }
+
+        private static string CalculateTransactionId(int bankAccountId, Transaction transaction, decimal amount, DateTime bookingDate)
+        {
+            // entry_reference is only unique within a single account, so every
+            // fingerprint is prefixed with the local BankAccount.Id to keep the
+            // global TransactionId unique index collision-free across accounts.
             if (!string.IsNullOrEmpty(transaction.EntryReference))
             {
-                return $"{transaction.EntryReference}/{amount}/{transaction.TransactionAmount?.Currency}/{bookingDate:yyyy-MM-dd}";
+                return $"{bankAccountId}/{transaction.EntryReference}/{amount}/{transaction.TransactionAmount?.Currency}/{bookingDate:yyyy-MM-dd}";
             }
 
             if (!string.IsNullOrEmpty(transaction.ReferenceNumber))
             {
-                return $"{transaction.ReferenceNumber}/{amount}/{transaction.TransactionAmount?.Currency}/{bookingDate:yyyy-MM-dd}";
+                return $"{bankAccountId}/{transaction.ReferenceNumber}/{amount}/{transaction.TransactionAmount?.Currency}/{bookingDate:yyyy-MM-dd}";
             }
 
             // Fuzzy fingerprint per EnableBanking docs when no stable reference exists
-            return $"{bookingDate:yyyy-MM-dd}/{amount}/{transaction.TransactionAmount?.Currency}/{transaction.CreditDebitIndicator}";
+            return $"{bankAccountId}/{bookingDate:yyyy-MM-dd}/{amount}/{transaction.TransactionAmount?.Currency}/{transaction.CreditDebitIndicator}";
         }
     }
 }

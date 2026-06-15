@@ -13,10 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnableBanking", "EnableBanking\EnableBanking\EnableBanking.csproj", "{B47DA0AA-A8BB-966C-9118-F8F7CAEE0E5A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SaltEdge", "SaltEdge", "{D0F0947D-B398-5D9E-F284-6020CE5B33BD}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SaltEdge", "SaltEdge\SaltEdge\SaltEdge.csproj", "{644A8E1E-4D13-48A7-B095-AE50E6E9A1EA}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,24 +83,9 @@ Global
 		{B47DA0AA-A8BB-966C-9118-F8F7CAEE0E5A}.Release|x64.Build.0 = Release|Any CPU
 		{B47DA0AA-A8BB-966C-9118-F8F7CAEE0E5A}.Release|x86.ActiveCfg = Release|Any CPU
 		{B47DA0AA-A8BB-966C-9118-F8F7CAEE0E5A}.Release|x86.Build.0 = Release|Any CPU
-		{644A8E1E-4D13-48A7-B095-AE50E6E9A1EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{644A8E1E-4D13-48A7-B095-AE50E6E9A1EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{644A8E1E-4D13-48A7-B095-AE50E6E9A1EA}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{644A8E1E-4D13-48A7-B095-AE50E6E9A1EA}.Debug|x64.Build.0 = Debug|Any CPU
-		{644A8E1E-4D13-48A7-B095-AE50E6E9A1EA}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{644A8E1E-4D13-48A7-B095-AE50E6E9A1EA}.Debug|x86.Build.0 = Debug|Any CPU
-		{644A8E1E-4D13-48A7-B095-AE50E6E9A1EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{644A8E1E-4D13-48A7-B095-AE50E6E9A1EA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{644A8E1E-4D13-48A7-B095-AE50E6E9A1EA}.Release|x64.ActiveCfg = Release|Any CPU
-		{644A8E1E-4D13-48A7-B095-AE50E6E9A1EA}.Release|x64.Build.0 = Release|Any CPU
-		{644A8E1E-4D13-48A7-B095-AE50E6E9A1EA}.Release|x86.ActiveCfg = Release|Any CPU
-		{644A8E1E-4D13-48A7-B095-AE50E6E9A1EA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{644A8E1E-4D13-48A7-B095-AE50E6E9A1EA} = {D0F0947D-B398-5D9E-F284-6020CE5B33BD}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {61B9485C-9421-443A-BC5C-9E39CF08CEBF}

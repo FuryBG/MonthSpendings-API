@@ -1,6 +1,5 @@
 using Application.Interfaces.Repository;
 using Application.Interfaces.Repository.Bank;
-using Application.Interfaces.Repository.SaltEdge;
 
 namespace Application.Interfaces
 {
@@ -16,10 +15,6 @@ namespace Application.Interfaces
         IBankAccountRepository BankAccountRepository { get; }
         IBankTransactionRepository BankTransactionRepository { get; }
         ITransactionCategoryRuleRepository TransactionCategoryRuleRepository { get; }
-        ISaltEdgeCustomerRepository SaltEdgeCustomerRepository { get; }
-        ISaltEdgeConnectionRepository SaltEdgeConnectionRepository { get; }
-        ISaltEdgeAccountRepository SaltEdgeAccountRepository { get; }
-        ISaltEdgeTransactionRepository SaltEdgeTransactionRepository { get; }
         IStatisticsRepository StatisticsRepository { get; }
 
         Task CommitAsync();

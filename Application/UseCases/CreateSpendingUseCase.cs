@@ -81,7 +81,7 @@ namespace Application.UseCases
                 result.Data = addedSpending.ToDto();
                 result.Data.CreatedByEmail = currentUser.Email;
                 result.Data.CreatedByName = $"{currentUser.FirstName} {currentUser.LastName}".Trim();
-                await SendSpendingNotification(budgetUsersNotificationTokens, currentUser.Email, budgetCategory.Budget.Name, budgetCategory.Name, spendingDto.Amount);
+                await SendSpendingNotification(budgetUsersNotificationTokens, currentUser.Email, budgetCategory.Budget.Name, budgetCategory.Name, spendingDto.Amount, budgetCategory.Budget.Currency.Symbol);
                 _Logger.LogInformation("Spending {SpendingId} created: {Amount} in category {CategoryId} by user {UserId}", result.Data!.Id, spendingDto.Amount, spendingDto.Id, userId);
             }
             catch (Exception ex)
@@ -95,11 +95,13 @@ namespace Application.UseCases
             return result;
         }
 
-        private async Task SendSpendingNotification(List<string> receiversNotificationToken, string userName, string budgetName, string categoryName, decimal spentAmound)
+        private async Task SendSpendingNotification(List<string> receiversNotificationToken, string userName, string budgetName, string categoryName, decimal spentAmound, string currencySymbol)
         {
+            string formattedAmount = $"{Math.Abs(spentAmound).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)} {currencySymbol}";
+
             string notificationMessage = spentAmound > 0 ?
-                $"{userName} Added {spentAmound} to {categoryName}." :
-                $"{userName} Spent {spentAmound} from {categoryName}.";
+                $"{userName} Added {formattedAmount} to {categoryName}." :
+                $"{userName} Spent {formattedAmount} from {categoryName}.";
 
             string notificationTitle = spentAmound > 0 ?
                 $"Funds added." :

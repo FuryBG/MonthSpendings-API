@@ -6,6 +6,7 @@ using Domain.Bank.Enums;
 using EnableBanking.Interfaces;
 using EnableBanking.Models;
 using EnableBanking.Models.Sessions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Bank
@@ -19,12 +20,14 @@ namespace Application.UseCases.Bank
     {
         private IUnitOfWork _UnitOfWork { get; set; }
         private ISessionsService _SessionsService { get; set; }
+        private readonly IConfiguration _Configuration;
         private readonly ILogger<FinishBankConnectionUseCase> _Logger;
 
-        public FinishBankConnectionUseCase(IUnitOfWork unitOfWork, ISessionsService sessionsService, ILogger<FinishBankConnectionUseCase> logger)
+        public FinishBankConnectionUseCase(IUnitOfWork unitOfWork, ISessionsService sessionsService, IConfiguration configuration, ILogger<FinishBankConnectionUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _SessionsService = sessionsService;
+            _Configuration = configuration;
             _Logger = logger;
         }
 
@@ -32,6 +35,10 @@ namespace Application.UseCases.Bank
         {
             var result = new CaseResult<string>();
             result.Successful = true;
+
+            string appScheme = _Configuration["EnableBanking:AppScheme"] ?? "tavira";
+            string successUrl = $"{appScheme}://(main)/ConnectBankSuccess";
+            string errorUrl = $"{appScheme}://(main)/ConnectBankError";
 
             try
             {
@@ -41,7 +48,7 @@ namespace Application.UseCases.Bank
                 {
                     _Logger.LogWarning("BankConsent not found for sessionId {SessionId}", sessionId);
                     result.Successful = false;
-                    result.Data = "monthspendings://(main)/ConnectBankFail";
+                    result.Data = errorUrl;
                     result.ErrorMessage = "Can't find initiated bank connection. Please try again.";
                     return result;
                 }
@@ -52,7 +59,7 @@ namespace Application.UseCases.Bank
                 {
                     _Logger.LogError("EnableBanking AuthorizeSession failed: {ErrorDetail}", authSessionResponse.Error?.Detail);
                     result.Successful = false;
-                    result.Data = "monthspendings://(main)/ConnectBankFail";
+                    result.Data = errorUrl;
                     result.ErrorMessage = authSessionResponse.Error?.Message;
                     return result;
                 }
@@ -61,7 +68,7 @@ namespace Application.UseCases.Bank
                 {
                     _Logger.LogError("All accounts returned from EnableBanking have null AccountId for sessionId {SessionId}", sessionId);
                     result.Successful = false;
-                    result.Data = "monthspendings://(main)/ConnectBankFail";
+                    result.Data = errorUrl;
                     result.ErrorMessage = authSessionResponse.Error?.Message;
                     return result;
                 }
@@ -72,13 +79,14 @@ namespace Application.UseCases.Bank
                     bankConsent.State = BankAccountStatus.ConnectionFailed;
                     await _UnitOfWork.BankConsentRepository.Update(bankConsent);
                     result.Successful = false;
-                    result.Data = "monthspendings://(main)/ConnectBankError";
+                    result.Data = errorUrl;
                     result.ErrorMessage = authSessionResponse.Error?.Message;
                     return result;
                 }
 
                 bankConsent.State = BankAccountStatus.Connected;
                 bankConsent.LastSync = DateTime.UtcNow;
+                bankConsent.EnableBankingSessionId = authSessionResponse.Data.SessionId;
                 bankConsent.Accounts = authSessionResponse.Data.Accounts.Where(acc => acc.Uid.HasValue).Select(ba => new BankAccount()
                 {
                     AccountUuid = ba.Uid!.Value,
@@ -91,13 +99,14 @@ namespace Application.UseCases.Bank
 
                 await _UnitOfWork.BankConsentRepository.Update(bankConsent);
                 await _UnitOfWork.CommitAsync();
-                result.Data = "monthspendings://(main)/ConnectBankSuccess";
+                result.Data = successUrl;
                 _Logger.LogInformation("Bank connection finished for sessionId {SessionId}: {AccountCount} accounts linked", sessionId, bankConsent.Accounts.Count);
             }
             catch (Exception ex)
             {
                 _Logger.LogError(ex, "Error finishing bank connection for sessionId {SessionId}", sessionId);
                 result.Successful = false;
+                result.Data = errorUrl;
                 result.ErrorMessage = "Something got wrong during finish bank connection. Please try again later.";
             }
             return result;

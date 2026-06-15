@@ -2,6 +2,8 @@ using Application.Contracts;
 using Application.Interfaces;
 using Application.Services;
 using Domain.Bank;
+using EnableBanking.Interfaces;
+using EnableBanking.Models.Sessions;
 using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Bank
@@ -15,12 +17,14 @@ namespace Application.UseCases.Bank
     {
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
+        private ISessionsService _SessionsService { get; set; }
         private readonly ILogger<RemoveConnectedBankBySessionIdUseCase> _Logger;
 
-        public RemoveConnectedBankBySessionIdUseCase(IUnitOfWork unitOfWork, IUserService userService, ILogger<RemoveConnectedBankBySessionIdUseCase> logger)
+        public RemoveConnectedBankBySessionIdUseCase(IUnitOfWork unitOfWork, IUserService userService, ISessionsService sessionsService, ILogger<RemoveConnectedBankBySessionIdUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
+            _SessionsService = sessionsService;
             _Logger = logger;
         }
 
@@ -33,9 +37,28 @@ namespace Application.UseCases.Bank
             try
             {
                 userId = _UserService.GetUserId();
-                int deleted = await _UnitOfWork.BankConsentRepository.Delete(((BankConsent bankConsent) =>
-                    bankConsent.SessionId == sessionId &&
-                    bankConsent.UserId == userId), cancellationToken);
+                BankConsent? bankConsent = await _UnitOfWork.BankConsentRepository.GetBankConsentBySessionId(sessionId);
+
+                if (bankConsent == null || bankConsent.UserId != userId)
+                {
+                    _Logger.LogWarning("BankConsent with sessionId {SessionId} not found for user {UserId}", sessionId, userId);
+                    result.Successful = false;
+                    result.ErrorMessage = "Something got wrong during remove bank account. Please try again later.";
+                    return result;
+                }
+
+                if (bankConsent.EnableBankingSessionId.HasValue)
+                {
+                    var deleteSessionResponse = await _SessionsService.DeleteSessionAsync(new DeleteSessionRequest { SessionId = bankConsent.EnableBankingSessionId }, cancellationToken);
+                    if (deleteSessionResponse.StatusCode != System.Net.HttpStatusCode.OK)
+                    {
+                        _Logger.LogWarning("Failed to revoke EnableBanking session {EnableBankingSessionId} for sessionId {SessionId}: {Error}", bankConsent.EnableBankingSessionId, sessionId, deleteSessionResponse.Error?.Detail);
+                    }
+                }
+
+                int deleted = await _UnitOfWork.BankConsentRepository.Delete(((BankConsent bc) =>
+                    bc.SessionId == sessionId &&
+                    bc.UserId == userId), cancellationToken);
 
                 if (deleted <= 0)
                 {

@@ -8,6 +8,7 @@ namespace Application.Interfaces.Repository.Bank
         Task<List<BankTransaction>> GetUncategorizedTransactionsByUser(int userId, CancellationToken cancellationToken);
         Task<BankTransaction?> GetTransactionById(int transactionId, int userId, CancellationToken cancellationToken);
         Task<BankTransaction?> GetTransactionByTransactionId(string transactionId, CancellationToken cancellationToken);
+        Task<HashSet<string>> GetExistingTransactionIdsAsync(IEnumerable<string> transactionIds, CancellationToken cancellationToken);
         Task<int> CategorizeAsync(List<int> transactionIds, int spendingId, CancellationToken cancellationToken);
     }
 }

@@ -14,21 +14,23 @@ namespace MonthSpendings.Controllers
         private IStartBankConnectionUseCase _StartBankConnectionUseCase;
         private IRemoveConnectedBankBySessionIdUseCase _RemoveBankConnectionBySessionIdUseCase;
         private IGetBanksUseCase _GetBanksUseCase;
+        private IGetConnectedBanksByUserUseCase _GetConnectedBanksByUserUseCase;
         private readonly ILogger<BankController> _Logger;
-        public BankController(IGetBanksUseCase getBanksUseCase, IStartBankConnectionUseCase startBankConnectionUseCase, IRemoveConnectedBankBySessionIdUseCase removeConnectedBankBySessionIdUseCase, IFinishBankConnectionUseCase finishBankConnectionUseCase, ISessionsService sessionsService, ILogger<BankController> logger)
+        public BankController(IGetBanksUseCase getBanksUseCase, IStartBankConnectionUseCase startBankConnectionUseCase, IRemoveConnectedBankBySessionIdUseCase removeConnectedBankBySessionIdUseCase, IFinishBankConnectionUseCase finishBankConnectionUseCase, IGetConnectedBanksByUserUseCase getConnectedBanksByUserUseCase, ISessionsService sessionsService, ILogger<BankController> logger)
         {
             _StartBankConnectionUseCase = startBankConnectionUseCase;
             _FinishBankConnectionUseCase = finishBankConnectionUseCase;
             _RemoveBankConnectionBySessionIdUseCase = removeConnectedBankBySessionIdUseCase;
             _GetBanksUseCase = getBanksUseCase;
+            _GetConnectedBanksByUserUseCase = getConnectedBanksByUserUseCase;
             _Logger = logger;
         }
 
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetBanks(string? bankName)
+        public async Task<IActionResult> GetBanks(string? bankName, CancellationToken cancellationToken)
         {
-            var result = await _GetBanksUseCase.InvokeAsync(bankName);
+            var result = await _GetBanksUseCase.InvokeAsync(bankName, cancellationToken);
 
             if (result.Successful)
             {
@@ -37,6 +39,22 @@ namespace MonthSpendings.Controllers
             else
             {
                 _Logger.LogWarning("GetBanks failed: {Error}", result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
+            }
+        }
+
+        [Authorize]
+        [HttpGet("connected")]
+        public async Task<IActionResult> GetConnectedBanks()
+        {
+            var result = await _GetConnectedBanksByUserUseCase.InvokeAsync();
+            if (result.Successful)
+            {
+                return Ok(result.Data);
+            }
+            else
+            {
+                _Logger.LogWarning("GetConnectedBanks failed: {Error}", result.ErrorMessage);
                 return BadRequest(result.ErrorMessage);
             }
         }

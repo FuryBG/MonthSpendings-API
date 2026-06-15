@@ -48,6 +48,17 @@ namespace Infrastructure.Repository.Bank
                 .FirstOrDefaultAsync(t => t.TransactionId == transactionId, cancellationToken);
         }
 
+        public async Task<HashSet<string>> GetExistingTransactionIdsAsync(IEnumerable<string> transactionIds, CancellationToken cancellationToken)
+        {
+            List<string> ids = transactionIds.ToList();
+            List<string> found = await _DbContext.BankTransactions
+                .Where(t => ids.Contains(t.TransactionId))
+                .Select(t => t.TransactionId)
+                .ToListAsync(cancellationToken);
+
+            return found.ToHashSet();
+        }
+
         public Task<int> CategorizeAsync(List<int> transactionIds, int spendingId, CancellationToken cancellationToken)
         {
             return _DbContext.BankTransactions

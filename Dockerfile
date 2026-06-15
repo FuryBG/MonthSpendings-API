@@ -5,7 +5,6 @@ COPY MonthSpendings/MonthSpendings.csproj MonthSpendings/
 COPY Domain/Domain.csproj Domain/
 COPY Application/Application.csproj Application/
 COPY Infrastructure/Infrastructure.csproj Infrastructure/
-COPY SaltEdge/SaltEdge/SaltEdge.csproj SaltEdge/SaltEdge/
 COPY EnableBanking/EnableBanking/EnableBanking.csproj EnableBanking/EnableBanking/
 COPY MonthSpendings.sln ./
 

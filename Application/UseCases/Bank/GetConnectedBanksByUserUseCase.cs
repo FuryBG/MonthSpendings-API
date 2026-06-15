@@ -8,7 +8,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Bank
 {
-    public class GetConnectedBanksByUserUseCase
+    public interface IGetConnectedBanksByUserUseCase
+    {
+        Task<CaseResult<List<BankConsentDto>>> InvokeAsync();
+    }
+
+    public class GetConnectedBanksByUserUseCase : IGetConnectedBanksByUserUseCase
     {
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }

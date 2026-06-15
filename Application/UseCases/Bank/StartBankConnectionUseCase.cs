@@ -6,6 +6,7 @@ using Domain.Bank;
 using EnableBanking.Interfaces;
 using EnableBanking.Models;
 using EnableBanking.Models.General;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Bank
@@ -20,13 +21,15 @@ namespace Application.UseCases.Bank
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
         private IGeneralService _GeneralService;
+        private readonly IConfiguration _Configuration;
         private readonly ILogger<StartBankConnectionUseCase> _Logger;
 
-        public StartBankConnectionUseCase(IUnitOfWork unitOfWork, IUserService userService, IGeneralService generalService, ILogger<StartBankConnectionUseCase> logger)
+        public StartBankConnectionUseCase(IUnitOfWork unitOfWork, IUserService userService, IGeneralService generalService, IConfiguration configuration, ILogger<StartBankConnectionUseCase> logger)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
             _GeneralService = generalService;
+            _Configuration = configuration;
             _Logger = logger;
         }
 
@@ -50,13 +53,22 @@ namespace Application.UseCases.Bank
                     return result;
                 }
 
+                string? redirectUrl = _Configuration["EnableBanking:RedirectUrl"];
+                if (string.IsNullOrWhiteSpace(redirectUrl))
+                {
+                    _Logger.LogError("EnableBanking:RedirectUrl is not configured");
+                    result.Successful = false;
+                    result.ErrorMessage = "Bank connection is not configured correctly. Please try again later.";
+                    return result;
+                }
+
                 ApiResponse<StartAuthorizationResponse> resp = await _GeneralService.StartAuthorizationAsync(new StartAuthorizationRequest()
                 {
                     Access = new Access { ValidUntil = DateTime.UtcNow.AddSeconds(maximumConsentValidity - 5), Balances = true, Transactions = true },
                     PsuType = "personal",
                     State = sessionId.ToString(),
                     Language = "en",
-                    RedirectUrl = new Uri($"https://355d-88-203-208-219.ngrok-free.app/api/Bank/connect-callback"),
+                    RedirectUrl = new Uri(redirectUrl),
                     CredentialsAutosubmit = true,
                     Aspsp = new Aspsp()
                     {

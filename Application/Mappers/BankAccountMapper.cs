@@ -11,6 +11,8 @@ namespace Application.Mappers
             {
                 Id = bankAccount.Id,
                 Iban = bankAccount.Iban,
+                Currency = bankAccount.Currency,
+                HolderName = bankAccount.HolderName,
             };
         }
     }

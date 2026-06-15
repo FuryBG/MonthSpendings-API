@@ -10,9 +10,11 @@ namespace Application.Mappers
             return new BankConsentDto()
             {
                 Id = bankConsent.Id,
+                SessionId = bankConsent.SessionId,
                 BankName = bankConsent.BankName,
                 ImageUrl = bankConsent.BankImgUrl,
                 ValidTo = bankConsent.ExpiresOn,
+                State = bankConsent.State.ToString(),
                 BankAccounts = bankConsent.Accounts.Select(acc => acc.ToDto()).ToList()
             };
         }

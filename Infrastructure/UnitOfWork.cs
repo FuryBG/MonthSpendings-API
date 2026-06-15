@@ -1,7 +1,6 @@
 using Application.Interfaces;
 using Application.Interfaces.Repository;
 using Application.Interfaces.Repository.Bank;
-using Application.Interfaces.Repository.SaltEdge;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Infrastructure
@@ -20,10 +19,6 @@ namespace Infrastructure
         public IBankAccountRepository BankAccountRepository { get; private set; }
         public IBankTransactionRepository BankTransactionRepository { get; private set; }
         public ITransactionCategoryRuleRepository TransactionCategoryRuleRepository { get; private set; }
-        public ISaltEdgeCustomerRepository SaltEdgeCustomerRepository { get; private set; }
-        public ISaltEdgeConnectionRepository SaltEdgeConnectionRepository { get; private set; }
-        public ISaltEdgeAccountRepository SaltEdgeAccountRepository { get; private set; }
-        public ISaltEdgeTransactionRepository SaltEdgeTransactionRepository { get; private set; }
         public IStatisticsRepository StatisticsRepository { get; private set; }
 
         public UnitOfWork(
@@ -38,10 +33,6 @@ namespace Infrastructure
             IBankAccountRepository bankAccountRepository,
             IBankTransactionRepository bankTransactionRepository,
             ITransactionCategoryRuleRepository transactionCategoryRuleRepository,
-            ISaltEdgeCustomerRepository saltEdgeCustomerRepository,
-            ISaltEdgeConnectionRepository saltEdgeConnectionRepository,
-            ISaltEdgeAccountRepository saltEdgeAccountRepository,
-            ISaltEdgeTransactionRepository saltEdgeTransactionRepository,
             IStatisticsRepository statisticsRepository)
         {
             _DbContext = dbContext;
@@ -55,10 +46,6 @@ namespace Infrastructure
             BankAccountRepository = bankAccountRepository;
             BankTransactionRepository = bankTransactionRepository;
             TransactionCategoryRuleRepository = transactionCategoryRuleRepository;
-            SaltEdgeCustomerRepository = saltEdgeCustomerRepository;
-            SaltEdgeConnectionRepository = saltEdgeConnectionRepository;
-            SaltEdgeAccountRepository = saltEdgeAccountRepository;
-            SaltEdgeTransactionRepository = saltEdgeTransactionRepository;
             StatisticsRepository = statisticsRepository;
         }
 

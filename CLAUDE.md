@@ -64,7 +64,7 @@ Migrations are applied automatically at startup (`Program.cs`). Migration files 
 
 ## Background Service
 
-`TransactionSyncBackgroundService` (registered as a hosted service) calls `IBankSyncWorker` on a configurable interval (default 15 min, `EnableBanking:TransactionSyncIntervalInMinutes`). The worker fetches debit transactions from EnableBanking, deduplicates by a computed `TransactionId` (unique index in DB), and records a `LastSync` timestamp on the consent.
+`TransactionSyncBackgroundService` (registered as a hosted service) calls `IBankSyncWorker` on a configurable interval (default 15 min, `EnableBanking:TransactionSyncIntervalInMinutes`). The worker fetches debit transactions from EnableBanking using a 5-day overlap window, computes a per-account `TransactionId` fingerprint (`entry_reference` → `reference_number` → fuzzy fallback, all prefixed with the local `BankAccount.Id`), skips any fingerprint already in the DB or already seen in the current batch (bulk pre-check, with a unique index as a safety net), and records a `LastSync` timestamp on the consent.
 
 ## Authentication
 

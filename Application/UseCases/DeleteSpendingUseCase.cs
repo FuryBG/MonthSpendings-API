@@ -51,7 +51,7 @@ namespace Application.UseCases
 
                 List<string> budgetUsersNotificationTokens = spending.BudgetCategory.Budget.Users.Where(u => u.Id != userId).Select(u => u.NotificationToken).ToList();
                 AppUser currentUser = spending.BudgetCategory.Budget.Users.Where(u => u.Id == userId).First();
-                await SendDeleteSpendingNotification(budgetUsersNotificationTokens, currentUser.Email, spending.BudgetCategory.Budget.Name, spending.BudgetCategory.Name, spending.Amount);
+                await SendDeleteSpendingNotification(budgetUsersNotificationTokens, currentUser.Email, spending.BudgetCategory.Budget.Name, spending.BudgetCategory.Name, spending.Amount, spending.BudgetCategory.Budget.Currency.Symbol);
                 _Logger.LogInformation("Spending {SpendingId} deleted by user {UserId}", spendingId, userId);
             }
             catch (Exception ex)
@@ -64,9 +64,10 @@ namespace Application.UseCases
             return result;
         }
 
-        private async Task SendDeleteSpendingNotification(List<string> receiversNotificationToken, string userName, string budgetName, string categoryName, decimal spentAmound)
+        private async Task SendDeleteSpendingNotification(List<string> receiversNotificationToken, string userName, string budgetName, string categoryName, decimal spentAmound, string currencySymbol)
         {
-            string notificationMessage = $"{userName} spending with amount: {spentAmound} from {categoryName}.";
+            string formattedAmount = $"{Math.Abs(spentAmound).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)} {currencySymbol}";
+            string notificationMessage = $"{userName} spending with amount: {formattedAmount} from {categoryName}.";
             await _PushNotificationService.SendNotification(receiversNotificationToken, "Spending deleted", notificationMessage, new NotificationDto() { Type = NotificationTypeEnum.SpendingDelete });
         }
     }

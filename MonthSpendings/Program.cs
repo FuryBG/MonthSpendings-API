@@ -166,6 +166,7 @@ public class Program
             builder.Services.AddTransient<IGetTransactionCategoryRulesUseCase, GetTransactionCategoryRulesUseCase>();
             builder.Services.AddTransient<ICreateTransactionCategoryRuleUseCase, CreateTransactionCategoryRuleUseCase>();
             builder.Services.AddTransient<IDeleteTransactionCategoryRuleUseCase, DeleteTransactionCategoryRuleUseCase>();
+            builder.Services.AddTransient<ISyncTransactionsUseCase, SyncTransactionsUseCase>();
             builder.Services.AddTransient<IBankSyncWorker, BankSyncWorker>();
 
             builder.Services.AddTransient<IBankConsentRepository, BankConsentRepository>();

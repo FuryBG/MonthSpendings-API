@@ -14,6 +14,7 @@ namespace Application.BackgroundWorkers
     public interface IBankSyncWorker
     {
         Task SyncBankAccountsAsync(CancellationToken ct);
+        Task SyncBankAccountsByUserAsync(int userId, CancellationToken ct);
     }
 
     public sealed class BankSyncWorker : IBankSyncWorker
@@ -51,6 +52,34 @@ namespace Application.BackgroundWorkers
                     {
                         break;
                     }
+
+                    List<TransactionCategoryRule> rules = await _UnitOfWork.TransactionCategoryRuleRepository
+                        .GetByUserIdAsync(bankConsent.UserId, cancellationToken);
+
+                    foreach (BankAccount account in bankConsent.Accounts)
+                    {
+                        await SyncAccountAsync(bankConsent, account, rules, cancellationToken);
+                    }
+
+                    await _UnitOfWork.BankConsentRepository.MarkConsentsAsSyncedAsync([bankConsent.Id], DateTime.UtcNow, cancellationToken);
+                }
+            }
+            catch (Exception ex)
+            {
+                _Logger.LogError(ex, ex.Message);
+                await _UnitOfWork.RollbackTransactionAsync();
+            }
+        }
+
+        public async Task SyncBankAccountsByUserAsync(int userId, CancellationToken cancellationToken)
+        {
+            List<BankConsent> bankConsents = await _UnitOfWork.BankConsentRepository.GetBankConsentByUserId(userId);
+
+            try
+            {
+                foreach (BankConsent bankConsent in bankConsents)
+                {
+                    if (cancellationToken.IsCancellationRequested) break;
 
                     List<TransactionCategoryRule> rules = await _UnitOfWork.TransactionCategoryRuleRepository
                         .GetByUserIdAsync(bankConsent.UserId, cancellationToken);

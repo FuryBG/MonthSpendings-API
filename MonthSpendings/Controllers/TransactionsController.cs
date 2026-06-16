@@ -13,11 +13,13 @@ namespace MonthSpendings.Controllers
     {
         private ICategorizeTransactionsUseCase _CategorizeTransactionsUseCase;
         private IGetUncategorizedTransactionsUseCase _GetUncategorizedTransactionsUseCase;
+        private ISyncTransactionsUseCase _SyncTransactionsUseCase;
         private readonly ILogger<TransactionsController> _Logger;
-        public TransactionsController(IGetUncategorizedTransactionsUseCase getUncategorizedTransactionsUseCase, ICategorizeTransactionsUseCase categorizeTransactionsUseCase, ILogger<TransactionsController> logger)
+        public TransactionsController(IGetUncategorizedTransactionsUseCase getUncategorizedTransactionsUseCase, ICategorizeTransactionsUseCase categorizeTransactionsUseCase, ISyncTransactionsUseCase syncTransactionsUseCase, ILogger<TransactionsController> logger)
         {
             _GetUncategorizedTransactionsUseCase = getUncategorizedTransactionsUseCase;
             _CategorizeTransactionsUseCase = categorizeTransactionsUseCase;
+            _SyncTransactionsUseCase = syncTransactionsUseCase;
             _Logger = logger;
         }
 
@@ -38,6 +40,16 @@ namespace MonthSpendings.Controllers
             var result = await _CategorizeTransactionsUseCase.InvokeAsync(transactionDto, cancellationToken);
             if (result.Successful) return Ok(result.Data);
             _Logger.LogWarning("CategorizeTransaction failed: {Error}", result.ErrorMessage);
+            return BadRequest(result.ErrorMessage);
+        }
+
+        [Authorize]
+        [HttpPost("sync")]
+        public async Task<IActionResult> SyncTransactions(CancellationToken cancellationToken)
+        {
+            var result = await _SyncTransactionsUseCase.InvokeAsync(cancellationToken);
+            if (result.Successful) return Ok();
+            _Logger.LogWarning("SyncTransactions failed: {Error}", result.ErrorMessage);
             return BadRequest(result.ErrorMessage);
         }
     }

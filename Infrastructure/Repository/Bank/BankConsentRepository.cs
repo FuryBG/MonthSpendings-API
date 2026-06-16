@@ -61,6 +61,35 @@ namespace Infrastructure.Repository.Bank
             return claimedConsents;
         }
 
+        public async Task<List<BankConsent>> ClaimConsentsForManualSyncAsync(int userId, CancellationToken ct)
+        {
+            var claimedConsents = await _DbContext.BankConsent
+                .FromSql($@"
+                    UPDATE ""BankConsent""
+                    SET ""SyncStartedAt"" = NOW()
+                    WHERE
+                        ""UserId"" = {userId}
+                        AND ""State"" = 1
+                        AND ""ExpiresOn"" > NOW()
+                        AND (""SyncStartedAt"" IS NULL OR ""SyncStartedAt"" < NOW() - INTERVAL '10 minutes')
+                    RETURNING *
+                ").ToListAsync(ct);
+
+            foreach (var consent in claimedConsents)
+            {
+                await _DbContext.Entry(consent).Collection(c => c.Accounts).LoadAsync(ct);
+            }
+
+            return claimedConsents;
+        }
+
+        public async Task UpdateSyncStartedAtAsync(List<int> consentIds, DateTime? value, CancellationToken ct)
+        {
+            await _DbContext.BankConsent
+                .Where(c => consentIds.Contains(c.Id))
+                .ExecuteUpdateAsync(c => c.SetProperty(c => c.SyncStartedAt, _ => value), ct);
+        }
+
         public async Task MarkConsentsAsSyncedAsync(List<int> consentIds, DateTime syncedAt, CancellationToken ct)
         {
             await _DbContext.BankConsent

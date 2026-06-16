@@ -44,6 +44,10 @@ namespace Application.BackgroundWorkers
             var threshold = DateTime.UtcNow.AddMinutes(-updateInterval);
             List<BankConsent> bankConsents = await _UnitOfWork.BankConsentRepository.GetConsentsForSync(threshold, cancellationToken);
 
+            if (bankConsents.Count == 0) return;
+
+            List<int> consentIds = bankConsents.Select(c => c.Id).ToList();
+
             try
             {
                 foreach (BankConsent bankConsent in bankConsents)
@@ -68,12 +72,17 @@ namespace Application.BackgroundWorkers
             {
                 _Logger.LogError(ex, ex.Message);
                 await _UnitOfWork.RollbackTransactionAsync();
+                await _UnitOfWork.BankConsentRepository.UpdateSyncStartedAtAsync(consentIds, null, cancellationToken);
             }
         }
 
         public async Task SyncBankAccountsByUserAsync(int userId, CancellationToken cancellationToken)
         {
-            List<BankConsent> bankConsents = await _UnitOfWork.BankConsentRepository.GetBankConsentByUserId(userId);
+            List<BankConsent> bankConsents = await _UnitOfWork.BankConsentRepository.ClaimConsentsForManualSyncAsync(userId, cancellationToken);
+
+            if (bankConsents.Count == 0) return;
+
+            List<int> consentIds = bankConsents.Select(c => c.Id).ToList();
 
             try
             {
@@ -96,6 +105,7 @@ namespace Application.BackgroundWorkers
             {
                 _Logger.LogError(ex, ex.Message);
                 await _UnitOfWork.RollbackTransactionAsync();
+                await _UnitOfWork.BankConsentRepository.UpdateSyncStartedAtAsync(consentIds, null, cancellationToken);
             }
         }
 

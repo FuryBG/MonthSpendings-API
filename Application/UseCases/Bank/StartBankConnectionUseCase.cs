@@ -67,6 +67,7 @@ namespace Application.UseCases.Bank
                 {
                     Access = new Access { ValidUntil = DateTime.UtcNow.AddSeconds(maximumConsentValidity - 5), Balances = true, Transactions = true },
                     PsuType = "personal",
+                    CredentialsAutosubmit = true,
                     State = sessionId.ToString(),
                     Language = "en",
                     RedirectUrl = new Uri(redirectUrl),

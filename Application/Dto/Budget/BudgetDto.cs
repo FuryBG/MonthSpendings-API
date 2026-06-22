@@ -15,6 +15,8 @@ namespace Application.Dto.Budget
         public List<BudgetPeriodDto>? BudgetPeriods { get; set; }
         [JsonPropertyName("budgetCategories")]
         public List<BudgetCategoryDto> BudgetCategories { get; set; } = new();
+        [JsonPropertyName("ownerId")]
+        public int OwnerId { get; set; }
         [JsonPropertyName("users")]
         public List<AppUserDto>? Users { get; set; }
     }

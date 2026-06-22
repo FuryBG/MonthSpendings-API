@@ -43,7 +43,26 @@ namespace Application.UseCases
                     return result;
                 }
 
+                var existingBudgets = await _UnitOfWork.BudgetRepository.GetUserBudgets(userId);
+
+                if (!existingUser.IsPro && existingBudgets.Count >= 1)
+                {
+                    _Logger.LogWarning("Non-pro user {UserId} attempted to create a second budget", userId);
+                    result.Successful = false;
+                    result.ErrorMessage = "Free accounts are limited to one budget. Upgrade to Pro to create more.";
+                    return result;
+                }
+
+                if (existingUser.IsPro && existingBudgets.Count >= 3)
+                {
+                    _Logger.LogWarning("Pro user {UserId} attempted to exceed the 3-budget limit", userId);
+                    result.Successful = false;
+                    result.ErrorMessage = "Pro accounts are limited to 3 budgets.";
+                    return result;
+                }
+
                 Budget budget = budgetDto.ToEntity();
+                budget.OwnerId = userId;
                 budget.Users.Add(existingUser);
                 BudgetPeriod newBudgetPeriod = new BudgetPeriod() { StartDate = DateTime.UtcNow };
                 budget.BudgetPeriods.Add(newBudgetPeriod);

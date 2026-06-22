@@ -11,6 +11,7 @@ namespace Application.Mappers
             {
                 Id = budget.Id,
                 Name = budget.Name,
+                OwnerId = budget.OwnerId,
                 Currency = budget.Currency.ToDto(),
                 BudgetPeriods = budget.BudgetPeriods.Select(budgetPeriod => budgetPeriod.ToDto()).ToList(),
                 BudgetCategories = budget.BudgetCategories != null

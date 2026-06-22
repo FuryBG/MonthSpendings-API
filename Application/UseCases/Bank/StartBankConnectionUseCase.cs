@@ -54,6 +54,14 @@ namespace Application.UseCases.Bank
                     return result;
                 }
 
+                if (!existingUser.IsPro)
+                {
+                    _Logger.LogWarning("Non-pro user {UserId} attempted to connect a bank", userId);
+                    result.Successful = false;
+                    result.ErrorMessage = "Bank connection is a Pro feature. Upgrade to Pro to connect a bank.";
+                    return result;
+                }
+
                 string? redirectUrl = _Configuration["EnableBanking:RedirectUrl"];
                 if (string.IsNullOrWhiteSpace(redirectUrl))
                 {

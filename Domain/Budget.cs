@@ -10,6 +10,7 @@ namespace Domain
         public required string Name { get; set; }
         public required Currency Currency { get; set; }
         public bool IsDeleted { get; set; }
+        public int OwnerId { get; set; }
         public List<AppUser> Users { get; set; } = new();
         public List<BudgetPeriod> BudgetPeriods { get; set; } = new();
         public List<BudgetCategory> BudgetCategories { get; set; } = new();

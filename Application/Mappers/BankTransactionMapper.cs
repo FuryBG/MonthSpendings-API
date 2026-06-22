@@ -20,6 +20,7 @@ namespace Application.Mappers
                 Status = transaction.Status.ToString(),
                 BookingDate = transaction.BookingDate,
                 Categorized = transaction.Categorized,
+                Determined = transaction.Determined,
             };
         }
     }

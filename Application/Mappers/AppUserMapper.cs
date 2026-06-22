@@ -16,6 +16,7 @@ namespace Application.Mappers
                 FirstName = appUser.FirstName,
                 LastName = appUser.LastName,
                 NotificationToken = appUser.NotificationToken,
+                IsPro = appUser.IsPro,
                 ReceivedBudgetInvites = appUser.ReceivedBudgetInvites.Select(invite => invite.ToDto()).ToList(),
                 SentBudgetInvites = appUser.SentBudgetInvites.Select(invite => invite.ToDto()).ToList()
             };

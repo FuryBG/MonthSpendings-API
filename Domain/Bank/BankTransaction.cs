@@ -18,6 +18,7 @@ namespace Domain.Bank
         public required TransactionStatus Status { get; set; }
         public DateTime BookingDate { get; set; }
         public bool Categorized { get; set; }
+        public bool Determined { get; set; } = true;
         public int? SpendingId { get; set; }
         public Spending? Spending { get; set; }
     }

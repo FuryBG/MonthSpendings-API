@@ -19,6 +19,8 @@ namespace Application.Dto
         public required string GoogleId { get; set; }
         [JsonPropertyName("googlePhotoAddress")]
         public string? GooglePhotoAddress { get; set; }
+        [JsonPropertyName("isPro")]
+        public bool IsPro { get; set; }
         public List<BudgetInviteDto> SentBudgetInvites { get; set; } = new();
         public List<BudgetInviteDto> ReceivedBudgetInvites { get; set; } = new();
     }

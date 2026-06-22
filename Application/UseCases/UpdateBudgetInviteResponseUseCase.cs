@@ -69,6 +69,16 @@ namespace Application.UseCases
 
                 if (accepted)
                 {
+                    bool ownerIsPro = budget.Users.FirstOrDefault(u => u.Id == budget.OwnerId)?.IsPro ?? false;
+                    int maxParticipants = ownerIsPro ? 10 : 2;
+
+                    if (budget.Users.Count >= maxParticipants)
+                    {
+                        result.Successful = false;
+                        result.ErrorMessage = "This budget is full and cannot accept more participants.";
+                        return result;
+                    }
+
                     budget.Users.Add(budgetInvite.Receiver);
                 }
 

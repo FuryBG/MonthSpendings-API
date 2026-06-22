@@ -138,7 +138,7 @@ namespace Application.BackgroundWorkers
                         .Where(t => t.CreditDebitIndicator == "DBIT")
                         .ToArray();
 
-                    List<(Transaction Transaction, decimal Amount, DateTime BookingDate, TransactionStatus Status, string TransactionId)> parsedTransactions = [];
+                    List<(Transaction Transaction, decimal Amount, DateTime BookingDate, TransactionStatus Status, string TransactionId, bool Determined)> parsedTransactions = [];
 
                     foreach (Transaction transaction in response.Data.Transactions)
                     {
@@ -157,14 +157,15 @@ namespace Application.BackgroundWorkers
                         // already stored before signed amounts were introduced.
                         string transactionId = CalculateTransactionId(account.Id, transaction, amount, bookingDate);
 
-                        decimal signedAmount = IsIncoming(transaction, account) ? amount : -amount;
-                        parsedTransactions.Add((transaction, signedAmount, bookingDate, transactionStatus, transactionId));
+                        var (isIncoming, determined) = DetermineDirection(transaction, account);
+                        decimal signedAmount = isIncoming ? amount : -amount;
+                        parsedTransactions.Add((transaction, signedAmount, bookingDate, transactionStatus, transactionId, determined));
                     }
 
                     HashSet<string> existingTransactionIds = await _UnitOfWork.BankTransactionRepository
                         .GetExistingTransactionIdsAsync(parsedTransactions.Select(p => p.TransactionId), cancellationToken);
 
-                    foreach (var (transaction, amount, bookingDate, transactionStatus, transactionId) in parsedTransactions)
+                    foreach (var (transaction, amount, bookingDate, transactionStatus, transactionId, determined) in parsedTransactions)
                     {
                         if (!existingTransactionIds.Add(transactionId))
                         {
@@ -187,6 +188,7 @@ namespace Application.BackgroundWorkers
                             TransactionId = transactionId,
                             Status = transactionStatus,
                             BankAccountId = account.Id,
+                            Determined = determined,
                         };
 
                         await _UnitOfWork.BankTransactionRepository.AddTransaction(bankTransaction, cancellationToken);
@@ -278,25 +280,33 @@ namespace Application.BackgroundWorkers
             }
         }
 
-        // Some ASPSPs report credit_debit_indicator from the wrong perspective
-        // (e.g. an outgoing transfer tagged as "CRDT"). Whichever party account
-        // matches our own IBAN is the more reliable signal; only fall back to
-        // the indicator when neither account is populated.
-        private static bool IsIncoming(Transaction transaction, BankAccount account)
+        // Returns (isIncoming, determined). determined=false when the bank reports our own
+        // IBAN as the creditor with no counterparty info — some ASPSPs do this for card
+        // charges (e.g. Google Pay via DSK), making it impossible to tell automatically
+        // whether the transaction is income or an expense.
+        private static (bool isIncoming, bool determined) DetermineDirection(Transaction transaction, BankAccount account)
         {
             string? creditorIban = transaction.CreditorAccount?.Iban;
             if (!string.IsNullOrEmpty(creditorIban))
             {
-                return string.Equals(creditorIban, account.Iban, StringComparison.OrdinalIgnoreCase);
+                bool userIsCreditor = string.Equals(creditorIban, account.Iban, StringComparison.OrdinalIgnoreCase);
+                if (userIsCreditor)
+                {
+                    bool hasCounterparty = !string.IsNullOrEmpty(transaction.DebtorAccount?.Iban)
+                                          || transaction.Debtor != null;
+                    return (isIncoming: true, determined: hasCounterparty);
+                }
+                return (isIncoming: false, determined: true);
             }
 
             string? debtorIban = transaction.DebtorAccount?.Iban;
             if (!string.IsNullOrEmpty(debtorIban))
             {
-                return !string.Equals(debtorIban, account.Iban, StringComparison.OrdinalIgnoreCase);
+                bool userIsDebtor = string.Equals(debtorIban, account.Iban, StringComparison.OrdinalIgnoreCase);
+                return (isIncoming: !userIsDebtor, determined: true);
             }
 
-            return transaction.CreditDebitIndicator != "DBIT";
+            return (isIncoming: transaction.CreditDebitIndicator != "DBIT", determined: true);
         }
 
         private static string CalculateTransactionId(int bankAccountId, Transaction transaction, decimal amount, DateTime bookingDate)

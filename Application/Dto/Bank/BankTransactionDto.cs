@@ -37,6 +37,9 @@ namespace Application.Dto.Bank
         [JsonPropertyName("categorized")]
         public bool Categorized { get; set; }
 
+        [JsonPropertyName("determined")]
+        public bool Determined { get; set; }
+
         [JsonPropertyName("categoryId")]
         public int CategoryId { get; set; }
 

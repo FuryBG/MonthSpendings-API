@@ -4,9 +4,11 @@ using Application.Dto.Notification;
 using Application.Enums;
 using Application.Interfaces;
 using Application.Mappers;
+using Application.Options;
 using Application.Services;
 using Domain;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Application.UseCases
 {
@@ -21,12 +23,14 @@ namespace Application.UseCases
         private IUserService _UserService { get; set; }
         private IPushNotificationService _PushNotificationService { get; set; }
         private readonly ILogger<UpdateBudgetInviteResponseUseCase> _Logger;
-        public UpdateBudgetInviteResponseUseCase(IUnitOfWork unitOfWork, IUserService userService, IPushNotificationService pushNotificationService, ILogger<UpdateBudgetInviteResponseUseCase> logger)
+        private readonly PlanLimitsOptions _Limits;
+        public UpdateBudgetInviteResponseUseCase(IUnitOfWork unitOfWork, IUserService userService, IPushNotificationService pushNotificationService, ILogger<UpdateBudgetInviteResponseUseCase> logger, IOptions<PlanLimitsOptions> planLimitsOptions)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
             _PushNotificationService = pushNotificationService;
             _Logger = logger;
+            _Limits = planLimitsOptions.Value;
         }
         public async Task<CaseResult<BudgetInviteDto?>> InvokeAsync(int budgetInviteId, bool accepted)
         {
@@ -69,13 +73,33 @@ namespace Application.UseCases
 
                 if (accepted)
                 {
-                    bool ownerIsPro = budget.Users.FirstOrDefault(u => u.Id == budget.OwnerId)?.IsPro ?? false;
-                    int maxParticipants = ownerIsPro ? 10 : 2;
+                    var receiverBudgets = await _UnitOfWork.BudgetRepository.GetUserBudgets(userId);
 
-                    if (budget.Users.Count >= maxParticipants)
+                    if (receiverBudgets.Count >= _Limits.FreeBudgetLimit && !budgetInvite.Receiver.IsPro)
                     {
                         result.Successful = false;
-                        result.ErrorMessage = "This budget is full and cannot accept more participants.";
+                        result.ErrorMessage = "To have more than one budget you must be a Pro.";
+                        return result;
+                    }
+
+                    if (receiverBudgets.Count >= _Limits.ProBudgetLimit && budgetInvite.Receiver.IsPro)
+                    {
+                        result.Successful = false;
+                        result.ErrorMessage = $"Pro accounts are limited to {_Limits.ProBudgetLimit} budgets.";
+                        return result;
+                    }
+
+                    if (budget.Users.Count > _Limits.FreeParticipantJoinThreshold && !budgetInvite.Receiver.IsPro)
+                    {
+                        result.Successful = false;
+                        result.ErrorMessage = "You must be a Pro to join a budget with more than two participants.";
+                        return result;
+                    }
+
+                    if (budget.Users.Count >= _Limits.ProParticipantLimit)
+                    {
+                        result.Successful = false;
+                        result.ErrorMessage = $"This budget has reached the {_Limits.ProParticipantLimit}-participant limit.";
                         return result;
                     }
 

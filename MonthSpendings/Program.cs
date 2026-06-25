@@ -1,4 +1,5 @@
 ﻿using Application.BackgroundWorkers;
+using Application.Options;
 using Application.Interfaces;
 using Application.Interfaces.Repository;
 using Application.Interfaces.Repository.Bank;
@@ -83,6 +84,8 @@ public class Program
             {
                 options.SuppressModelStateInvalidFilter = true;
             });
+
+            builder.Services.Configure<PlanLimitsOptions>(builder.Configuration.GetSection("PlanLimits"));
 
             builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
             builder.Services.AddProblemDetails();

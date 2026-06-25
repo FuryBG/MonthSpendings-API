@@ -56,18 +56,6 @@ namespace Application.UseCases
                     return result;
                 }
 
-                bool ownerIsPro = budget.Users.FirstOrDefault(u => u.Id == budget.OwnerId)?.IsPro ?? false;
-                int participantLimit = ownerIsPro ? 10 : 2;
-                if (budget.Users.Count >= participantLimit)
-                {
-                    _Logger.LogWarning("User {UserId} attempted to exceed the {Limit}-participant limit for budget {BudgetId}", userId, participantLimit, budgetInviteDto.BudgetId);
-                    result.Successful = false;
-                    result.ErrorMessage = ownerIsPro
-                        ? "This budget has reached the 10-participant limit."
-                        : "Free budgets are limited to 2 participants. Upgrade the budget owner to Pro for up to 10.";
-                    return result;
-                }
-
                 AppUser? receiver = await _UnitOfWork.UserRepository.GetUserByEmail(budgetInviteDto.ReceiverEmail);
 
                 if (receiver == null)

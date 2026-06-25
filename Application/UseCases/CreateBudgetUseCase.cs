@@ -2,9 +2,11 @@ using Application.Contracts;
 using Application.Dto.Budget;
 using Application.Interfaces;
 using Application.Mappers;
+using Application.Options;
 using Application.Services;
 using Domain;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Application.UseCases
 {
@@ -18,11 +20,13 @@ namespace Application.UseCases
         private IUnitOfWork _UnitOfWork { get; set; }
         private IUserService _UserService { get; set; }
         private readonly ILogger<CreateBudgetUseCase> _Logger;
-        public CreateBudgetUseCase(IUnitOfWork unitOfWork, IUserService userService, ILogger<CreateBudgetUseCase> logger)
+        private readonly PlanLimitsOptions _Limits;
+        public CreateBudgetUseCase(IUnitOfWork unitOfWork, IUserService userService, ILogger<CreateBudgetUseCase> logger, IOptions<PlanLimitsOptions> planLimitsOptions)
         {
             _UnitOfWork = unitOfWork;
             _UserService = userService;
             _Logger = logger;
+            _Limits = planLimitsOptions.Value;
         }
         // THIS WILL CREATE THE WHOLE STRUCTURE Budget > MonthlyBudget> BudgetCategories > One Spending(init category budget)
         public async Task<CaseResult<BudgetDto?>> InvokeAsync(BudgetDto budgetDto)
@@ -45,19 +49,19 @@ namespace Application.UseCases
 
                 var existingBudgets = await _UnitOfWork.BudgetRepository.GetUserBudgets(userId);
 
-                if (!existingUser.IsPro && existingBudgets.Count >= 1)
+                if (!existingUser.IsPro && existingBudgets.Count >= _Limits.FreeBudgetLimit)
                 {
                     _Logger.LogWarning("Non-pro user {UserId} attempted to create a second budget", userId);
                     result.Successful = false;
-                    result.ErrorMessage = "Free accounts are limited to one budget. Upgrade to Pro to create more.";
+                    result.ErrorMessage = "To have more than one budget you must be a Pro.";
                     return result;
                 }
 
-                if (existingUser.IsPro && existingBudgets.Count >= 3)
+                if (existingUser.IsPro && existingBudgets.Count >= _Limits.ProBudgetLimit)
                 {
-                    _Logger.LogWarning("Pro user {UserId} attempted to exceed the 3-budget limit", userId);
+                    _Logger.LogWarning("Pro user {UserId} attempted to exceed the {Limit}-budget limit", userId, _Limits.ProBudgetLimit);
                     result.Successful = false;
-                    result.ErrorMessage = "Pro accounts are limited to 3 budgets.";
+                    result.ErrorMessage = $"Pro accounts are limited to {_Limits.ProBudgetLimit} budgets.";
                     return result;
                 }
 

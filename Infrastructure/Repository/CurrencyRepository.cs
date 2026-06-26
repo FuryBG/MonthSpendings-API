@@ -14,7 +14,7 @@ namespace Infrastructure.Repository
 
         public async Task<List<Currency>> GetAllCurrencies()
         {
-            return await _DbContext.Currencies.ToListAsync();
+            return await _DbContext.Currencies.AsNoTracking().ToListAsync();
         }
     }
 }

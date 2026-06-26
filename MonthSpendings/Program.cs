@@ -9,6 +9,7 @@ using Application.UseCases.Bank;
 using Application.UseCases.Statistics;
 using Application.UseCases.TransactionRules;
 using EnableBanking;
+using MonthSpendings.Filters;
 using Infrastructure;
 using Infrastructure.Interceptors;
 using Infrastructure.Repository;
@@ -86,6 +87,7 @@ public class Program
             });
 
             builder.Services.Configure<PlanLimitsOptions>(builder.Configuration.GetSection("PlanLimits"));
+            builder.Services.Configure<RevenueCatOptions>(builder.Configuration.GetSection("RevenueCat"));
 
             builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
             builder.Services.AddProblemDetails();
@@ -134,6 +136,8 @@ public class Program
             builder.Services.AddTransient<ICreateBudgetInviteUseCase, CreateBudgetInviteUseCase>();
             builder.Services.AddTransient<IUpdateBudgetInviteResponseUseCase, UpdateBudgetInviteResponseUseCase>();
             builder.Services.AddTransient<IGetAllCurrenciesUseCase, GetAllCurrenciesUseCase>();
+            builder.Services.AddTransient<IHandleRevenueCatWebhookUseCase, HandleRevenueCatWebhookUseCase>();
+            builder.Services.AddScoped<RevenueCatAuthFilter>();
             builder.Services.AddTransient<IGetPeriodComparisonUseCase, GetPeriodComparisonUseCase>();
 
             string? bankingCertificatePath = builder.Configuration.GetSection("EnableBanking:AppCertPath").Value;

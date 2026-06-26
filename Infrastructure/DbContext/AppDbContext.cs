@@ -7,6 +7,7 @@ namespace Infrastructure
     public class AppDbContext : DbContext
     {
         public DbSet<AppUser> Users { get; set; }
+        public DbSet<Subscription> Subscriptions { get; set; }
         public DbSet<Budget> Budgets { get; set; }
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<BudgetPeriod> BudgetPeriods { get; set; }
@@ -25,6 +26,12 @@ namespace Infrastructure
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<AppUser>()
+                .HasMany(u => u.Subscriptions)
+                .WithOne(s => s.User)
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<BudgetCategory>()
                 .HasQueryFilter(c => !c.IsDeleted);

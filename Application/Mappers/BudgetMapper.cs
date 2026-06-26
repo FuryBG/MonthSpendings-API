@@ -36,6 +36,7 @@ namespace Application.Mappers
                 Users = dto.Users != null
                         ? dto.Users.Select(user => user.ToEntity()).ToList()
                         : [],
+                CurrencyId = dto.Currency.Id,
                 Currency = dto.Currency.ToEntity(),
             };
         }

@@ -18,6 +18,7 @@ namespace Domain
         public DateTime? LastInactivityNotificationSentAt { get; set; }
         public string? GooglePhotoAddress { get; set; }
         public bool IsPro { get; set; } = false;
+        public List<Subscription> Subscriptions { get; set; } = [];
         public List<Budget> Budgets { get; set; } = [];
         public List<BudgetInvite> SentBudgetInvites { get; set; } = new();
         public List<BudgetInvite> ReceivedBudgetInvites { get; set; } = new();

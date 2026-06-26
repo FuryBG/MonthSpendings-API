@@ -15,6 +15,7 @@ namespace Infrastructure.Repository
         public async Task<AppUser?> GetUserById(int userId)
         {
             return await _DbContext.Users
+                .Include(u => u.Subscriptions)
                 .Include(u => u.SentBudgetInvites)
                 .ThenInclude(bi => bi.Receiver)
                 .Include(u => u.SentBudgetInvites)

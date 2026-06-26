@@ -46,6 +46,7 @@ namespace Infrastructure.Repository
         public async Task<List<Budget>> GetUserBudgets(int userId)
         {
             return await _DbContext.Budgets
+                .AsNoTracking()
                 .Include(budget => budget.Currency)
                 .Include(budget => budget.Users)
                 .Include(budget => budget.BudgetPeriods.Where(budgetPeriod => budgetPeriod.EndDate == null))

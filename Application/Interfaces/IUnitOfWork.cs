@@ -16,6 +16,7 @@ namespace Application.Interfaces
         IBankTransactionRepository BankTransactionRepository { get; }
         ITransactionCategoryRuleRepository TransactionCategoryRuleRepository { get; }
         IStatisticsRepository StatisticsRepository { get; }
+        IAccountDeleteRequestRepository AccountDeleteRequestRepository { get; }
 
         Task CommitAsync();
         Task BeginTransactionAsync();

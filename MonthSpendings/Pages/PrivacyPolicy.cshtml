@@ -1,0 +1,351 @@
+@page "/privacy-policy"
+@model MonthSpendings.Pages.PrivacyPolicyModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy — Tavira</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #06101F;
+            color: #C8D0DC;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        header {
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding: 18px 0;
+            position: sticky;
+            top: 0;
+            background: rgba(6,16,31,0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 10;
+        }
+
+        .header-inner {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #3EC6C6, #5B7BFF);
+            flex-shrink: 0;
+        }
+
+        .brand-name {
+            font-size: 17px;
+            font-weight: 700;
+            color: #F2F4F8;
+            letter-spacing: -0.3px;
+        }
+
+        main {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 56px 24px 80px;
+        }
+
+        .page-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #3EC6C6;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: clamp(26px, 5vw, 36px);
+            font-weight: 800;
+            color: #F2F4F8;
+            letter-spacing: -0.8px;
+            line-height: 1.2;
+            margin-bottom: 10px;
+        }
+
+        .meta {
+            font-size: 12px;
+            color: rgba(242,244,248,0.28);
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .intro {
+            font-size: 15px;
+            color: rgba(242,244,248,0.55);
+            line-height: 1.8;
+            margin-bottom: 48px;
+            padding-bottom: 32px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .sections {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .section {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 14px;
+            padding: 22px 24px;
+            transition: border-color 0.2s;
+        }
+
+        .section:hover {
+            border-color: rgba(91,123,255,0.22);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .accent-bar {
+            width: 3px;
+            height: 16px;
+            border-radius: 2px;
+            background: #5B7BFF;
+            flex-shrink: 0;
+        }
+
+        .section-index {
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(91,123,255,0.45);
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #5B7BFF;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+        }
+
+        .section-body {
+            font-size: 14px;
+            color: rgba(242,244,248,0.58);
+            line-height: 1.75;
+        }
+
+        footer {
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding: 32px 0;
+            text-align: center;
+        }
+
+        .footer-inner {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .footer-text {
+            font-size: 12px;
+            color: rgba(242,244,248,0.22);
+        }
+
+        .footer-link {
+            color: rgba(62,198,198,0.6);
+            text-decoration: none;
+        }
+
+        .footer-link:hover {
+            color: #3EC6C6;
+        }
+
+        @@media (max-width: 480px) {
+            main { padding: 40px 16px 60px; }
+            .section { padding: 18px 16px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-inner">
+            <div class="brand-dot"></div>
+            <span class="brand-name">Tavira</span>
+        </div>
+    </header>
+
+    <main>
+        <p class="page-label">Legal</p>
+        <h1>Privacy Policy</h1>
+        <p class="meta">Last updated: May 2025</p>
+        <p class="intro">
+            Your privacy matters to us. This policy explains what data Tavira collects,
+            how it is used, and the choices you have regarding your information.
+        </p>
+
+        <div class="sections">
+            <div class="section">
+                <div class="section-header">
+                    <div class="accent-bar"></div>
+                    <span class="section-index">01</span>
+                    <span class="section-title">Information We Collect</span>
+                </div>
+                <p class="section-body">
+                    We collect information you provide directly, including your name, email address, and profile photo
+                    obtained via Google Sign-In. We also collect financial data you enter manually and transaction data
+                    synced from connected bank accounts. Usage data such as feature interactions and error logs may be
+                    collected to improve the service.
+                </p>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="accent-bar"></div>
+                    <span class="section-index">02</span>
+                    <span class="section-title">How We Use Your Information</span>
+                </div>
+                <p class="section-body">
+                    Your information is used to provide, maintain, and improve the Tavira budgeting service. We use
+                    your data to personalize your experience, send you relevant notifications, and respond to support
+                    requests. We do not use your financial data to serve you advertisements.
+                </p>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="accent-bar"></div>
+                    <span class="section-index">03</span>
+                    <span class="section-title">Bank Account Data</span>
+                </div>
+                <p class="section-body">
+                    When you connect a bank account, Tavira accesses read-only transaction data via secure
+                    open-banking APIs. This data is used exclusively to populate your transaction history and
+                    assist with budget tracking. We do not store your banking credentials and never initiate
+                    transactions on your behalf.
+                </p>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="accent-bar"></div>
+                    <span class="section-index">04</span>
+                    <span class="section-title">Data Sharing</span>
+                </div>
+                <p class="section-body">
+                    We do not sell, rent, or trade your personal or financial information to third parties. We may
+                    share data with trusted service providers who assist in operating Tavira, subject to strict
+                    confidentiality agreements. We may disclose information if required to do so by law or to
+                    protect the rights of our users.
+                </p>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="accent-bar"></div>
+                    <span class="section-index">05</span>
+                    <span class="section-title">Data Security</span>
+                </div>
+                <p class="section-body">
+                    We implement industry-standard security measures including encryption in transit (TLS) and at
+                    rest to protect your data. Access to user data is restricted to authorized personnel only.
+                    While we strive to protect your information, no method of transmission over the internet is
+                    completely secure.
+                </p>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="accent-bar"></div>
+                    <span class="section-index">06</span>
+                    <span class="section-title">Data Retention</span>
+                </div>
+                <p class="section-body">
+                    We retain your personal and financial data for as long as your account remains active or as
+                    needed to provide the service. If you delete your account, your data will be permanently removed
+                    within 30 days, except where retention is required by law. Bank transaction history linked to
+                    revoked consents is deleted promptly.
+                </p>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="accent-bar"></div>
+                    <span class="section-index">07</span>
+                    <span class="section-title">Your Rights</span>
+                </div>
+                <p class="section-body">
+                    You have the right to access, correct, or delete the personal information we hold about you.
+                    You may export your budget data or disconnect bank accounts at any time through the app settings.
+                    To exercise any of these rights, contact us at
+                    <a class="footer-link" href="mailto:support@tavira.app">support&commat;tavira.app</a>.
+                </p>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="accent-bar"></div>
+                    <span class="section-index">08</span>
+                    <span class="section-title">Children's Privacy</span>
+                </div>
+                <p class="section-body">
+                    Tavira is not directed to individuals under the age of 16. We do not knowingly collect personal
+                    information from children. If we become aware that a child has provided us with personal
+                    information, we will delete it promptly.
+                </p>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="accent-bar"></div>
+                    <span class="section-index">09</span>
+                    <span class="section-title">Changes to This Policy</span>
+                </div>
+                <p class="section-body">
+                    We may update this Privacy Policy periodically to reflect changes in our practices or applicable
+                    regulations. Material changes will be communicated through the app or via email. Your continued
+                    use of Tavira after changes are posted constitutes your acceptance of the updated policy.
+                </p>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="accent-bar"></div>
+                    <span class="section-index">10</span>
+                    <span class="section-title">Contact Us</span>
+                </div>
+                <p class="section-body">
+                    If you have any questions about this Privacy Policy or how we handle your data, please contact
+                    us at <a class="footer-link" href="mailto:support@tavira.app">support&commat;tavira.app</a>.
+                    We are committed to addressing privacy concerns promptly and transparently.
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-inner">
+            <p class="footer-text">
+                &copy; 2025 Tavira. All rights reserved. &middot;
+                <a class="footer-link" href="mailto:support@tavira.app">Contact</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

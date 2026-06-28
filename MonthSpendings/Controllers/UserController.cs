@@ -12,12 +12,14 @@ namespace MonthSpendings.Controllers
         private IRegisterUserUseCase _RegisterUseCase { get; set; }
         private IGetUserByIdUseCase _GetUserByIdUseCase { get; set; }
         private IUpdateLastUserActivityUseCase _UpdateLastUserActivityUseCase { get; set; }
+        private IRequestAccountDeletionUseCase _RequestAccountDeletionUseCase { get; set; }
         private readonly ILogger<UserController> _Logger;
-        public UserController(IRegisterUserUseCase registerUseCase, IGetUserByIdUseCase getUserByIdUseCase, IUpdateLastUserActivityUseCase updateLastUserActivityUseCase, ILogger<UserController> logger)
+        public UserController(IRegisterUserUseCase registerUseCase, IGetUserByIdUseCase getUserByIdUseCase, IUpdateLastUserActivityUseCase updateLastUserActivityUseCase, IRequestAccountDeletionUseCase requestAccountDeletionUseCase, ILogger<UserController> logger)
         {
             _RegisterUseCase = registerUseCase;
             _GetUserByIdUseCase = getUserByIdUseCase;
             _UpdateLastUserActivityUseCase = updateLastUserActivityUseCase;
+            _RequestAccountDeletionUseCase = requestAccountDeletionUseCase;
             _Logger = logger;
         }
 
@@ -54,6 +56,19 @@ namespace MonthSpendings.Controllers
             if (!result.Successful)
             {
                 _Logger.LogWarning("UpdateActivity failed: {Error}", result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
+            }
+            return Ok();
+        }
+
+        [HttpPost("delete-request")]
+        [Authorize]
+        public async Task<IActionResult> RequestDeletion()
+        {
+            var result = await _RequestAccountDeletionUseCase.InvokeAsync();
+            if (!result.Successful)
+            {
+                _Logger.LogWarning("RequestDeletion failed: {Error}", result.ErrorMessage);
                 return BadRequest(result.ErrorMessage);
             }
             return Ok();

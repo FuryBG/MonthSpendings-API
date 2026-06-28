@@ -81,6 +81,7 @@ public class Program
                 .AddInterceptors(sp.GetRequiredService<SlowQueryInterceptor>()));
 
             builder.Services.AddControllers();
+            builder.Services.AddRazorPages();
             builder.Services.Configure<ApiBehaviorOptions>(options =>
             {
                 options.SuppressModelStateInvalidFilter = true;
@@ -120,10 +121,12 @@ public class Program
             builder.Services.AddTransient<IBudgetInviteRepository, BudgetInviteRepository>();
             builder.Services.AddTransient<ICurrencyRepository, CurrencyRepository>();
             builder.Services.AddTransient<IStatisticsRepository, StatisticsRepository>();
+            builder.Services.AddTransient<IAccountDeleteRequestRepository, AccountDeleteRequestRepository>();
 
             builder.Services.AddTransient<IRegisterUserUseCase, RegisterUserUseCase>();
             builder.Services.AddTransient<IGetUserByIdUseCase, GetUserByIdUseCase>();
             builder.Services.AddTransient<IUpdateLastUserActivityUseCase, UpdateLastUserActivityUseCase>();
+            builder.Services.AddTransient<IRequestAccountDeletionUseCase, RequestAccountDeletionUseCase>();
             builder.Services.AddTransient<ICreateBudgetUseCase, CreateBudgetUseCase>();
             builder.Services.AddTransient<IGetAllBudgetsUseCase, GetAllBudgetsUseCase>();
             builder.Services.AddTransient<IDeleteBudgetUseCase, DeleteBudgetUseCase>();
@@ -212,6 +215,7 @@ public class Program
             }
 
             app.UseExceptionHandler();
+            app.UseStaticFiles();
             app.UseMiddleware<CorrelationIdMiddleware>();
             app.UseSerilogRequestLogging(opts =>
             {
@@ -234,6 +238,7 @@ public class Program
 
             app.MapSwagger();
             app.MapControllers();
+            app.MapRazorPages();
 
             using (var scope = app.Services.CreateScope())
             {

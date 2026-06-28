@@ -18,6 +18,7 @@ namespace Infrastructure
         public DbSet<BankAccount> BankAccounts { get; set; }
         public DbSet<BankTransaction> BankTransactions { get; set; }
         public DbSet<TransactionCategoryRule> TransactionCategoryRules { get; set; }
+        public DbSet<AccountDeleteRequest> AccountDeleteRequests { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {

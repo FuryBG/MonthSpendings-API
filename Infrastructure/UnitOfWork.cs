@@ -20,6 +20,7 @@ namespace Infrastructure
         public IBankTransactionRepository BankTransactionRepository { get; private set; }
         public ITransactionCategoryRuleRepository TransactionCategoryRuleRepository { get; private set; }
         public IStatisticsRepository StatisticsRepository { get; private set; }
+        public IAccountDeleteRequestRepository AccountDeleteRequestRepository { get; private set; }
 
         public UnitOfWork(
             AppDbContext dbContext,
@@ -33,7 +34,8 @@ namespace Infrastructure
             IBankAccountRepository bankAccountRepository,
             IBankTransactionRepository bankTransactionRepository,
             ITransactionCategoryRuleRepository transactionCategoryRuleRepository,
-            IStatisticsRepository statisticsRepository)
+            IStatisticsRepository statisticsRepository,
+            IAccountDeleteRequestRepository accountDeleteRequestRepository)
         {
             _DbContext = dbContext;
             UserRepository = userRepository;
@@ -47,6 +49,7 @@ namespace Infrastructure
             BankTransactionRepository = bankTransactionRepository;
             TransactionCategoryRuleRepository = transactionCategoryRuleRepository;
             StatisticsRepository = statisticsRepository;
+            AccountDeleteRequestRepository = accountDeleteRequestRepository;
         }
 
         public async Task CommitAsync()

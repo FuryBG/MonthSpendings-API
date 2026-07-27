@@ -126,6 +126,7 @@ public class Program
             builder.Services.AddTransient<IRegisterUserUseCase, RegisterUserUseCase>();
             builder.Services.AddTransient<IGetUserByIdUseCase, GetUserByIdUseCase>();
             builder.Services.AddTransient<IUpdateLastUserActivityUseCase, UpdateLastUserActivityUseCase>();
+            builder.Services.AddTransient<IUpdateNotificationTokenUseCase, UpdateNotificationTokenUseCase>();
             builder.Services.AddTransient<IRequestAccountDeletionUseCase, RequestAccountDeletionUseCase>();
             builder.Services.AddTransient<ICreateBudgetUseCase, CreateBudgetUseCase>();
             builder.Services.AddTransient<IGetAllBudgetsUseCase, GetAllBudgetsUseCase>();

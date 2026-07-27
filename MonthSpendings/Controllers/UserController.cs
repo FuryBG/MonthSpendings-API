@@ -13,13 +13,15 @@ namespace MonthSpendings.Controllers
         private IGetUserByIdUseCase _GetUserByIdUseCase { get; set; }
         private IUpdateLastUserActivityUseCase _UpdateLastUserActivityUseCase { get; set; }
         private IRequestAccountDeletionUseCase _RequestAccountDeletionUseCase { get; set; }
+        private IUpdateNotificationTokenUseCase _UpdateNotificationTokenUseCase { get; set; }
         private readonly ILogger<UserController> _Logger;
-        public UserController(IRegisterUserUseCase registerUseCase, IGetUserByIdUseCase getUserByIdUseCase, IUpdateLastUserActivityUseCase updateLastUserActivityUseCase, IRequestAccountDeletionUseCase requestAccountDeletionUseCase, ILogger<UserController> logger)
+        public UserController(IRegisterUserUseCase registerUseCase, IGetUserByIdUseCase getUserByIdUseCase, IUpdateLastUserActivityUseCase updateLastUserActivityUseCase, IRequestAccountDeletionUseCase requestAccountDeletionUseCase, IUpdateNotificationTokenUseCase updateNotificationTokenUseCase, ILogger<UserController> logger)
         {
             _RegisterUseCase = registerUseCase;
             _GetUserByIdUseCase = getUserByIdUseCase;
             _UpdateLastUserActivityUseCase = updateLastUserActivityUseCase;
             _RequestAccountDeletionUseCase = requestAccountDeletionUseCase;
+            _UpdateNotificationTokenUseCase = updateNotificationTokenUseCase;
             _Logger = logger;
         }
 
@@ -58,6 +60,20 @@ namespace MonthSpendings.Controllers
                 _Logger.LogWarning("UpdateActivity failed: {Error}", result.ErrorMessage);
                 return BadRequest(result.ErrorMessage);
             }
+            return Ok();
+        }
+
+        [HttpPut("notification-token")]
+        [Authorize]
+        public async Task<IActionResult> UpdateNotificationToken([FromBody] UpdateNotificationTokenDto dto)
+        {
+            var result = await _UpdateNotificationTokenUseCase.InvokeAsync(dto);
+            if (!result.Successful)
+            {
+                _Logger.LogWarning("UpdateNotificationToken failed: {Error}", result.ErrorMessage);
+                return BadRequest(result.ErrorMessage);
+            }
+            _Logger.LogInformation("User push notification token updated successfully: {PushNotificationToken}", result.Data);
             return Ok();
         }
 

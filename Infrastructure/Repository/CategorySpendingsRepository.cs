@@ -38,5 +38,20 @@ namespace Infrastructure.Repository
             _DbContext.Spendings.Remove(spending);
             return spending.Id;
         }
+
+        public async Task<List<Spending>> GetSpendingsByCategoryAndPeriod(int budgetCategoryId, int budgetPeriodId, int userId)
+        {
+            bool hasAccess = await _DbContext.BudgetCategories
+                .AnyAsync(bc => bc.Id == budgetCategoryId && bc.Budget.Users.Any(u => u.Id == userId));
+
+            if (!hasAccess) return [];
+
+            return await _DbContext.Spendings
+                .Include(s => s.CreatedBy)
+                .Include(s => s.BankTransaction)
+                .Where(s => s.BudgetCategoryId == budgetCategoryId && s.BudgetPeriodId == budgetPeriodId)
+                .OrderByDescending(s => s.Date)
+                .ToListAsync();
+        }
     }
 }

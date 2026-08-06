@@ -17,7 +17,7 @@ namespace Infrastructure.Repository
             Budget? budget = await _DbContext.Budgets
                 .Include(budget => budget.Currency)
                 .Include(budget => budget.Users)
-                .Include(budget => budget.BudgetPeriods.Where(budgetPeriod => budgetPeriod.EndDate == null))
+                .Include(budget => budget.BudgetPeriods.OrderByDescending(bp => bp.StartDate))
                 .Include(budget => budget.BudgetCategories)
                 .ThenInclude(budgetCategory => budgetCategory.Spendings.Where(spending => spending.BudgetPeriod.EndDate == null))
                 .Where(b => b.Id == budgetId && b.Users.Any(u => u.Id == userId))
@@ -49,7 +49,7 @@ namespace Infrastructure.Repository
                 .AsNoTracking()
                 .Include(budget => budget.Currency)
                 .Include(budget => budget.Users)
-                .Include(budget => budget.BudgetPeriods.Where(budgetPeriod => budgetPeriod.EndDate == null))
+                .Include(budget => budget.BudgetPeriods.OrderByDescending(bp => bp.StartDate))
                 .Include(budget => budget.BudgetCategories)
                 .ThenInclude(budgetCategory => budgetCategory.Spendings.Where(spending => spending.BudgetPeriod.EndDate == null))
                 .ThenInclude(spending => spending.CreatedBy)

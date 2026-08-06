@@ -137,6 +137,7 @@ public class Program
             builder.Services.AddTransient<IUpdateBudgetCategoryNameUseCase, UpdateBudgetCategoryNameUseCase>();
             builder.Services.AddTransient<ICreateSpendingUseCase, CreateSpendingUseCase>();
             builder.Services.AddTransient<IDeleteSpendingUseCase, DeleteSpendingUseCase>();
+            builder.Services.AddTransient<IGetCategorySpendingsByPeriodUseCase, GetCategorySpendingsByPeriodUseCase>();
             builder.Services.AddTransient<ICreateBudgetInviteUseCase, CreateBudgetInviteUseCase>();
             builder.Services.AddTransient<IUpdateBudgetInviteResponseUseCase, UpdateBudgetInviteResponseUseCase>();
             builder.Services.AddTransient<IGetAllCurrenciesUseCase, GetAllCurrenciesUseCase>();

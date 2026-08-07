@@ -225,7 +225,8 @@ public class Program
                 opts.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
                 {
                     diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
-                    var userId = httpContext.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                    var userId = httpContext.User?.FindFirst("sub")?.Value
+                        ?? httpContext.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                     if (userId is not null)
                         diagnosticContext.Set("UserId", userId);
                 };

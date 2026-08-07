@@ -50,7 +50,7 @@ namespace Application.UseCases
             {
                 result.Successful = false;
                 result.ErrorMessage = "Invalid user.";
-                _Logger.LogError(ex, "Error getting user {UserId}", _UserService.GetUserId());
+                _Logger.LogError(ex, "Error getting user");
             }
 
             return result;

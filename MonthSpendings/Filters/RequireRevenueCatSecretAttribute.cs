@@ -27,7 +27,6 @@ namespace MonthSpendings.Filters
 
         public void OnAuthorization(AuthorizationFilterContext context)
         {
-            var aa = context.HttpContext.Request.Headers.TryGetValue("Authorization", out var headera);
             var received = context.HttpContext.Request.Headers.TryGetValue("Authorization", out var header)
                 ? header.ToString()
                 : null;

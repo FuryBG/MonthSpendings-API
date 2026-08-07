@@ -22,7 +22,9 @@ namespace Application.Services
 
         public int GetUserId()
         {
-            var userIdString = _HttpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            var principal = _HttpContextAccessor.HttpContext?.User;
+            var userIdString = principal?.FindFirstValue("sub")
+                ?? principal?.FindFirstValue(ClaimTypes.NameIdentifier);
 
             int? id = int.TryParse(userIdString, out var parsed) ? parsed : null;
 

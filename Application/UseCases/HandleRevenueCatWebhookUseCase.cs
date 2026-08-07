@@ -34,26 +34,28 @@ namespace Application.UseCases
 
         public async Task<CaseResult<bool>> InvokeAsync(RevenueCatWebhookPayload payload)
         {
-            var result = new CaseResult<bool> { Successful = true, Data = true };
             var ev = payload.Event;
 
             if (!ProGrantEvents.Contains(ev.Type) && !ProRevokeEvents.Contains(ev.Type))
             {
                 _Logger.LogDebug("RevenueCat webhook: ignoring unhandled event type '{EventType}'", ev.Type);
-                return result;
+                return new CaseResult<bool> { Successful = true, Data = true };
             }
+
+            if (ev.Type == "TRANSFER")
+                return await HandleTransferAsync(ev);
 
             if (!int.TryParse(ev.AppUserId, out int userId))
             {
                 _Logger.LogDebug("RevenueCat webhook: skipping non-integer app_user_id '{AppUserId}' for event '{EventType}'", ev.AppUserId, ev.Type);
-                return result;
+                return new CaseResult<bool> { Successful = true, Data = true };
             }
 
             var user = await _UnitOfWork.UserRepository.GetUserById(userId);
             if (user == null)
             {
-                _Logger.LogWarning("RevenueCat webhook: user {UserId} not found for event '{EventType}'", userId, ev.Type);
-                return result;
+                _Logger.LogError("RevenueCat webhook: user {UserId} not found for event '{EventType}'", userId, ev.Type);
+                return new CaseResult<bool> { Successful = false, ErrorMessage = $"User {userId} not found" };
             }
 
             bool isPro = ProGrantEvents.Contains(ev.Type);
@@ -79,7 +81,46 @@ namespace Application.UseCases
                 "RevenueCat webhook: user {UserId} IsPro={IsPro} via '{EventType}' — Plan={Plan} Store={Store} ExpiresAt={ExpiresAt}",
                 userId, isPro, ev.Type, ev.ProductId, ev.Store, expiresAt);
 
-            return result;
+            return new CaseResult<bool> { Successful = true, Data = true };
+        }
+
+        private async Task<CaseResult<bool>> HandleTransferAsync(RevenueCatEvent ev)
+        {
+            var toUserId = ev.TransferredTo
+                .Select(s => int.TryParse(s, out var id) ? id : (int?)null)
+                .FirstOrDefault(id => id.HasValue);
+
+            if (toUserId == null)
+            {
+                _Logger.LogDebug("RevenueCat webhook: TRANSFER has no integer user ID in transferred_to [{TransferredTo}]", string.Join(", ", ev.TransferredTo));
+                return new CaseResult<bool> { Successful = true, Data = true };
+            }
+
+            var user = await _UnitOfWork.UserRepository.GetUserById(toUserId.Value);
+            if (user == null)
+            {
+                _Logger.LogError("RevenueCat webhook: TRANSFER target user {UserId} not found", toUserId.Value);
+                return new CaseResult<bool> { Successful = false, ErrorMessage = $"Transfer target user {toUserId.Value} not found" };
+            }
+
+            user.IsPro = true;
+            user.Subscriptions.Add(new Subscription
+            {
+                UserId = user.Id,
+                EventType = "TRANSFER",
+                ProductId = string.Empty,
+                Store = ev.Store ?? string.Empty,
+                ExpiresAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
+            });
+
+            await _UnitOfWork.CommitAsync();
+
+            _Logger.LogInformation(
+                "RevenueCat webhook: TRANSFER — user {UserId} IsPro=true (transferred from [{TransferredFrom}])",
+                toUserId.Value, string.Join(", ", ev.TransferredFrom));
+
+            return new CaseResult<bool> { Successful = true, Data = true };
         }
     }
 }

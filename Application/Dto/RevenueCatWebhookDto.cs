@@ -19,6 +19,12 @@ namespace Application.Dto
         [JsonPropertyName("original_app_user_id")]
         public string OriginalAppUserId { get; set; } = string.Empty;
 
+        [JsonPropertyName("transferred_from")]
+        public List<string> TransferredFrom { get; set; } = [];
+
+        [JsonPropertyName("transferred_to")]
+        public List<string> TransferredTo { get; set; } = [];
+
         [JsonPropertyName("expiration_at_ms")]
         public long? ExpirationAtMs { get; set; }
 

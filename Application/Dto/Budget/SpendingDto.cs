@@ -1,5 +1,4 @@
-﻿using Application.Dto.Bank;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace Application.Dto.Budget
 {
@@ -17,12 +16,8 @@ namespace Application.Dto.Budget
         public int BudgetCategoryId { get; set; }
         [JsonPropertyName("budgetPeriodId")]
         public int BudgetPeriodId { get; set; }
-        [JsonPropertyName("bankTransactionId")]
-        public int? BankTransactionId { get; set; }
-        [JsonPropertyName("bankTransaction")]
-        public BankTransactionDto? BankTransaction { get; set; }
-        [JsonPropertyName("transactionDate")]
-        public DateTime? TransactionDate { get; set; }
+        [JsonPropertyName("notificationTransactionId")]
+        public int? NotificationTransactionId { get; set; }
         [JsonPropertyName("createdByUserId")]
         public int CreatedByUserId { get; set; }
         [JsonPropertyName("createdByEmail")]

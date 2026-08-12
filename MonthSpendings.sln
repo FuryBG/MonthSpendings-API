@@ -11,8 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{016A7AD1-2D0D-41F9-A333-81E949BCCDFF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnableBanking", "EnableBanking\EnableBanking\EnableBanking.csproj", "{B47DA0AA-A8BB-966C-9118-F8F7CAEE0E5A}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,18 +69,6 @@ Global
 		{016A7AD1-2D0D-41F9-A333-81E949BCCDFF}.Release|x64.Build.0 = Release|Any CPU
 		{016A7AD1-2D0D-41F9-A333-81E949BCCDFF}.Release|x86.ActiveCfg = Release|Any CPU
 		{016A7AD1-2D0D-41F9-A333-81E949BCCDFF}.Release|x86.Build.0 = Release|Any CPU
-		{B47DA0AA-A8BB-966C-9118-F8F7CAEE0E5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B47DA0AA-A8BB-966C-9118-F8F7CAEE0E5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B47DA0AA-A8BB-966C-9118-F8F7CAEE0E5A}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{B47DA0AA-A8BB-966C-9118-F8F7CAEE0E5A}.Debug|x64.Build.0 = Debug|Any CPU
-		{B47DA0AA-A8BB-966C-9118-F8F7CAEE0E5A}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{B47DA0AA-A8BB-966C-9118-F8F7CAEE0E5A}.Debug|x86.Build.0 = Debug|Any CPU
-		{B47DA0AA-A8BB-966C-9118-F8F7CAEE0E5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B47DA0AA-A8BB-966C-9118-F8F7CAEE0E5A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B47DA0AA-A8BB-966C-9118-F8F7CAEE0E5A}.Release|x64.ActiveCfg = Release|Any CPU
-		{B47DA0AA-A8BB-966C-9118-F8F7CAEE0E5A}.Release|x64.Build.0 = Release|Any CPU
-		{B47DA0AA-A8BB-966C-9118-F8F7CAEE0E5A}.Release|x86.ActiveCfg = Release|Any CPU
-		{B47DA0AA-A8BB-966C-9118-F8F7CAEE0E5A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

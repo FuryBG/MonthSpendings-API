@@ -1,6 +1,4 @@
-﻿using Domain.Bank;
-
-namespace Domain
+﻿namespace Domain
 {
     public class Spending
     {
@@ -12,9 +10,8 @@ namespace Domain
         public BudgetCategory BudgetCategory { get; set; } = null!;
         public int BudgetPeriodId { get; set; }
         public BudgetPeriod BudgetPeriod { get; set; } = null!;
-        public int? BankTransactionId { get; set; }
-        public BankTransaction? BankTransaction { get; set; }
-        public DateTime? TransactionDate { get; set; }
+        public int? NotificationTransactionId { get; set; }
+        public NotificationTransaction? NotificationTransaction { get; set; }
         public int CreatedByUserId { get; set; }
         public AppUser CreatedBy { get; set; } = null!;
     }

@@ -1,5 +1,4 @@
 using Application.Interfaces.Repository;
-using Application.Interfaces.Repository.Bank;
 
 namespace Application.Interfaces
 {
@@ -11,9 +10,7 @@ namespace Application.Interfaces
         IBudgetInviteRepository BudgetInviteRepository { get; }
         IUserRepository UserRepository { get; }
         ICurrencyRepository CurrencyRepository { get; }
-        IBankConsentRepository BankConsentRepository { get; }
-        IBankAccountRepository BankAccountRepository { get; }
-        IBankTransactionRepository BankTransactionRepository { get; }
+        INotificationTransactionRepository NotificationTransactionRepository { get; }
         ITransactionCategoryRuleRepository TransactionCategoryRuleRepository { get; }
         IStatisticsRepository StatisticsRepository { get; }
         IAccountDeleteRequestRepository AccountDeleteRequestRepository { get; }

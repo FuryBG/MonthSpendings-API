@@ -48,7 +48,7 @@ namespace Infrastructure.Repository
 
             return await _DbContext.Spendings
                 .Include(s => s.CreatedBy)
-                .Include(s => s.BankTransaction)
+                .Include(s => s.NotificationTransaction)
                 .Where(s => s.BudgetCategoryId == budgetCategoryId && s.BudgetPeriodId == budgetPeriodId)
                 .OrderByDescending(s => s.Date)
                 .ToListAsync();

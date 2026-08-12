@@ -1,6 +1,4 @@
-﻿
-using Domain.Bank;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Domain
 {
@@ -22,7 +20,6 @@ namespace Domain
         public List<Budget> Budgets { get; set; } = [];
         public List<BudgetInvite> SentBudgetInvites { get; set; } = new();
         public List<BudgetInvite> ReceivedBudgetInvites { get; set; } = new();
-        public List<BankConsent> BankConsents { get; set; } = new();
         public List<Spending> CreatedSpendings { get; set; } = new();
     }
 }

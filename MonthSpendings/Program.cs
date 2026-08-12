@@ -1,19 +1,14 @@
-﻿using Application.BackgroundWorkers;
-using Application.Options;
+﻿using Application.Options;
 using Application.Interfaces;
 using Application.Interfaces.Repository;
-using Application.Interfaces.Repository.Bank;
 using Application.Services;
 using Application.UseCases;
-using Application.UseCases.Bank;
+using Application.UseCases.NotificationTransactions;
 using Application.UseCases.Statistics;
-using Application.UseCases.TransactionRules;
-using EnableBanking;
 using MonthSpendings.Filters;
 using Infrastructure;
 using Infrastructure.Interceptors;
 using Infrastructure.Repository;
-using Infrastructure.Repository.Bank;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
@@ -145,50 +140,16 @@ public class Program
             builder.Services.AddScoped<RevenueCatAuthFilter>();
             builder.Services.AddTransient<IGetPeriodComparisonUseCase, GetPeriodComparisonUseCase>();
 
-            string? bankingCertificatePath = builder.Configuration.GetSection("EnableBanking:AppCertPath").Value;
-            string? bankingAppKeyId = builder.Configuration.GetSection("EnableBanking:AppKeyId").Value;
-
-            if (string.IsNullOrWhiteSpace(bankingCertificatePath))
-            {
-                throw new InvalidOperationException("EnableBanking:AppCertPath is not configured in appsettings.json or environment variables.");
-            }
-
-            if (string.IsNullOrWhiteSpace(bankingAppKeyId))
-            {
-                throw new InvalidOperationException("EnableBanking:AppKeyId is not configured in appsettings.json or environment variables.");
-            }
-
             builder.Services.AddTransient<IPushNotificationService, PushNotificationsService>();
 
-            builder.Services.AddEnableBankingApi(options =>
-            {
-                options.KeyPath = Path.Combine(builder.Environment.ContentRootPath, bankingCertificatePath);
-                options.AppKid = bankingAppKeyId;
-            });
+            builder.Services.AddTransient<ICreateNotificationTransactionUseCase, CreateNotificationTransactionUseCase>();
+            builder.Services.AddTransient<IGetUncategorizedNotificationTransactionsUseCase, GetUncategorizedNotificationTransactionsUseCase>();
+            builder.Services.AddTransient<ICategorizeNotificationTransactionUseCase, CategorizeNotificationTransactionUseCase>();
 
-            builder.Services.AddMemoryCache();
-
-            builder.Services.AddTransient<IGetBanksUseCase, GetBanksUseCase>();
-            builder.Services.AddTransient<IStartBankConnectionUseCase, StartBankConnectionUseCase>();
-            builder.Services.AddTransient<IFinishBankConnectionUseCase, FinishBankConnectionUseCase>();
-            builder.Services.AddTransient<ICategorizeTransactionsUseCase, CategorizeTransactionsUseCase>();
-            builder.Services.AddTransient<IGetUncategorizedTransactionsUseCase, GetUncategorizedTransactionsUseCase>();
-            builder.Services.AddTransient<IRemoveConnectedBankBySessionIdUseCase, RemoveConnectedBankBySessionIdUseCase>();
-            builder.Services.AddTransient<IGetConnectedBanksByUserUseCase, GetConnectedBanksByUserUseCase>();
-            builder.Services.AddTransient<IGetTransactionCategoryRulesUseCase, GetTransactionCategoryRulesUseCase>();
-            builder.Services.AddTransient<ICreateTransactionCategoryRuleUseCase, CreateTransactionCategoryRuleUseCase>();
-            builder.Services.AddTransient<IDeleteTransactionCategoryRuleUseCase, DeleteTransactionCategoryRuleUseCase>();
-            builder.Services.AddTransient<ISyncTransactionsUseCase, SyncTransactionsUseCase>();
-            builder.Services.AddTransient<IBankSyncWorker, BankSyncWorker>();
-
-            builder.Services.AddTransient<IBankConsentRepository, BankConsentRepository>();
-            builder.Services.AddTransient<IBankAccountRepository, BankAccountRepository>();
-            builder.Services.AddTransient<IBankTransactionRepository, BankTransactionRepository>();
+            builder.Services.AddTransient<INotificationTransactionRepository, NotificationTransactionRepository>();
             builder.Services.AddTransient<ITransactionCategoryRuleRepository, TransactionCategoryRuleRepository>();
 
-            builder.Services.AddHostedService<TransactionSyncBackgroundService>();
             builder.Services.AddHostedService<InactivityNotificationBackgroundService>();
-            builder.Services.AddHostedService<BankCacheWarmupService>();
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(jwtOptions =>

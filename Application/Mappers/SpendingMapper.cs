@@ -15,9 +15,7 @@ namespace Application.Mappers
                 Description = spending.Description,
                 BudgetCategoryId = spending.BudgetCategoryId,
                 BudgetPeriodId = spending.BudgetPeriodId,
-                BankTransactionId = spending.BankTransactionId,
-                BankTransaction = spending.BankTransaction != null ? spending.BankTransaction.ToDto() : null,
-                TransactionDate = spending.TransactionDate,
+                NotificationTransactionId = spending.NotificationTransactionId,
                 CreatedByUserId = spending.CreatedByUserId,
                 CreatedByEmail = spending.CreatedBy?.Email,
                 CreatedByName = $"{spending.CreatedBy?.FirstName} {spending.CreatedBy?.LastName}".Trim(),
@@ -33,8 +31,7 @@ namespace Application.Mappers
                 Description = dto.Description,
                 BudgetCategoryId = dto.BudgetCategoryId,
                 BudgetPeriodId = dto.BudgetPeriodId,
-                BankTransactionId = dto.BankTransactionId,
-                TransactionDate = dto.TransactionDate,
+                NotificationTransactionId = dto.NotificationTransactionId,
             };
         }
     }

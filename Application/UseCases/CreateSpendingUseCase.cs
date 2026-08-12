@@ -67,13 +67,6 @@ namespace Application.UseCases
                 newSpending.CreatedByUserId = userId;
                 Spending addedSpending = _UnitOfWork.CategorySpendingsRepository.AddSpending(newSpending);
 
-                await _UnitOfWork.CommitAsync();
-
-                if (addedSpending.BankTransactionId != null)
-                {
-                    await _UnitOfWork.BankTransactionRepository.CategorizeAsync([addedSpending.BankTransactionId.Value], addedSpending.Id, new CancellationToken());
-                }
-
                 await _UnitOfWork.CommitTransactionAsync();
 
                 List<string> budgetUsersNotificationTokens = budgetCategory.Budget.Users.Where(u => u.Id != userId).Select(u => u.NotificationToken).ToList();

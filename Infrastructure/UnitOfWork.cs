@@ -1,6 +1,5 @@
 using Application.Interfaces;
 using Application.Interfaces.Repository;
-using Application.Interfaces.Repository.Bank;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Infrastructure
@@ -15,9 +14,7 @@ namespace Infrastructure
         public ICategorySpendingsRepository CategorySpendingsRepository { get; private set; }
         public IBudgetInviteRepository BudgetInviteRepository { get; private set; }
         public ICurrencyRepository CurrencyRepository { get; private set; }
-        public IBankConsentRepository BankConsentRepository { get; private set; }
-        public IBankAccountRepository BankAccountRepository { get; private set; }
-        public IBankTransactionRepository BankTransactionRepository { get; private set; }
+        public INotificationTransactionRepository NotificationTransactionRepository { get; private set; }
         public ITransactionCategoryRuleRepository TransactionCategoryRuleRepository { get; private set; }
         public IStatisticsRepository StatisticsRepository { get; private set; }
         public IAccountDeleteRequestRepository AccountDeleteRequestRepository { get; private set; }
@@ -30,9 +27,7 @@ namespace Infrastructure
             ICategorySpendingsRepository categorySpendingsRepository,
             IBudgetInviteRepository budgetInviteRepository,
             ICurrencyRepository currencyRepository,
-            IBankConsentRepository bankConsentRepository,
-            IBankAccountRepository bankAccountRepository,
-            IBankTransactionRepository bankTransactionRepository,
+            INotificationTransactionRepository notificationTransactionRepository,
             ITransactionCategoryRuleRepository transactionCategoryRuleRepository,
             IStatisticsRepository statisticsRepository,
             IAccountDeleteRequestRepository accountDeleteRequestRepository)
@@ -44,9 +39,7 @@ namespace Infrastructure
             CategorySpendingsRepository = categorySpendingsRepository;
             BudgetInviteRepository = budgetInviteRepository;
             CurrencyRepository = currencyRepository;
-            BankConsentRepository = bankConsentRepository;
-            BankAccountRepository = bankAccountRepository;
-            BankTransactionRepository = bankTransactionRepository;
+            NotificationTransactionRepository = notificationTransactionRepository;
             TransactionCategoryRuleRepository = transactionCategoryRuleRepository;
             StatisticsRepository = statisticsRepository;
             AccountDeleteRequestRepository = accountDeleteRequestRepository;

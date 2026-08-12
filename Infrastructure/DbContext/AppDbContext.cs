@@ -14,9 +14,7 @@ namespace Infrastructure
         public DbSet<BudgetCategory> BudgetCategories { get; set; }
         public DbSet<BudgetInvite> BudgetInvites { get; set; }
         public DbSet<Spending> Spendings { get; set; }
-        public DbSet<BankConsent> BankConsent { get; set; }
-        public DbSet<BankAccount> BankAccounts { get; set; }
-        public DbSet<BankTransaction> BankTransactions { get; set; }
+        public DbSet<NotificationTransaction> NotificationTransactions { get; set; }
         public DbSet<TransactionCategoryRule> TransactionCategoryRules { get; set; }
         public DbSet<AccountDeleteRequest> AccountDeleteRequests { get; set; }
 
@@ -40,51 +38,49 @@ namespace Infrastructure
             modelBuilder.Entity<Budget>()
                 .HasQueryFilter(b => !b.IsDeleted);
 
-            modelBuilder.Entity<BankTransaction>()
-            .HasOne(b => b.Spending)
-            .WithOne(s => s.BankTransaction)
-            .HasForeignKey<BankTransaction>(b => b.SpendingId)
-            .IsRequired(false);
+            modelBuilder.Entity<NotificationTransaction>()
+                .HasOne(t => t.Spending)
+                .WithOne(s => s.NotificationTransaction)
+                .HasForeignKey<NotificationTransaction>(t => t.SpendingId)
+                .IsRequired(false);
+
+            modelBuilder.Entity<NotificationTransaction>()
+                .HasOne(t => t.User)
+                .WithMany()
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<TransactionCategoryRule>()
-            .HasOne(r => r.Category)
-            .WithMany()
-            .HasForeignKey(r => r.CategoryId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<BankTransaction>()
-                .HasIndex(b => b.TransactionId)
-                .IsUnique();
+                .HasOne(r => r.Category)
+                .WithMany()
+                .HasForeignKey(r => r.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<BudgetPeriod>()
-            .Property(i => i.StartDate)
-            .HasDefaultValueSql("timezone('utc', now())");
+                .Property(i => i.StartDate)
+                .HasDefaultValueSql("timezone('utc', now())");
 
             modelBuilder.Entity<BudgetInvite>()
-           .Property(i => i.ValidTo)
-           .HasDefaultValueSql("timezone('utc', now()) + INTERVAL '2 days'");
-
-            modelBuilder.Entity<BankConsent>()
-            .Property(i => i.LastSync)
-            .HasDefaultValueSql("timezone('utc', now())");
+                .Property(i => i.ValidTo)
+                .HasDefaultValueSql("timezone('utc', now()) + INTERVAL '2 days'");
 
             modelBuilder.Entity<BudgetInvite>()
-            .HasOne(bi => bi.Sender)
-            .WithMany(u => u.SentBudgetInvites)
-            .HasForeignKey(bi => bi.SenderId)
-            .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(bi => bi.Sender)
+                .WithMany(u => u.SentBudgetInvites)
+                .HasForeignKey(bi => bi.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<BudgetInvite>()
-            .HasOne(bi => bi.Receiver)
-            .WithMany(u => u.ReceivedBudgetInvites)
-            .HasForeignKey(bi => bi.ReceiverId)
-            .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(bi => bi.Receiver)
+                .WithMany(u => u.ReceivedBudgetInvites)
+                .HasForeignKey(bi => bi.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Spending>()
-            .HasOne(s => s.CreatedBy)
-            .WithMany(u => u.CreatedSpendings)
-            .HasForeignKey(s => s.CreatedByUserId)
-            .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(s => s.CreatedBy)
+                .WithMany(u => u.CreatedSpendings)
+                .HasForeignKey(s => s.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Currency>().HasData(
                 new Currency { Id = 1, Code = "USD", Name = "US Dollar", Symbol = "$" },

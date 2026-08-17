@@ -99,10 +99,32 @@ namespace Infrastructure.Repository
         private async Task<Dictionary<int, decimal>> BuildSpendingMap(int periodId)
         {
             return await _DbContext.Spendings
-                .Where(s => s.BudgetPeriodId == periodId)
+                .Where(s => s.BudgetPeriodId == periodId && s.Amount < 0)
                 .GroupBy(s => s.BudgetCategoryId)
-                .Select(g => new { CategoryId = g.Key, Total = g.Sum(s => s.Amount) })
+                .Select(g => new { CategoryId = g.Key, Total = g.Sum(s => -s.Amount) })
                 .ToDictionaryAsync(x => x.CategoryId, x => x.Total);
+        }
+
+        public async Task<List<PeriodHistoryItemDto>> GetPeriodsHistory(int budgetId, int userId)
+        {
+            bool userHasAccess = await _DbContext.Budgets
+                .AnyAsync(b => b.Id == budgetId && b.Users.Any(u => u.Id == userId));
+
+            if (!userHasAccess) return [];
+
+            return await _DbContext.BudgetPeriods
+                .Where(p => p.BudgetId == budgetId)
+                .OrderBy(p => p.StartDate)
+                .Select(p => new PeriodHistoryItemDto
+                {
+                    PeriodId = p.Id,
+                    StartDate = p.StartDate,
+                    EndDate = p.EndDate,
+                    TotalSpent = _DbContext.Spendings
+                        .Where(s => s.BudgetPeriodId == p.Id && s.Amount < 0)
+                        .Sum(s => (decimal?)(-s.Amount)) ?? 0,
+                })
+                .ToListAsync();
         }
     }
 }

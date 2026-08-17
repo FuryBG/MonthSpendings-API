@@ -140,6 +140,7 @@ public class Program
             builder.Services.AddTransient<IHandleRevenueCatWebhookUseCase, HandleRevenueCatWebhookUseCase>();
             builder.Services.AddScoped<RevenueCatAuthFilter>();
             builder.Services.AddTransient<IGetPeriodComparisonUseCase, GetPeriodComparisonUseCase>();
+            builder.Services.AddTransient<IGetPeriodsHistoryUseCase, GetPeriodsHistoryUseCase>();
 
             builder.Services.AddTransient<IPushNotificationService, PushNotificationsService>();
 

@@ -147,6 +147,7 @@ public class Program
             builder.Services.AddTransient<ICreateNotificationTransactionUseCase, CreateNotificationTransactionUseCase>();
             builder.Services.AddTransient<IGetUncategorizedNotificationTransactionsUseCase, GetUncategorizedNotificationTransactionsUseCase>();
             builder.Services.AddTransient<ICategorizeNotificationTransactionUseCase, CategorizeNotificationTransactionUseCase>();
+            builder.Services.AddTransient<IDeleteNotificationTransactionUseCase, DeleteNotificationTransactionUseCase>();
 
             builder.Services.AddTransient<INotificationTransactionRepository, NotificationTransactionRepository>();
             builder.Services.AddTransient<ITransactionCategoryRuleRepository, TransactionCategoryRuleRepository>();

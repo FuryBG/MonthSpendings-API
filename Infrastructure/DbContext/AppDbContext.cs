@@ -39,6 +39,9 @@ namespace Infrastructure
                 .HasQueryFilter(b => !b.IsDeleted);
 
             modelBuilder.Entity<NotificationTransaction>()
+                .HasQueryFilter(t => !t.IsDeleted);
+
+            modelBuilder.Entity<NotificationTransaction>()
                 .HasOne(t => t.Spending)
                 .WithOne(s => s.NotificationTransaction)
                 .HasForeignKey<NotificationTransaction>(t => t.SpendingId)

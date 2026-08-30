@@ -42,5 +42,13 @@ namespace Infrastructure.Repository
                     .SetProperty(t => t.SpendingId, spendingId),
                     cancellationToken);
         }
+
+        public async Task DeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            await _DbContext.NotificationTransactions
+                .IgnoreQueryFilters()
+                .Where(t => t.Id == id)
+                .ExecuteUpdateAsync(s => s.SetProperty(t => t.IsDeleted, true), cancellationToken);
+        }
     }
 }

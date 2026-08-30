@@ -15,6 +15,7 @@ namespace Domain
         public string? RawBody { get; set; }
         public DateTime ReceivedAt { get; set; }
         public bool Categorized { get; set; }
+        public bool IsDeleted { get; set; }
         public int? SpendingId { get; set; }
         public Spending? Spending { get; set; }
     }

@@ -8,5 +8,6 @@ namespace Application.Interfaces.Repository
         Task<List<NotificationTransaction>> GetUncategorizedByUserAsync(int userId, CancellationToken cancellationToken);
         Task<NotificationTransaction?> GetByIdAsync(int id, int userId, CancellationToken cancellationToken);
         Task CategorizeAsync(int transactionId, int spendingId, CancellationToken cancellationToken);
+        Task DeleteAsync(int id, CancellationToken cancellationToken);
     }
 }

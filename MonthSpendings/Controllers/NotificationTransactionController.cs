@@ -13,15 +13,18 @@ namespace MonthSpendings.Controllers
         private readonly ICreateNotificationTransactionUseCase _CreateUseCase;
         private readonly IGetUncategorizedNotificationTransactionsUseCase _GetUncategorizedUseCase;
         private readonly ICategorizeNotificationTransactionUseCase _CategorizeUseCase;
+        private readonly IDeleteNotificationTransactionUseCase _DeleteUseCase;
 
         public NotificationTransactionController(
             ICreateNotificationTransactionUseCase createUseCase,
             IGetUncategorizedNotificationTransactionsUseCase getUncategorizedUseCase,
-            ICategorizeNotificationTransactionUseCase categorizeUseCase)
+            ICategorizeNotificationTransactionUseCase categorizeUseCase,
+            IDeleteNotificationTransactionUseCase deleteUseCase)
         {
             _CreateUseCase = createUseCase;
             _GetUncategorizedUseCase = getUncategorizedUseCase;
             _CategorizeUseCase = categorizeUseCase;
+            _DeleteUseCase = deleteUseCase;
         }
 
         [HttpPost]
@@ -49,6 +52,15 @@ namespace MonthSpendings.Controllers
             if (!result.Successful)
                 return BadRequest(result.ErrorMessage);
             return Ok(result.Data);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+        {
+            var result = await _DeleteUseCase.InvokeAsync(id, cancellationToken);
+            if (!result.Successful)
+                return BadRequest(result.ErrorMessage);
+            return Ok();
         }
     }
 }

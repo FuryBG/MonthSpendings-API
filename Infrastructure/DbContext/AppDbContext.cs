@@ -17,6 +17,7 @@ namespace Infrastructure
         public DbSet<NotificationTransaction> NotificationTransactions { get; set; }
         public DbSet<TransactionCategoryRule> TransactionCategoryRules { get; set; }
         public DbSet<AccountDeleteRequest> AccountDeleteRequests { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -84,6 +85,19 @@ namespace Infrastructure
                 .WithMany(u => u.CreatedSpendings)
                 .HasForeignKey(s => s.CreatedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RefreshToken>()
+                .HasOne(rt => rt.User)
+                .WithMany()
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RefreshToken>()
+                .HasIndex(rt => rt.Token)
+                .IsUnique();
+
+            modelBuilder.Entity<RefreshToken>()
+                .HasIndex(rt => rt.UserId);
 
             modelBuilder.Entity<Currency>().HasData(
                 new Currency { Id = 1, Code = "USD", Name = "US Dollar", Symbol = "$" },

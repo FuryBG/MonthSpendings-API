@@ -12,6 +12,7 @@ using Infrastructure.Repository;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -25,6 +26,7 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
 using System.Text;
+using System.Threading.RateLimiting;
 
 namespace MonthSpendings;
 
@@ -77,10 +79,6 @@ public class Program
 
             builder.Services.AddControllers();
             builder.Services.AddRazorPages();
-            builder.Services.Configure<ApiBehaviorOptions>(options =>
-            {
-                options.SuppressModelStateInvalidFilter = true;
-            });
 
             builder.Services.Configure<PlanLimitsOptions>(builder.Configuration.GetSection("PlanLimits"));
             builder.Services.Configure<RevenueCatOptions>(builder.Configuration.GetSection("RevenueCat"));
@@ -105,7 +103,20 @@ public class Program
 
             builder.Services.AddHttpContextAccessor();
 
-            builder.Services.AddTransient<ITokenService, TokenService>();
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.AddFixedWindowLimiter("auth", o =>
+                {
+                    o.PermitLimit = 5;
+                    o.Window = TimeSpan.FromMinutes(1);
+                    o.QueueLimit = 0;
+                    o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                });
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            });
+
+            builder.Services.AddScoped<ITokenService, TokenService>();
+            builder.Services.AddTransient<IPasswordService, PasswordService>();
             builder.Services.AddScoped<IUserService, UserService>();
 
             builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
@@ -119,6 +130,10 @@ public class Program
             builder.Services.AddTransient<IAccountDeleteRequestRepository, AccountDeleteRequestRepository>();
 
             builder.Services.AddTransient<IRegisterUserUseCase, RegisterUserUseCase>();
+            builder.Services.AddTransient<IRegisterWithEmailUseCase, RegisterWithEmailUseCase>();
+            builder.Services.AddTransient<ILoginWithEmailUseCase, LoginWithEmailUseCase>();
+            builder.Services.AddTransient<IRefreshTokenUseCase, RefreshTokenUseCase>();
+            builder.Services.AddTransient<IRevokeRefreshTokenUseCase, RevokeRefreshTokenUseCase>();
             builder.Services.AddTransient<IGetUserByIdUseCase, GetUserByIdUseCase>();
             builder.Services.AddTransient<IUpdateLastUserActivityUseCase, UpdateLastUserActivityUseCase>();
             builder.Services.AddTransient<IUpdateNotificationTokenUseCase, UpdateNotificationTokenUseCase>();
@@ -199,6 +214,7 @@ public class Program
                     elapsed > 1000 ? LogEventLevel.Warning :
                     LogEventLevel.Information;
             });
+            app.UseRateLimiter();
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseMiddleware<UserIdEnricherMiddleware>();

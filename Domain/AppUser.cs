@@ -17,6 +17,9 @@ namespace Domain
         public string? GooglePhotoAddress { get; set; }
         public bool IsPro { get; set; } = false;
         public bool SyncWalletTransactions { get; set; } = false;
+        public string? PasswordHash { get; set; }
+        public int FailedLoginAttempts { get; set; } = 0;
+        public DateTime? LockoutEnd { get; set; }
         public List<Subscription> Subscriptions { get; set; } = [];
         public List<Budget> Budgets { get; set; } = [];
         public List<BudgetInvite> SentBudgetInvites { get; set; } = new();

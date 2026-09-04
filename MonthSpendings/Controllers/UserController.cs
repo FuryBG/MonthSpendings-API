@@ -28,6 +28,7 @@ namespace MonthSpendings.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetAuthenticatedUser()
         {
             var result = await _GetUserByIdUseCase.InvokeAsync();

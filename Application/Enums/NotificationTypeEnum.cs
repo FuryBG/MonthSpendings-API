@@ -7,6 +7,7 @@
         SpendingAdd,
         SpendingDelete,
         BudgetCategoryUpdate,
-        InactivityReminder
+        InactivityReminder,
+        KickedFromBudget
     }
 }

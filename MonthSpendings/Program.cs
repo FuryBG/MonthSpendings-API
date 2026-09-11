@@ -151,6 +151,8 @@ public class Program
             builder.Services.AddTransient<IGetCategorySpendingsByPeriodUseCase, GetCategorySpendingsByPeriodUseCase>();
             builder.Services.AddTransient<ICreateBudgetInviteUseCase, CreateBudgetInviteUseCase>();
             builder.Services.AddTransient<IUpdateBudgetInviteResponseUseCase, UpdateBudgetInviteResponseUseCase>();
+            builder.Services.AddTransient<IKickBudgetMemberUseCase, KickBudgetMemberUseCase>();
+            builder.Services.AddTransient<ILeaveBudgetUseCase, LeaveBudgetUseCase>();
             builder.Services.AddTransient<IGetAllCurrenciesUseCase, GetAllCurrenciesUseCase>();
             builder.Services.AddTransient<IHandleRevenueCatWebhookUseCase, HandleRevenueCatWebhookUseCase>();
             builder.Services.AddScoped<RevenueCatAuthFilter>();

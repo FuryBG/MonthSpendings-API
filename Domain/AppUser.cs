@@ -15,7 +15,7 @@ namespace Domain
         public string Timezone { get; set; } = "UTC";
         public DateTime? LastInactivityNotificationSentAt { get; set; }
         public string? GooglePhotoAddress { get; set; }
-        public bool IsPro { get; set; } = false;
+        public bool IsPro { get; set; } = true;
         public bool SyncWalletTransactions { get; set; } = false;
         public string? PasswordHash { get; set; }
         public int FailedLoginAttempts { get; set; } = 0;

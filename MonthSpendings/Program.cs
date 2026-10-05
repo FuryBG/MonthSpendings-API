@@ -82,6 +82,7 @@ public class Program
 
             builder.Services.Configure<PlanLimitsOptions>(builder.Configuration.GetSection("PlanLimits"));
             builder.Services.Configure<RevenueCatOptions>(builder.Configuration.GetSection("RevenueCat"));
+            builder.Services.Configure<AppVersionOptions>(builder.Configuration.GetSection("AppVersion"));
 
             builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
             builder.Services.AddProblemDetails();
@@ -156,8 +157,7 @@ public class Program
             builder.Services.AddTransient<IGetAllCurrenciesUseCase, GetAllCurrenciesUseCase>();
             builder.Services.AddTransient<IHandleRevenueCatWebhookUseCase, HandleRevenueCatWebhookUseCase>();
             builder.Services.AddScoped<RevenueCatAuthFilter>();
-            builder.Services.AddTransient<IGetPeriodComparisonUseCase, GetPeriodComparisonUseCase>();
-            builder.Services.AddTransient<IGetPeriodsHistoryUseCase, GetPeriodsHistoryUseCase>();
+            builder.Services.AddTransient<IGetRangeSummaryUseCase, GetRangeSummaryUseCase>();
 
             builder.Services.AddTransient<IPushNotificationService, PushNotificationsService>();
 

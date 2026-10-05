@@ -8,41 +8,30 @@ namespace MonthSpendings.Controllers
     [Route("api/[controller]")]
     public class StatisticsController : ControllerBase
     {
-        private readonly IGetPeriodComparisonUseCase _GetPeriodComparisonUseCase;
-        private readonly IGetPeriodsHistoryUseCase _GetPeriodsHistoryUseCase;
+        private readonly IGetRangeSummaryUseCase _GetRangeSummaryUseCase;
         private readonly ILogger<StatisticsController> _Logger;
 
         public StatisticsController(
-            IGetPeriodComparisonUseCase getPeriodComparisonUseCase,
-            IGetPeriodsHistoryUseCase getPeriodsHistoryUseCase,
+            IGetRangeSummaryUseCase getRangeSummaryUseCase,
             ILogger<StatisticsController> logger)
         {
-            _GetPeriodComparisonUseCase = getPeriodComparisonUseCase;
-            _GetPeriodsHistoryUseCase = getPeriodsHistoryUseCase;
+            _GetRangeSummaryUseCase = getRangeSummaryUseCase;
             _Logger = logger;
         }
 
         [Authorize]
-        [HttpGet("period-comparison")]
-        public async Task<IActionResult> GetPeriodComparison([FromQuery] int budgetId)
+        [HttpGet("range-summary")]
+        public async Task<IActionResult> GetRangeSummary(
+            [FromQuery] int budgetId,
+            [FromQuery] int fromPeriodId,
+            [FromQuery] int toPeriodId,
+            [FromQuery] int? categoryId,
+            [FromQuery] int top = GetRangeSummaryUseCase.DefaultTop)
         {
-            var result = await _GetPeriodComparisonUseCase.InvokeAsync(budgetId);
+            var result = await _GetRangeSummaryUseCase.InvokeAsync(budgetId, fromPeriodId, toPeriodId, categoryId, top);
             if (!result.Successful)
             {
-                _Logger.LogWarning("GetPeriodComparison failed: {Error}", result.ErrorMessage);
-                return BadRequest(result.ErrorMessage);
-            }
-            return Ok(result.Data);
-        }
-
-        [Authorize]
-        [HttpGet("periods-history")]
-        public async Task<IActionResult> GetPeriodsHistory([FromQuery] int budgetId)
-        {
-            var result = await _GetPeriodsHistoryUseCase.InvokeAsync(budgetId);
-            if (!result.Successful)
-            {
-                _Logger.LogWarning("GetPeriodsHistory failed: {Error}", result.ErrorMessage);
+                _Logger.LogWarning("GetRangeSummary failed: {Error}", result.ErrorMessage);
                 return BadRequest(result.ErrorMessage);
             }
             return Ok(result.Data);

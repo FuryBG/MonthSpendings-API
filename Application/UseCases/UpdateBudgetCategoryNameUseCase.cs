@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto.Budget;
 using Application.Dto.Notification;
@@ -33,53 +34,43 @@ namespace Application.UseCases
             var result = new CaseResult<BudgetCategoryDto?>();
             result.Successful = true;
 
-            try
+            int userId = _UserService.GetUserId();
+            AppUser? user = await _UnitOfWork.UserRepository.GetUserById(userId);
+
+            if (user == null)
             {
-                int userId = _UserService.GetUserId();
-                AppUser? user = await _UnitOfWork.UserRepository.GetUserById(userId);
-
-                if (user == null)
-                {
-                    _Logger.LogWarning("User {UserId} not found when updating category name", userId);
-                    result.Successful = false;
-                    result.ErrorMessage = "Can't update the Budget Category.";
-                    return result;
-                }
-
-                BudgetCategory? budgetCategory = await _UnitOfWork.BudgetCategoryRepository.GetBudgetCategoryById(budgetCategoryId, userId);
-
-                if (budgetCategory == null)
-                {
-                    _Logger.LogWarning("Budget category {CategoryId} not found for name update", budgetCategoryId);
-                    result.Successful = false;
-                    result.ErrorMessage = "Can't find the Budget Category.";
-                    return result;
-                }
-
-                string oldName = budgetCategory.Name;
-                budgetCategory.Name = newName;
-                _UnitOfWork.BudgetCategoryRepository.UpdateCategory(budgetCategory);
-
-                await _UnitOfWork.CommitAsync();
-                result.Data = budgetCategory.ToDto();
-                _Logger.LogInformation("Category {CategoryId} renamed to {NewName} by user {UserId}", budgetCategoryId, newName, userId);
-
-                List<string> notificationReceiversTokens = budgetCategory.Budget.Users.Select(u => u.NotificationToken).ToList();
-                await SendBudgetUpdateNotification(notificationReceiversTokens, user.Email, oldName, newName);
+                _Logger.LogWarning("User {UserId} not found when updating category name", userId);
+                return CaseResult<BudgetCategoryDto?>.Error(Messages.UserInvalid);
             }
-            catch (Exception ex)
+
+            BudgetCategory? budgetCategory = await _UnitOfWork.BudgetCategoryRepository.GetBudgetCategoryById(budgetCategoryId, userId);
+
+            if (budgetCategory == null)
             {
-                _Logger.LogError(ex, "Error updating category {CategoryId} name", budgetCategoryId);
-                result.Successful = false;
-                result.ErrorMessage = "Something got wrong during respond to Invite. Please try again later.";
+                _Logger.LogInformation("Budget category {CategoryId} not found for user {UserId} on rename", budgetCategoryId, userId);
+                return CaseResult<BudgetCategoryDto?>.Error(Messages.CategoryNotFound);
             }
+
+            string oldName = budgetCategory.Name;
+            budgetCategory.Name = newName;
+            _UnitOfWork.BudgetCategoryRepository.UpdateCategory(budgetCategory);
+
+            await _UnitOfWork.CommitAsync();
+            result.Data = budgetCategory.ToDto();
+            _Logger.LogInformation("Category {CategoryId} renamed to {NewName} by user {UserId}", budgetCategoryId, newName, userId);
+
+            await SendBudgetUpdateNotification(budgetCategory.Budget.Users, user.Email, oldName, newName);
             return result;
         }
 
-        private async Task SendBudgetUpdateNotification(List<string> receiverNotificationTokens, string initiatorEmail, string oldCategoryName, string newCategoryName)
+        private async Task SendBudgetUpdateNotification(List<AppUser> receivers, string initiatorEmail, string oldCategoryName, string newCategoryName)
         {
-            string notificationMessage = $"{initiatorEmail} updated category name from {oldCategoryName} to {newCategoryName}.";
-            await _PushNotificationService.SendNotification(receiverNotificationTokens, "Budget Category Update", notificationMessage, new NotificationDto() { Type = NotificationTypeEnum.BudgetCategoryUpdate });
+            await _PushNotificationService.SendLocalized(
+                receivers,
+                nameof(Messages.PushCategoryRenamedTitle),
+                nameof(Messages.PushCategoryRenamedBody),
+                new NotificationDto() { Type = NotificationTypeEnum.BudgetCategoryUpdate },
+                initiatorEmail, oldCategoryName, newCategoryName);
         }
     }
 }

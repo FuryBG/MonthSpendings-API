@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto.Budget;
 using Application.Interfaces;
@@ -29,32 +30,21 @@ namespace Application.UseCases
             var result = new CaseResult<int?>();
             result.Successful = true;
 
-            try
+            int userId = _UserService.GetUserId();
+            BudgetCategory? budgetCategory = await _UnitOfWork.BudgetCategoryRepository.GetBudgetCategoryById(budgetCategoryId, userId);
+
+            if (budgetCategory == null)
             {
-                int userId = _UserService.GetUserId();
-                BudgetCategory? budgetCategory = await _UnitOfWork.BudgetCategoryRepository.GetBudgetCategoryById(budgetCategoryId, userId);
+                _Logger.LogInformation("Budget category {CategoryId} not found for user {UserId} on delete", budgetCategoryId, userId);
+                return CaseResult<int?>.Error(Messages.CategoryNotFound);
 
-                if (budgetCategory == null)
-                {
-                    _Logger.LogWarning("Budget category {CategoryId} not found for deletion", budgetCategoryId);
-                    result.Successful = false;
-                    result.ErrorMessage = "Can't find the Budget to delete.";
-                    return result;
-
-                }
-
-                BudgetCategory addedCategory = _UnitOfWork.BudgetCategoryRepository.DeleteCategory(budgetCategory);
-                await _UnitOfWork.TransactionCategoryRuleRepository.DeleteByCategoryIdAsync(budgetCategoryId, new CancellationToken());
-                await _UnitOfWork.CommitAsync();
-                result.Data = budgetCategoryId;
-                _Logger.LogInformation("Budget category {CategoryId} deleted by user {UserId}", budgetCategoryId, userId);
             }
-            catch (Exception ex)
-            {
-                _Logger.LogError(ex, "Error deleting budget category {CategoryId}", budgetCategoryId);
-                result.Successful = false;
-                result.ErrorMessage = "Something got wrong during deleting category. Please try again later.";
-            }
+
+            BudgetCategory addedCategory = _UnitOfWork.BudgetCategoryRepository.DeleteCategory(budgetCategory);
+            await _UnitOfWork.TransactionCategoryRuleRepository.DeleteByCategoryIdAsync(budgetCategoryId, new CancellationToken());
+            await _UnitOfWork.CommitAsync();
+            result.Data = budgetCategoryId;
+            _Logger.LogInformation("Budget category {CategoryId} deleted by user {UserId}", budgetCategoryId, userId);
 
             return result;
         }

@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto.Budget;
 using Application.Interfaces;
@@ -30,20 +31,10 @@ namespace Application.UseCases
             var result = new CaseResult<List<SpendingDto>>([]);
             result.Successful = true;
 
-            int userId = 0;
-            try
-            {
-                userId = _UserService.GetUserId();
-                var spendings = await _UnitOfWork.CategorySpendingsRepository.GetSpendingsByCategoryAndPeriod(budgetCategoryId, budgetPeriodId, userId);
-                result.Data = spendings.Select(s => s.ToDto()).ToList();
-                _Logger.LogInformation("Retrieved {Count} spendings for category {CategoryId} period {PeriodId} user {UserId}", result.Data.Count, budgetCategoryId, budgetPeriodId, userId);
-            }
-            catch (Exception ex)
-            {
-                _Logger.LogError(ex, "Error retrieving spendings for category {CategoryId} period {PeriodId} user {UserId}", budgetCategoryId, budgetPeriodId, userId);
-                result.Successful = false;
-                result.ErrorMessage = "Something went wrong while retrieving spendings. Please try again later.";
-            }
+            int userId = _UserService.GetUserId();
+            var spendings = await _UnitOfWork.CategorySpendingsRepository.GetSpendingsByCategoryAndPeriod(budgetCategoryId, budgetPeriodId, userId);
+            result.Data = spendings.Select(s => s.ToDto()).ToList();
+            _Logger.LogDebug("Retrieved {Count} spendings for category {CategoryId} period {PeriodId} user {UserId}", result.Data.Count, budgetCategoryId, budgetPeriodId, userId);
 
             return result;
         }

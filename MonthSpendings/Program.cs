@@ -1,23 +1,27 @@
-﻿using Application.Options;
-using Application.Interfaces;
+﻿using Application.Interfaces;
 using Application.Interfaces.Repository;
+using Application.Localization;
+using Application.Options;
+using Application.Resources;
 using Application.Services;
 using Application.UseCases;
 using Application.UseCases.NotificationTransactions;
 using Application.UseCases.Statistics;
-using MonthSpendings.Filters;
 using Infrastructure;
 using Infrastructure.Interceptors;
 using Infrastructure.Repository;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.WebEncoders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using MonthSpendings.BackgroundServices;
+using MonthSpendings.Controllers;
 using MonthSpendings.Exceptions;
+using MonthSpendings.Filters;
 using MonthSpendings.Middleware;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -26,6 +30,8 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
 using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using System.Threading.RateLimiting;
 
 namespace MonthSpendings;
@@ -53,9 +59,7 @@ public class Program
                     tableName: "Logs",
                     columnOptions: null,
                     needAutoCreateTable: true,
-                    restrictedToMinimumLevel: builder.Environment.IsDevelopment()
-                        ? LogEventLevel.Information
-                        : LogEventLevel.Warning)));
+                    restrictedToMinimumLevel: LogEventLevel.Information)));
 
             builder.Services.AddOpenTelemetry()
                 .ConfigureResource(r => r.AddService("MonthSpendings-API"))
@@ -79,6 +83,8 @@ public class Program
 
             builder.Services.AddControllers();
             builder.Services.AddRazorPages();
+            // Emit Cyrillic/accented text as-is in Razor pages instead of HTML entities.
+            builder.Services.Configure<WebEncoderOptions>(o => o.TextEncoderSettings = new TextEncoderSettings(UnicodeRanges.All));
 
             builder.Services.Configure<PlanLimitsOptions>(builder.Configuration.GetSection("PlanLimits"));
             builder.Services.Configure<RevenueCatOptions>(builder.Configuration.GetSection("RevenueCat"));
@@ -114,6 +120,10 @@ public class Program
                     o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                 });
                 options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+                options.OnRejected = async (context, cancellationToken) =>
+                {
+                    await context.HttpContext.Response.WriteAsJsonAsync(Messages.TooManyRequests, cancellationToken);
+                };
             });
 
             builder.Services.AddScoped<ITokenService, TokenService>();
@@ -139,6 +149,7 @@ public class Program
             builder.Services.AddTransient<IUpdateLastUserActivityUseCase, UpdateLastUserActivityUseCase>();
             builder.Services.AddTransient<IUpdateNotificationTokenUseCase, UpdateNotificationTokenUseCase>();
             builder.Services.AddTransient<IUpdateSyncWalletTransactionsUseCase, UpdateSyncWalletTransactionsUseCase>();
+            builder.Services.AddTransient<IUpdateUserLanguageUseCase, UpdateUserLanguageUseCase>();
             builder.Services.AddTransient<IRequestAccountDeletionUseCase, RequestAccountDeletionUseCase>();
             builder.Services.AddTransient<ICreateBudgetUseCase, CreateBudgetUseCase>();
             builder.Services.AddTransient<IGetAllBudgetsUseCase, GetAllBudgetsUseCase>();
@@ -216,6 +227,18 @@ public class Program
                     elapsed > 1000 ? LogEventLevel.Warning :
                     LogEventLevel.Information;
             });
+            // Request culture: ?lang= (privacy page links), then Accept-Language. "bg-BG" falls back to "bg";
+            // anything unsupported falls back to English. CultureInfo.CurrentUICulture is always en/bg/es afterwards.
+            var localizationOptions = new RequestLocalizationOptions()
+                .SetDefaultCulture(SupportedLanguages.Default)
+                .AddSupportedCultures(SupportedLanguages.All)
+                .AddSupportedUICultures(SupportedLanguages.All);
+            localizationOptions.RequestCultureProviders =
+            [
+                new QueryStringRequestCultureProvider { QueryStringKey = "lang", UIQueryStringKey = "lang" },
+                new AcceptLanguageHeaderRequestCultureProvider()
+            ];
+            app.UseRequestLocalization(localizationOptions);
             app.UseRateLimiter();
             app.UseAuthentication();
             app.UseAuthorization();

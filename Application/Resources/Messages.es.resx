@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="TooManyRequests" xml:space="preserve">
+    <value>Demasiados intentos. Espera un minuto e inténtalo de nuevo.</value>
+  </data>
+  <data name="UserInvalid" xml:space="preserve">
+    <value>Usuario no válido. Vuelve a iniciar sesión.</value>
+  </data>
+  <data name="UserNotFound" xml:space="preserve">
+    <value>Usuario no encontrado.</value>
+  </data>
+  <data name="UserUnsupportedLanguage" xml:space="preserve">
+    <value>Idioma no admitido. Usa en, bg o es.</value>
+  </data>
+  <data name="AuthInvalidGoogleCredentials" xml:space="preserve">
+    <value>Credenciales de Google no válidas.</value>
+  </data>
+  <data name="AuthEmailExists" xml:space="preserve">
+    <value>Ya existe una cuenta con este correo electrónico.</value>
+  </data>
+  <data name="AuthInvalidCredentials" xml:space="preserve">
+    <value>Correo electrónico o contraseña incorrectos.</value>
+  </data>
+  <data name="AuthAccountLocked" xml:space="preserve">
+    <value>Cuenta bloqueada. Inténtalo de nuevo en {0} segundos.</value>
+  </data>
+  <data name="AuthRefreshTokenReused" xml:space="preserve">
+    <value>Tu sesión ya no es válida. Vuelve a iniciar sesión.</value>
+  </data>
+  <data name="AuthRefreshTokenInvalid" xml:space="preserve">
+    <value>Tu sesión ha caducado. Vuelve a iniciar sesión.</value>
+  </data>
+  <data name="AuthPasswordTooShort" xml:space="preserve">
+    <value>La contraseña debe tener al menos 8 caracteres.</value>
+  </data>
+  <data name="AuthPasswordTooWeak" xml:space="preserve">
+    <value>La contraseña debe contener al menos una letra mayúscula, un número y un carácter especial.</value>
+  </data>
+  <data name="BudgetNotFound" xml:space="preserve">
+    <value>Presupuesto no encontrado.</value>
+  </data>
+  <data name="BudgetProRequiredForMultiple" xml:space="preserve">
+    <value>Para tener más de un presupuesto necesitas ser Pro.</value>
+  </data>
+  <data name="BudgetProLimitReached" xml:space="preserve">
+    <value>Las cuentas Pro están limitadas a {0} presupuestos.</value>
+  </data>
+  <data name="BudgetNotOwner" xml:space="preserve">
+    <value>Solo el propietario del presupuesto puede eliminar miembros.</value>
+  </data>
+  <data name="BudgetOwnerCannotBeRemoved" xml:space="preserve">
+    <value>El propietario no puede ser eliminado del presupuesto.</value>
+  </data>
+  <data name="BudgetMemberNotFound" xml:space="preserve">
+    <value>El usuario no es miembro de este presupuesto.</value>
+  </data>
+  <data name="BudgetOwnerCannotLeave" xml:space="preserve">
+    <value>El propietario no puede abandonar el presupuesto. Elimínalo en su lugar.</value>
+  </data>
+  <data name="BudgetNotMember" xml:space="preserve">
+    <value>No eres miembro de este presupuesto.</value>
+  </data>
+  <data name="BudgetNoActivePeriod" xml:space="preserve">
+    <value>No se encontró ningún período de presupuesto activo.</value>
+  </data>
+  <data name="CategoryNotFound" xml:space="preserve">
+    <value>Categoría no encontrada.</value>
+  </data>
+  <data name="SpendingNotFound" xml:space="preserve">
+    <value>Gasto no encontrado.</value>
+  </data>
+  <data name="SpendingInsufficientBalance" xml:space="preserve">
+    <value>Intentas gastar más que el saldo de la categoría.</value>
+  </data>
+  <data name="InviteNotFound" xml:space="preserve">
+    <value>Invitación al presupuesto no encontrada.</value>
+  </data>
+  <data name="InviteUserNotFound" xml:space="preserve">
+    <value>No existe ningún usuario con este correo electrónico.</value>
+  </data>
+  <data name="InviteProRequiredForLargeBudget" xml:space="preserve">
+    <value>Necesitas ser Pro para unirte a un presupuesto con más de dos participantes.</value>
+  </data>
+  <data name="InviteParticipantLimitReached" xml:space="preserve">
+    <value>Este presupuesto ha alcanzado el límite de {0} participantes.</value>
+  </data>
+  <data name="TransactionNotFound" xml:space="preserve">
+    <value>Transacción no encontrada.</value>
+  </data>
+  <data name="SubscriptionProRequired" xml:space="preserve">
+    <value>Esta función requiere una suscripción Pro activa.</value>
+  </data>
+  <data name="StatisticsBudgetNotAccessible" xml:space="preserve">
+    <value>Presupuesto no encontrado o no tienes acceso.</value>
+  </data>
+  <data name="StatisticsPeriodsMismatch" xml:space="preserve">
+    <value>Los períodos seleccionados no pertenecen a este presupuesto.</value>
+  </data>
+  <data name="PushInviteReceivedTitle" xml:space="preserve">
+    <value>Invitación a un presupuesto</value>
+  </data>
+  <data name="PushInviteReceivedBody" xml:space="preserve">
+    <value>Te han invitado a un presupuesto. Toca para ver la invitación.</value>
+  </data>
+  <data name="PushInviteResponseTitle" xml:space="preserve">
+    <value>Estado de la invitación</value>
+  </data>
+  <data name="PushInviteAcceptedBody" xml:space="preserve">
+    <value>¡{0} aceptó tu invitación al presupuesto!</value>
+  </data>
+  <data name="PushInviteDeclinedBody" xml:space="preserve">
+    <value>{0} rechazó tu invitación al presupuesto.</value>
+  </data>
+  <data name="PushFundsAddedTitle" xml:space="preserve">
+    <value>Fondos añadidos</value>
+  </data>
+  <data name="PushFundsAddedBody" xml:space="preserve">
+    <value>{0} añadió {1:0.00} {2} a {3}.</value>
+  </data>
+  <data name="PushFundsSpentTitle" xml:space="preserve">
+    <value>Nuevo gasto</value>
+  </data>
+  <data name="PushFundsSpentBody" xml:space="preserve">
+    <value>{0} gastó {1:0.00} {2} de {3}.</value>
+  </data>
+  <data name="PushSpendingDeletedTitle" xml:space="preserve">
+    <value>Gasto eliminado</value>
+  </data>
+  <data name="PushSpendingDeletedBody" xml:space="preserve">
+    <value>{0} eliminó un gasto de {1:0.00} {2} de {3}.</value>
+  </data>
+  <data name="PushCategoryRenamedTitle" xml:space="preserve">
+    <value>Categoría actualizada</value>
+  </data>
+  <data name="PushCategoryRenamedBody" xml:space="preserve">
+    <value>{0} cambió el nombre de la categoría {1} a {2}.</value>
+  </data>
+  <data name="PushKickedTitle" xml:space="preserve">
+    <value>Eliminado del presupuesto</value>
+  </data>
+  <data name="PushKickedBody" xml:space="preserve">
+    <value>Has sido eliminado de «{0}».</value>
+  </data>
+  <data name="PushInactivityTitle" xml:space="preserve">
+    <value>¡Te echamos de menos!</value>
+  </data>
+  <data name="PushInactivityBody" xml:space="preserve">
+    <value>Abre Tavira para revisar tus gastos y mantenerte dentro del presupuesto.</value>
+  </data>
+</root>

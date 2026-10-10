@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Interfaces;
 using Application.Services;
@@ -28,46 +29,34 @@ namespace Application.UseCases
             var result = new CaseResult<bool>();
             result.Successful = true;
 
-            try
+            int userId = _UserService.GetUserId();
+            var budget = await _UnitOfWork.BudgetRepository.GetBudgetById(budgetId, userId);
+
+            if (budget == null)
             {
-                int userId = _UserService.GetUserId();
-                var budget = await _UnitOfWork.BudgetRepository.GetBudgetById(budgetId, userId);
-
-                if (budget == null)
-                {
-                    result.Successful = false;
-                    result.ErrorMessage = "Budget not found.";
-                    return result;
-                }
-
-                if (budget.OwnerId == userId)
-                {
-                    result.Successful = false;
-                    result.ErrorMessage = "The owner cannot leave the budget. Delete it instead.";
-                    return result;
-                }
-
-                var self = budget.Users.FirstOrDefault(u => u.Id == userId);
-
-                if (self == null)
-                {
-                    result.Successful = false;
-                    result.ErrorMessage = "You are not a member of this budget.";
-                    return result;
-                }
-
-                budget.Users.Remove(self);
-                await _UnitOfWork.CommitAsync();
-
-                result.Data = true;
-                _Logger.LogInformation("User {UserId} left budget {BudgetId}", userId, budgetId);
+                _Logger.LogInformation("Budget {BudgetId} not found for user {UserId} on leave", budgetId, userId);
+                return CaseResult<bool>.Error(Messages.BudgetNotFound);
             }
-            catch (Exception ex)
+
+            if (budget.OwnerId == userId)
             {
-                _Logger.LogError(ex, "Error leaving budget {BudgetId}", budgetId);
-                result.Successful = false;
-                result.ErrorMessage = "Something went wrong. Please try again later.";
+                _Logger.LogInformation("Owner {UserId} tried to leave their own budget {BudgetId}", userId, budgetId);
+                return CaseResult<bool>.Error(Messages.BudgetOwnerCannotLeave);
             }
+
+            var self = budget.Users.FirstOrDefault(u => u.Id == userId);
+
+            if (self == null)
+            {
+                _Logger.LogWarning("User {UserId} can see budget {BudgetId} but is not in its member list", userId, budgetId);
+                return CaseResult<bool>.Error(Messages.BudgetNotMember);
+            }
+
+            budget.Users.Remove(self);
+            await _UnitOfWork.CommitAsync();
+
+            result.Data = true;
+            _Logger.LogInformation("User {UserId} left budget {BudgetId}", userId, budgetId);
 
             return result;
         }

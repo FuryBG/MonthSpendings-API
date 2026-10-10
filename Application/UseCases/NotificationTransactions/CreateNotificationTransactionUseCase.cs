@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto;
 using Application.Interfaces;
@@ -29,68 +30,58 @@ namespace Application.UseCases.NotificationTransactions
         public async Task<CaseResult<NotificationTransactionDto>> InvokeAsync(CreateNotificationTransactionDto dto, CancellationToken cancellationToken)
         {
             var result = new CaseResult<NotificationTransactionDto>();
-            int userId = 0;
-            try
+            int userId = _UserService.GetUserId();
+
+            var transaction = new NotificationTransaction
             {
-                userId = _UserService.GetUserId();
+                UserId = userId,
+                Amount = dto.Amount,
+                Currency = dto.Currency,
+                MerchantName = dto.MerchantName,
+                RawTitle = dto.RawTitle,
+                RawBody = dto.RawBody,
+                ReceivedAt = DateTime.UtcNow,
+                Categorized = false,
+            };
 
-                var transaction = new NotificationTransaction
+            await _UnitOfWork.NotificationTransactionRepository.AddAsync(transaction, cancellationToken);
+            await _UnitOfWork.CommitAsync();
+
+            // Auto-apply matching rule if one exists
+            TransactionCategoryRule? rule = await _UnitOfWork.TransactionCategoryRuleRepository.FindMatchingRuleAsync(userId, dto.MerchantName, cancellationToken);
+            if (rule != null)
+            {
+                BudgetCategory? category = await _UnitOfWork.BudgetCategoryRepository.GetBudgetCategoryById(rule.CategoryId, userId);
+                BudgetPeriod? budgetPeriod = category?.Budget.BudgetPeriods.FirstOrDefault();
+                if (category != null && budgetPeriod != null)
                 {
-                    UserId = userId,
-                    Amount = dto.Amount,
-                    Currency = dto.Currency,
-                    MerchantName = dto.MerchantName,
-                    RawTitle = dto.RawTitle,
-                    RawBody = dto.RawBody,
-                    ReceivedAt = DateTime.UtcNow,
-                    Categorized = false,
-                };
-
-                await _UnitOfWork.NotificationTransactionRepository.AddAsync(transaction, cancellationToken);
-                await _UnitOfWork.CommitAsync();
-
-                // Auto-apply matching rule if one exists
-                TransactionCategoryRule? rule = await _UnitOfWork.TransactionCategoryRuleRepository.FindMatchingRuleAsync(userId, dto.MerchantName, cancellationToken);
-                if (rule != null)
-                {
-                    BudgetCategory? category = await _UnitOfWork.BudgetCategoryRepository.GetBudgetCategoryById(rule.CategoryId, userId);
-                    BudgetPeriod? budgetPeriod = category?.Budget.BudgetPeriods.FirstOrDefault();
-                    if (category != null && budgetPeriod != null)
+                    Spending spending = _UnitOfWork.CategorySpendingsRepository.AddSpending(new Spending
                     {
-                        Spending spending = _UnitOfWork.CategorySpendingsRepository.AddSpending(new Spending
-                        {
-                            Amount = -transaction.Amount,
-                            NotificationTransactionId = transaction.Id,
-                            Date = transaction.ReceivedAt,
-                            BudgetCategoryId = category.Id,
-                            BudgetPeriodId = budgetPeriod.Id,
-                            CreatedByUserId = userId,
-                        });
-                        await _UnitOfWork.CommitAsync();
-                        await _UnitOfWork.NotificationTransactionRepository.CategorizeAsync(transaction.Id, spending.Id, cancellationToken);
-                        transaction.Categorized = true;
-                        _Logger.LogInformation("Auto-categorized notification transaction {Id} via rule for merchant {Merchant}", transaction.Id, dto.MerchantName);
-                    }
+                        Amount = -transaction.Amount,
+                        NotificationTransactionId = transaction.Id,
+                        Date = transaction.ReceivedAt,
+                        BudgetCategoryId = category.Id,
+                        BudgetPeriodId = budgetPeriod.Id,
+                        CreatedByUserId = userId,
+                    });
+                    await _UnitOfWork.CommitAsync();
+                    await _UnitOfWork.NotificationTransactionRepository.CategorizeAsync(transaction.Id, spending.Id, cancellationToken);
+                    transaction.Categorized = true;
+                    _Logger.LogInformation("Auto-categorized notification transaction {Id} via rule for merchant {Merchant}", transaction.Id, dto.MerchantName);
                 }
+            }
 
-                result.Successful = true;
-                result.Data = new NotificationTransactionDto
-                {
-                    Id = transaction.Id,
-                    Amount = transaction.Amount,
-                    Currency = transaction.Currency,
-                    MerchantName = transaction.MerchantName,
-                    ReceivedAt = transaction.ReceivedAt,
-                    Categorized = transaction.Categorized,
-                };
-                _Logger.LogInformation("Created notification transaction {Id} for user {UserId}, merchant {Merchant}", transaction.Id, userId, dto.MerchantName);
-            }
-            catch (Exception ex)
+            result.Successful = true;
+            result.Data = new NotificationTransactionDto
             {
-                _Logger.LogError(ex, "Error creating notification transaction for user {UserId}", userId);
-                result.Successful = false;
-                result.ErrorMessage = "Failed to save the transaction. Please try again.";
-            }
+                Id = transaction.Id,
+                Amount = transaction.Amount,
+                Currency = transaction.Currency,
+                MerchantName = transaction.MerchantName,
+                ReceivedAt = transaction.ReceivedAt,
+                Categorized = transaction.Categorized,
+            };
+            _Logger.LogInformation("Created notification transaction {Id} for user {UserId}, merchant {Merchant}", transaction.Id, userId, dto.MerchantName);
             return result;
         }
     }

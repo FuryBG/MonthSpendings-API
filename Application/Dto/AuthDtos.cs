@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using System.ComponentModel.DataAnnotations;
 
 namespace Application.Dto
@@ -5,10 +6,10 @@ namespace Application.Dto
     public record RegisterDto(
         [Required][EmailAddress] string Email,
         [Required]
-        [MinLength(8, ErrorMessage = "Password must be at least 8 characters.")]
+        [MinLength(8, ErrorMessageResourceType = typeof(Messages), ErrorMessageResourceName = nameof(Messages.AuthPasswordTooShort))]
         [RegularExpression(
             @"^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$",
-            ErrorMessage = "Password must contain at least one uppercase letter, one digit, and one special character.")]
+            ErrorMessageResourceType = typeof(Messages), ErrorMessageResourceName = nameof(Messages.AuthPasswordTooWeak))]
         string Password,
         [Required][MaxLength(50)] string FirstName,
         [Required][MaxLength(50)] string LastName

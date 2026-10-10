@@ -21,6 +21,8 @@ namespace Application.Dto
         public string? GooglePhotoAddress { get; set; }
         [JsonPropertyName("isPro")]
         public bool IsPro { get; set; }
+        [JsonPropertyName("language")]
+        public string Language { get; set; } = "en";
         [JsonPropertyName("syncWalletTransactions")]
         public bool SyncWalletTransactions { get; set; }
         [JsonPropertyName("subscription")]

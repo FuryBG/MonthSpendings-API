@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto.Notification;
 using Application.Enums;
@@ -33,42 +34,35 @@ namespace Application.UseCases
             var result = new CaseResult<int?>();
             result.Successful = true;
 
-            try
+            int userId = _UserService.GetUserId();
+            Spending? spending = await _UnitOfWork.CategorySpendingsRepository.GetSpending(spendingId, userId);
+
+            if (spending == null)
             {
-                int userId = _UserService.GetUserId();
-                Spending? spending = await _UnitOfWork.CategorySpendingsRepository.GetSpending(spendingId, userId);
-
-                if (spending == null)
-                {
-                    result.Successful = false;
-                    result.ErrorMessage = $"Can't find spending with id {spendingId} to delete. Please try again later.";
-                    return result;
-                }
-
-                _UnitOfWork.CategorySpendingsRepository.DeleteSpending(spending);
-                await _UnitOfWork.CommitAsync();
-                result.Data = spendingId;
-
-                List<string> budgetUsersNotificationTokens = spending.BudgetCategory.Budget.Users.Where(u => u.Id != userId).Select(u => u.NotificationToken).ToList();
-                AppUser currentUser = spending.BudgetCategory.Budget.Users.Where(u => u.Id == userId).First();
-                await SendDeleteSpendingNotification(budgetUsersNotificationTokens, currentUser.Email, spending.BudgetCategory.Budget.Name, spending.BudgetCategory.Name, spending.Amount, spending.BudgetCategory.Budget.Currency.Symbol);
-                _Logger.LogInformation("Spending {SpendingId} deleted by user {UserId}", spendingId, userId);
+                _Logger.LogInformation("Spending {SpendingId} not found for user {UserId} on delete", spendingId, userId);
+                return CaseResult<int?>.Error(Messages.SpendingNotFound);
             }
-            catch (Exception ex)
-            {
-                _Logger.LogError(ex, "Error deleting spending {SpendingId}", spendingId);
-                result.Successful = false;
-                result.ErrorMessage = $"Something got wrong during deleting spending with id {spendingId}. Please try again later.";
-            }
+
+            _UnitOfWork.CategorySpendingsRepository.DeleteSpending(spending);
+            await _UnitOfWork.CommitAsync();
+            result.Data = spendingId;
+
+            List<AppUser> notificationReceivers = spending.BudgetCategory.Budget.Users.Where(u => u.Id != userId).ToList();
+            AppUser currentUser = spending.BudgetCategory.Budget.Users.Where(u => u.Id == userId).First();
+            await SendDeleteSpendingNotification(notificationReceivers, currentUser.Email, spending.BudgetCategory.Name, spending.Amount, spending.BudgetCategory.Budget.Currency.Symbol);
+            _Logger.LogInformation("Spending {SpendingId} deleted by user {UserId}", spendingId, userId);
 
             return result;
         }
 
-        private async Task SendDeleteSpendingNotification(List<string> receiversNotificationToken, string userName, string budgetName, string categoryName, decimal spentAmound, string currencySymbol)
+        private async Task SendDeleteSpendingNotification(List<AppUser> receivers, string userName, string categoryName, decimal spentAmount, string currencySymbol)
         {
-            string formattedAmount = $"{Math.Abs(spentAmound).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)} {currencySymbol}";
-            string notificationMessage = $"{userName} spending with amount: {formattedAmount} from {categoryName}.";
-            await _PushNotificationService.SendNotification(receiversNotificationToken, "Spending deleted", notificationMessage, new NotificationDto() { Type = NotificationTypeEnum.SpendingDelete });
+            await _PushNotificationService.SendLocalized(
+                receivers,
+                nameof(Messages.PushSpendingDeletedTitle),
+                nameof(Messages.PushSpendingDeletedBody),
+                new NotificationDto() { Type = NotificationTypeEnum.SpendingDelete },
+                userName, Math.Abs(spentAmount), currencySymbol, categoryName);
         }
     }
 }

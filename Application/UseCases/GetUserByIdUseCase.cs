@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto;
 using Application.Interfaces;
@@ -30,28 +31,17 @@ namespace Application.UseCases
             var result = new CaseResult<AppUserDto?>(null);
             result.Successful = true;
 
-            try
-            {
-                int userId = _UserService.GetUserId();
-                AppUser? user = await _UnitOfWork.UserRepository.GetUserById(userId);
+            int userId = _UserService.GetUserId();
+            AppUser? user = await _UnitOfWork.UserRepository.GetUserById(userId);
 
-                if (user == null)
-                {
-                    result.Successful = false;
-                    result.ErrorMessage = "Invalid user.";
-                    _Logger.LogWarning("User {UserId} not found", userId);
-                    return result;
-                }
-
-                result.Data = user.ToDto();
-                _Logger.LogInformation("User {UserId} retrieved", userId);
-            }
-            catch (Exception ex)
+            if (user == null)
             {
-                result.Successful = false;
-                result.ErrorMessage = "Invalid user.";
-                _Logger.LogError(ex, "Error getting user");
+                _Logger.LogWarning("User {UserId} not found", userId);
+                return CaseResult<AppUserDto?>.Error(Messages.UserInvalid);
             }
+
+            result.Data = user.ToDto();
+            _Logger.LogDebug("User {UserId} retrieved", userId);
 
             return result;
         }

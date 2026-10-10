@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Interfaces;
 using Application.Services;
@@ -27,31 +28,20 @@ namespace Application.UseCases.NotificationTransactions
         public async Task<CaseResult<bool>> InvokeAsync(int id, CancellationToken cancellationToken)
         {
             var result = new CaseResult<bool>();
-            int userId = 0;
-            try
+            int userId = _UserService.GetUserId();
+
+            NotificationTransaction? transaction = await _UnitOfWork.NotificationTransactionRepository.GetByIdAsync(id, userId, cancellationToken);
+            if (transaction == null)
             {
-                userId = _UserService.GetUserId();
-
-                NotificationTransaction? transaction = await _UnitOfWork.NotificationTransactionRepository.GetByIdAsync(id, userId, cancellationToken);
-                if (transaction == null)
-                {
-                    result.Successful = false;
-                    result.ErrorMessage = "Transaction not found.";
-                    return result;
-                }
-
-                await _UnitOfWork.NotificationTransactionRepository.DeleteAsync(id, cancellationToken);
-
-                result.Successful = true;
-                result.Data = true;
-                _Logger.LogInformation("Notification transaction {Id} soft-deleted by user {UserId}", id, userId);
+                _Logger.LogInformation("Notification transaction {Id} not found for user {UserId} on delete", id, userId);
+                return CaseResult<bool>.Error(Messages.TransactionNotFound);
             }
-            catch (Exception ex)
-            {
-                _Logger.LogError(ex, "Error deleting notification transaction {Id} for user {UserId}", id, userId);
-                result.Successful = false;
-                result.ErrorMessage = "Failed to delete the transaction. Please try again.";
-            }
+
+            await _UnitOfWork.NotificationTransactionRepository.DeleteAsync(id, cancellationToken);
+
+            result.Successful = true;
+            result.Data = true;
+            _Logger.LogInformation("Notification transaction {Id} soft-deleted by user {UserId}", id, userId);
             return result;
         }
     }

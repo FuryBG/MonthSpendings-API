@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Interfaces;
 using Application.Services;
@@ -28,29 +29,19 @@ namespace Application.UseCases
             var result = new CaseResult<int?>();
             result.Successful = true;
 
-            try
-            {
-                int userId = _UserService.GetUserId();
-                Budget? budget = await _UnitOfWork.BudgetRepository.GetBudgetById(budgetId, userId);
+            int userId = _UserService.GetUserId();
+            Budget? budget = await _UnitOfWork.BudgetRepository.GetBudgetById(budgetId, userId);
 
-                if (budget == null)
-                {
-                    result.Successful = false;
-                    result.ErrorMessage = $"Can't find budget with id {budgetId} to delete. Please try again later.";
-                    return result;
-                }
-
-                _UnitOfWork.BudgetRepository.DeleteBudget(budget);
-                await _UnitOfWork.CommitAsync();
-                result.Data = budgetId;
-                _Logger.LogInformation("Budget {BudgetId} deleted by user {UserId}", budgetId, userId);
-            }
-            catch (Exception ex)
+            if (budget == null)
             {
-                _Logger.LogError(ex, "Error deleting budget {BudgetId}", budgetId);
-                result.Successful = false;
-                result.ErrorMessage = $"Something got wrong during deleting budget with id {budgetId}. Please try again later.";
+                _Logger.LogInformation("Budget {BudgetId} not found for user {UserId} on delete", budgetId, userId);
+                return CaseResult<int?>.Error(Messages.BudgetNotFound);
             }
+
+            _UnitOfWork.BudgetRepository.DeleteBudget(budget);
+            await _UnitOfWork.CommitAsync();
+            result.Data = budgetId;
+            _Logger.LogInformation("Budget {BudgetId} deleted by user {UserId}", budgetId, userId);
 
             return result;
         }

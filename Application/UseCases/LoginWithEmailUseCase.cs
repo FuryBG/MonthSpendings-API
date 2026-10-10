@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto;
 using Application.Interfaces;
@@ -33,60 +34,48 @@ namespace Application.UseCases
         {
             var result = new CaseResult<AuthResponseDto?>();
 
-            try
+            var user = await _UnitOfWork.UserRepository.GetUserByEmail(dto.Email);
+
+            if (user == null || string.IsNullOrEmpty(user.PasswordHash))
             {
-                var user = await _UnitOfWork.UserRepository.GetUserByEmail(dto.Email);
+                // Run a dummy verify to prevent timing-based email enumeration
+                _PasswordService.Verify(dto.Password, _PasswordService.Hash("_dummy_prevent_timing_"));
+                _Logger.LogInformation("Email login failed: no account with a password for this email");
+                return CaseResult<AuthResponseDto?>.Error(Messages.AuthInvalidCredentials, ErrorType.Unauthorized);
+            }
 
-                if (user == null || string.IsNullOrEmpty(user.PasswordHash))
+            if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTime.UtcNow)
+            {
+                var secondsRemaining = (int)(user.LockoutEnd.Value - DateTime.UtcNow).TotalSeconds;
+                _Logger.LogInformation("Email login rejected for user {UserId}: account locked for another {SecondsRemaining}s", user.Id, secondsRemaining);
+                return CaseResult<AuthResponseDto?>.Error(string.Format(Messages.AuthAccountLocked, secondsRemaining), ErrorType.Locked);
+            }
+
+            var passwordValid = _PasswordService.Verify(dto.Password, user.PasswordHash);
+            if (!passwordValid)
+            {
+                user.FailedLoginAttempts++;
+                if (user.FailedLoginAttempts >= 5)
                 {
-                    // Run a dummy verify to prevent timing-based email enumeration
-                    _PasswordService.Verify(dto.Password, _PasswordService.Hash("_dummy_prevent_timing_"));
-                    result.Successful = false;
-                    result.ErrorMessage = "Invalid email or password.";
-                    return result;
+                    user.LockoutEnd = DateTime.UtcNow.AddMinutes(15);
+                    _Logger.LogWarning("User {UserId} locked out after too many failed attempts", user.Id);
                 }
-
-                if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTime.UtcNow)
-                {
-                    var secondsRemaining = (int)(user.LockoutEnd.Value - DateTime.UtcNow).TotalSeconds;
-                    result.Successful = false;
-                    result.ErrorMessage = $"Account locked. Try again in {secondsRemaining} seconds.";
-                    return result;
-                }
-
-                var passwordValid = _PasswordService.Verify(dto.Password, user.PasswordHash);
-                if (!passwordValid)
-                {
-                    user.FailedLoginAttempts++;
-                    if (user.FailedLoginAttempts >= 5)
-                    {
-                        user.LockoutEnd = DateTime.UtcNow.AddMinutes(15);
-                        _Logger.LogWarning("User {UserId} locked out after too many failed attempts", user.Id);
-                    }
-                    await _UnitOfWork.CommitAsync();
-
-                    result.Successful = false;
-                    result.ErrorMessage = "Invalid email or password.";
-                    return result;
-                }
-
-                user.FailedLoginAttempts = 0;
-                user.LockoutEnd = null;
                 await _UnitOfWork.CommitAsync();
 
-                var accessToken = _TokenService.CreateAccessToken(user);
-                var refreshToken = await _TokenService.CreateRefreshTokenAsync(user.Id);
+                _Logger.LogInformation("Email login failed for user {UserId}: wrong password ({FailedAttempts} consecutive failures)", user.Id, user.FailedLoginAttempts);
+                return CaseResult<AuthResponseDto?>.Error(Messages.AuthInvalidCredentials, ErrorType.Unauthorized);
+            }
 
-                result.Successful = true;
-                result.Data = new AuthResponseDto(accessToken, refreshToken.Token);
-                _Logger.LogInformation("User {UserId} logged in with email", user.Id);
-            }
-            catch (Exception ex)
-            {
-                _Logger.LogError(ex, "Error during email login");
-                result.Successful = false;
-                result.ErrorMessage = "Something went wrong. Please try again later.";
-            }
+            user.FailedLoginAttempts = 0;
+            user.LockoutEnd = null;
+            await _UnitOfWork.CommitAsync();
+
+            var accessToken = _TokenService.CreateAccessToken(user);
+            var refreshToken = await _TokenService.CreateRefreshTokenAsync(user.Id);
+
+            result.Successful = true;
+            result.Data = new AuthResponseDto(accessToken, refreshToken.Token);
+            _Logger.LogInformation("User {UserId} logged in with email", user.Id);
 
             return result;
         }

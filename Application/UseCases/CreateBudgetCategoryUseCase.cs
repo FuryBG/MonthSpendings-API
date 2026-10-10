@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto.Budget;
 using Application.Interfaces;
@@ -29,32 +30,21 @@ namespace Application.UseCases
             var result = new CaseResult<BudgetCategoryDto?>();
             result.Successful = true;
 
-            try
-            {
-                int userId = _UserService.GetUserId();
-                Budget? budget = await _UnitOfWork.BudgetRepository.GetBudgetById(budgetcategoryDto.BudgetId, userId);
+            int userId = _UserService.GetUserId();
+            Budget? budget = await _UnitOfWork.BudgetRepository.GetBudgetById(budgetcategoryDto.BudgetId, userId);
 
-                if (budget == null)
-                {
-                    _Logger.LogWarning("Budget {BudgetId} not found when creating category for user {UserId}", budgetcategoryDto.BudgetId, userId);
-                    result.Successful = false;
-                    result.ErrorMessage = "Can't find the Budget to add Sppending.";
-                    return result;
-
-                }
-                BudgetCategory newCategory = budgetcategoryDto.ToEntity();
-                newCategory.Spendings.ForEach(spending => spending.CreatedByUserId = userId);
-                BudgetCategory addedCategory = _UnitOfWork.BudgetCategoryRepository.CreateCategory(newCategory);
-                await _UnitOfWork.CommitAsync();
-                result.Data = addedCategory.ToDto();
-                _Logger.LogInformation("Category {CategoryId} created in budget {BudgetId} by user {UserId}", result.Data!.Id, budgetcategoryDto.BudgetId, userId);
-            }
-            catch (Exception ex)
+            if (budget == null)
             {
-                _Logger.LogError(ex, "Error creating budget category for budget {BudgetId}", budgetcategoryDto.BudgetId);
-                result.Successful = false;
-                result.ErrorMessage = "Something got wrong during creating category. Please try again later.";
+                _Logger.LogInformation("Budget {BudgetId} not found when creating category for user {UserId}", budgetcategoryDto.BudgetId, userId);
+                return CaseResult<BudgetCategoryDto?>.Error(Messages.BudgetNotFound);
+
             }
+            BudgetCategory newCategory = budgetcategoryDto.ToEntity();
+            newCategory.Spendings.ForEach(spending => spending.CreatedByUserId = userId);
+            BudgetCategory addedCategory = _UnitOfWork.BudgetCategoryRepository.CreateCategory(newCategory);
+            await _UnitOfWork.CommitAsync();
+            result.Data = addedCategory.ToDto();
+            _Logger.LogInformation("Category {CategoryId} created in budget {BudgetId} by user {UserId}", result.Data!.Id, budgetcategoryDto.BudgetId, userId);
 
             return result;
         }

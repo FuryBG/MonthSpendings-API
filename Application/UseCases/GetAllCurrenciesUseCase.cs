@@ -1,4 +1,5 @@
-﻿using Application.Contracts;
+﻿using Application.Resources;
+using Application.Contracts;
 using Application.Dto.Budget;
 using Application.Interfaces;
 using Application.Mappers;
@@ -27,19 +28,10 @@ namespace Application.UseCases
             var result = new CaseResult<List<CurrencyDto>>();
             result.Successful = true;
 
-            try
-            {
-                List<Currency> currencies = await _UnitOfWork.CurrencyRepository.GetAllCurrencies();
-                List<CurrencyDto> currenciesDto = currencies.Select(currency => currency.ToDto()).ToList();
-                result.Data = currenciesDto;
-                _Logger.LogInformation("Retrieved {Count} currencies", currenciesDto.Count);
-            }
-            catch (Exception ex)
-            {
-                _Logger.LogError(ex, "Error retrieving currencies");
-                result.Successful = false;
-                result.ErrorMessage = "Something got wrong getting all currencies. Please try again later.";
-            }
+            List<Currency> currencies = await _UnitOfWork.CurrencyRepository.GetAllCurrencies();
+            List<CurrencyDto> currenciesDto = currencies.Select(currency => currency.ToDto()).ToList();
+            result.Data = currenciesDto;
+            _Logger.LogDebug("Retrieved {Count} currencies", currenciesDto.Count);
             return result;
         }
     }

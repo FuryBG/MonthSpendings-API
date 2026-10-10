@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto;
 using Application.Interfaces;
@@ -30,52 +31,37 @@ namespace Application.UseCases
         {
             var result = new CaseResult<AuthResponseDto?>();
 
-            try
+            var existingToken = await _TokenService.GetRefreshTokenIncludingRevokedAsync(dto.RefreshToken);
+
+            if (existingToken != null && existingToken.RevokedAt != null)
             {
-                // Check if token exists at all (including revoked)
-                var existingToken = await _TokenService.GetRefreshTokenIncludingRevokedAsync(dto.RefreshToken);
-
-                if (existingToken != null && existingToken.RevokedAt != null)
-                {
-                    // Reuse of a revoked token — potential theft, revoke entire family
-                    _Logger.LogWarning("Revoked refresh token reused for user {UserId} — revoking all tokens", existingToken.UserId);
-                    await _TokenService.RevokeAllRefreshTokensForUserAsync(existingToken.UserId);
-                    result.Successful = false;
-                    result.ErrorMessage = "Refresh token has already been used. Please log in again.";
-                    return result;
-                }
-
-                var validToken = existingToken?.IsActive == true ? existingToken : null;
-                if (validToken == null)
-                {
-                    result.Successful = false;
-                    result.ErrorMessage = "Invalid or expired refresh token.";
-                    return result;
-                }
-
-                var user = await _UnitOfWork.UserRepository.GetUserById(validToken.UserId);
-                if (user == null)
-                {
-                    result.Successful = false;
-                    result.ErrorMessage = "User not found.";
-                    return result;
-                }
-
-                var newRefreshToken = await _TokenService.CreateRefreshTokenAsync(user.Id);
-                await _TokenService.RevokeRefreshTokenAsync(validToken, replacedBy: newRefreshToken.Token);
-
-                var accessToken = _TokenService.CreateAccessToken(user);
-
-                result.Successful = true;
-                result.Data = new AuthResponseDto(accessToken, newRefreshToken.Token);
-                _Logger.LogInformation("Tokens refreshed for user {UserId}", user.Id);
+                _Logger.LogWarning("Revoked refresh token reused for user {UserId} — revoking all tokens", existingToken.UserId);
+                await _TokenService.RevokeAllRefreshTokensForUserAsync(existingToken.UserId);
+                return CaseResult<AuthResponseDto?>.Error(Messages.AuthRefreshTokenReused, ErrorType.Unauthorized);
             }
-            catch (Exception ex)
+
+            var validToken = existingToken?.IsActive == true ? existingToken : null;
+            if (validToken == null)
             {
-                _Logger.LogError(ex, "Error refreshing token");
-                result.Successful = false;
-                result.ErrorMessage = "Something went wrong. Please try again later.";
+                _Logger.LogInformation("Token refresh failed: refresh token unknown or expired");
+                return CaseResult<AuthResponseDto?>.Error(Messages.AuthRefreshTokenInvalid, ErrorType.Unauthorized);
             }
+
+            var user = await _UnitOfWork.UserRepository.GetUserById(validToken.UserId);
+            if (user == null)
+            {
+                _Logger.LogWarning("Token refresh failed: refresh token belongs to missing user {UserId}", validToken.UserId);
+                return CaseResult<AuthResponseDto?>.Error(Messages.UserNotFound);
+            }
+
+            var newRefreshToken = await _TokenService.CreateRefreshTokenAsync(user.Id);
+            await _TokenService.RevokeRefreshTokenAsync(validToken, replacedBy: newRefreshToken.Token);
+
+            var accessToken = _TokenService.CreateAccessToken(user);
+
+            result.Successful = true;
+            result.Data = new AuthResponseDto(accessToken, newRefreshToken.Token);
+            _Logger.LogInformation("Tokens refreshed for user {UserId}", user.Id);
 
             return result;
         }

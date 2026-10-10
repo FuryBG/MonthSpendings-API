@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Dto;
 using Application.UseCases;
 using Microsoft.AspNetCore.Mvc;
@@ -13,20 +14,17 @@ namespace MonthSpendings.Controllers
         private readonly ILoginWithEmailUseCase _LoginWithEmail;
         private readonly IRefreshTokenUseCase _RefreshToken;
         private readonly IRevokeRefreshTokenUseCase _RevokeRefreshToken;
-        private readonly ILogger<AuthController> _Logger;
 
         public AuthController(
             IRegisterWithEmailUseCase registerWithEmail,
             ILoginWithEmailUseCase loginWithEmail,
             IRefreshTokenUseCase refreshToken,
-            IRevokeRefreshTokenUseCase revokeRefreshToken,
-            ILogger<AuthController> logger)
+            IRevokeRefreshTokenUseCase revokeRefreshToken)
         {
             _RegisterWithEmail = registerWithEmail;
             _LoginWithEmail = loginWithEmail;
             _RefreshToken = refreshToken;
-            _RevokeRefreshToken = revokeRefreshToken;
-            _Logger = logger;
+            _RevokeRefreshToken = revokeRefreshToken;
         }
 
         [HttpPost("register")]
@@ -35,10 +33,8 @@ namespace MonthSpendings.Controllers
         {
             var result = await _RegisterWithEmail.InvokeAsync(dto);
             if (!result.Successful)
-            {
-                if (result.ErrorMessage?.Contains("already exists") == true)
-                    return Conflict(result.ErrorMessage);
-                return BadRequest(result.ErrorMessage);
+            {
+                return StatusCode((int)result.ErrorType, result.ErrorMessage);
             }
             return Ok(result.Data);
         }
@@ -49,10 +45,8 @@ namespace MonthSpendings.Controllers
         {
             var result = await _LoginWithEmail.InvokeAsync(dto);
             if (!result.Successful)
-            {
-                if (result.ErrorMessage?.Contains("locked") == true)
-                    return StatusCode(StatusCodes.Status423Locked, result.ErrorMessage);
-                return Unauthorized(result.ErrorMessage);
+            {
+                return StatusCode((int)result.ErrorType, result.ErrorMessage);
             }
             return Ok(result.Data);
         }
@@ -62,7 +56,9 @@ namespace MonthSpendings.Controllers
         {
             var result = await _RefreshToken.InvokeAsync(dto);
             if (!result.Successful)
-                return Unauthorized(result.ErrorMessage);
+            {
+                return StatusCode((int)result.ErrorType, result.ErrorMessage);
+            }
             return Ok(result.Data);
         }
 

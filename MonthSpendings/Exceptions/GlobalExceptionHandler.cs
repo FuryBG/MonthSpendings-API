@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace MonthSpendings.Exceptions;
 
 public sealed class GlobalExceptionHandler(
-    ILogger<GlobalExceptionHandler> logger,
     IProblemDetailsService problemDetailsService,
     IHostEnvironment env) : IExceptionHandler
 {
@@ -13,13 +13,6 @@ public sealed class GlobalExceptionHandler(
         Exception exception,
         CancellationToken cancellationToken)
     {
-        logger.LogError(
-            exception,
-            "Unhandled exception on {Method} {Path}. TraceId: {TraceId}",
-            httpContext.Request.Method,
-            httpContext.Request.Path,
-            httpContext.TraceIdentifier);
-
         var statusCode = exception switch
         {
             UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
@@ -29,9 +22,9 @@ public sealed class GlobalExceptionHandler(
         var problemDetails = new ProblemDetails
         {
             Status = statusCode,
-            Title = statusCode == 401 ? "Unauthorized" : "An unexpected error occurred.",
-            Detail = env.IsDevelopment() ? exception.Message : "An internal server error has occurred.",
-            Extensions = { ["traceId"] = httpContext.TraceIdentifier }
+            Title = statusCode == StatusCodes.Status401Unauthorized ? "Unauthorized" : "An unexpected error occurred.",
+            Detail = env.IsDevelopment() ? exception.Message : null,
+            Extensions = { ["traceId"] = Activity.Current?.TraceId.ToString() ?? httpContext.TraceIdentifier }
         };
 
         httpContext.Response.StatusCode = statusCode;

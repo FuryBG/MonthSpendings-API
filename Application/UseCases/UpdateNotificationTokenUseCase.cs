@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto;
 using Application.Interfaces;
@@ -30,37 +31,27 @@ namespace Application.UseCases
             var result = new CaseResult<bool>();
             result.Successful = true;
 
-            try
+            int userId = _UserService.GetUserId();
+            AppUser? user = await _UnitOfWork.UserRepository.GetUserById(userId);
+
+            if (user == null)
             {
-                int userId = _UserService.GetUserId();
-                AppUser? user = await _UnitOfWork.UserRepository.GetUserById(userId);
+                _Logger.LogWarning("User {UserId} not found when updating notification token", userId);
+                return CaseResult<bool>.Error(Messages.UserInvalid);
+            }
 
-                if (user == null)
-                {
-                    result.Successful = false;
-                    result.ErrorMessage = "Invalid user.";
-                    return result;
-                }
-
-                if (user.NotificationToken == dto.NotificationToken)
-                {
-                    result.Data = true;
-                    _Logger.LogInformation("Notification token unchanged for user {UserId}, skipping update.", userId);
-                    return result;
-                }
-
-                user.NotificationToken = dto.NotificationToken;
-                await _UnitOfWork.CommitAsync();
-
+            if (user.NotificationToken == dto.NotificationToken)
+            {
                 result.Data = true;
-                _Logger.LogInformation("Notification token updated for user {UserId}.", userId);
+                _Logger.LogDebug("Notification token unchanged for user {UserId}, skipping update.", userId);
+                return result;
             }
-            catch (Exception ex)
-            {
-                result.Successful = false;
-                result.ErrorMessage = "Failed to update notification token.";
-                _Logger.LogError(ex, "Error updating notification token.");
-            }
+
+            user.NotificationToken = dto.NotificationToken;
+            await _UnitOfWork.CommitAsync();
+
+            result.Data = true;
+            _Logger.LogInformation("Notification token updated for user {UserId}.", userId);
 
             return result;
         }

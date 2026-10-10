@@ -1,4 +1,5 @@
-using Application.Dto.Notification;
+﻿using Application.Dto.Notification;
+using Application.Resources;
 using Application.Enums;
 using Application.Interfaces;
 
@@ -80,10 +81,10 @@ namespace MonthSpendings.BackgroundServices
                         continue;
                 }
 
-                var sent = await pushNotificationService.SendNotification(
-                    [user.NotificationToken],
-                    "We miss you!",
-                    "Open Tavira to review your spending and stay on budget.",
+                var sent = await pushNotificationService.SendLocalized(
+                    [user],
+                    nameof(Messages.PushInactivityTitle),
+                    nameof(Messages.PushInactivityBody),
                     notificationDto
                 );
 

@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto;
 using Application.Dto.Notification;
@@ -37,99 +38,78 @@ namespace Application.UseCases
             var result = new CaseResult<BudgetInviteDto?>();
             result.Successful = true;
 
-            try
+            int userId = _UserService.GetUserId();
+
+            BudgetInvite? budgetInvite = await _UnitOfWork.BudgetInviteRepository.GetBudgetInviteById(budgetInviteId);
+
+            if (budgetInvite == null)
             {
-                int userId = _UserService.GetUserId();
-
-                BudgetInvite? budgetInvite = await _UnitOfWork.BudgetInviteRepository.GetBudgetInviteById(budgetInviteId);
-
-                if (budgetInvite == null)
-                {
-                    _Logger.LogWarning("Budget invite {InviteId} not found", budgetInviteId);
-                    result.Successful = false;
-                    result.ErrorMessage = "Can't find the Budget invite to.";
-                    return result;
-                }
-
-                if (budgetInvite.ReceiverId != userId)
-                {
-                    _Logger.LogWarning("User {UserId} attempted to respond to invite {InviteId} but is not the receiver", userId, budgetInviteId);
-                    result.Successful = false;
-                    result.ErrorMessage = "Can't find the Budget invite to respond.";
-                    return result;
-                }
-
-                Budget? budget = await _UnitOfWork.BudgetRepository.GetBudgetById(budgetInvite.BudgetId, budgetInvite.SenderId);
-
-                if (budget == null)
-                {
-                    _Logger.LogWarning("Budget {BudgetId} not found when responding to invite {InviteId}", budgetInvite.BudgetId, budgetInviteId);
-                    result.Successful = false;
-                    result.ErrorMessage = "Can't find the Budget invite to respond.";
-                    return result;
-                }
-
-                budgetInvite.Accepted = accepted;
-
-                if (accepted)
-                {
-                    var receiverBudgets = await _UnitOfWork.BudgetRepository.GetUserBudgets(userId);
-
-                    if (receiverBudgets.Count >= _Limits.FreeBudgetLimit && !budgetInvite.Receiver.IsPro)
-                    {
-                        result.Successful = false;
-                        result.ErrorMessage = "To have more than one budget you must be a Pro.";
-                        return result;
-                    }
-
-                    if (receiverBudgets.Count >= _Limits.ProBudgetLimit && budgetInvite.Receiver.IsPro)
-                    {
-                        result.Successful = false;
-                        result.ErrorMessage = $"Pro accounts are limited to {_Limits.ProBudgetLimit} budgets.";
-                        return result;
-                    }
-
-                    if (budget.Users.Count > _Limits.FreeParticipantJoinThreshold && !budgetInvite.Receiver.IsPro)
-                    {
-                        result.Successful = false;
-                        result.ErrorMessage = "You must be a Pro to join a budget with more than two participants.";
-                        return result;
-                    }
-
-                    if (budget.Users.Count >= _Limits.ProParticipantLimit)
-                    {
-                        result.Successful = false;
-                        result.ErrorMessage = $"This budget has reached the {_Limits.ProParticipantLimit}-participant limit.";
-                        return result;
-                    }
-
-                    budget.Users.Add(budgetInvite.Receiver);
-                }
-
-                BudgetInvite createdInvite = _UnitOfWork.BudgetInviteRepository.UpdateInvite(budgetInvite);
-
-                await _UnitOfWork.CommitAsync();
-                await SendBudgetInviteNotification(budgetInvite.Sender.NotificationToken, budgetInvite.Receiver.Email, budgetInvite.Accepted.Value);
-
-                result.Data = createdInvite.ToDto();
-                _Logger.LogInformation("Budget invite {InviteId} responded by user {UserId}", budgetInviteId, userId);
+                _Logger.LogInformation("Budget invite {InviteId} not found (user {UserId})", budgetInviteId, userId);
+                return CaseResult<BudgetInviteDto?>.Error(Messages.InviteNotFound);
             }
-            catch (Exception ex)
+
+            if (budgetInvite.ReceiverId != userId)
             {
-                _Logger.LogError(ex, "Error updating budget invite {InviteId} response", budgetInviteId);
-                result.Successful = false;
-                result.ErrorMessage = "Something got wrong during respond to Invite. Please try again later.";
+                _Logger.LogWarning("User {UserId} attempted to respond to invite {InviteId} but is not the receiver", userId, budgetInviteId);
+                return CaseResult<BudgetInviteDto?>.Error(Messages.InviteNotFound);
             }
+
+            Budget? budget = await _UnitOfWork.BudgetRepository.GetBudgetById(budgetInvite.BudgetId, budgetInvite.SenderId);
+
+            if (budget == null)
+            {
+                _Logger.LogWarning("Budget {BudgetId} not found when responding to invite {InviteId}", budgetInvite.BudgetId, budgetInviteId);
+                return CaseResult<BudgetInviteDto?>.Error(Messages.InviteNotFound);
+            }
+
+            budgetInvite.Accepted = accepted;
+
+            if (accepted)
+            {
+                var receiverBudgets = await _UnitOfWork.BudgetRepository.GetUserBudgets(userId);
+
+                if (receiverBudgets.Count >= _Limits.FreeBudgetLimit && !budgetInvite.Receiver.IsPro)
+                {
+                    _Logger.LogInformation("Non-pro user {UserId} needs Pro to accept invite {InviteId}: already has {BudgetCount} budgets", userId, budgetInviteId, receiverBudgets.Count);
+                    return CaseResult<BudgetInviteDto?>.Error(Messages.BudgetProRequiredForMultiple, ErrorType.ProRequired);
+                }
+
+                if (receiverBudgets.Count >= _Limits.ProBudgetLimit && budgetInvite.Receiver.IsPro)
+                {
+                    _Logger.LogInformation("Pro user {UserId} cannot accept invite {InviteId}: reached the {Limit}-budget limit", userId, budgetInviteId, _Limits.ProBudgetLimit);
+                    return CaseResult<BudgetInviteDto?>.Error(string.Format(Messages.BudgetProLimitReached, _Limits.ProBudgetLimit));
+                }
+
+                if (budget.Users.Count > _Limits.FreeParticipantJoinThreshold && !budgetInvite.Receiver.IsPro)
+                {
+                    _Logger.LogInformation("Non-pro user {UserId} needs Pro to accept invite {InviteId}: budget {BudgetId} has {MemberCount} members", userId, budgetInviteId, budget.Id, budget.Users.Count);
+                    return CaseResult<BudgetInviteDto?>.Error(Messages.InviteProRequiredForLargeBudget, ErrorType.ProRequired);
+                }
+
+                if (budget.Users.Count >= _Limits.ProParticipantLimit)
+                {
+                    _Logger.LogInformation("User {UserId} cannot accept invite {InviteId}: budget {BudgetId} reached the {Limit}-member limit", userId, budgetInviteId, budget.Id, _Limits.ProParticipantLimit);
+                    return CaseResult<BudgetInviteDto?>.Error(string.Format(Messages.InviteParticipantLimitReached, _Limits.ProParticipantLimit));
+                }
+
+                budget.Users.Add(budgetInvite.Receiver);
+            }
+
+            BudgetInvite createdInvite = _UnitOfWork.BudgetInviteRepository.UpdateInvite(budgetInvite);
+
+            await _UnitOfWork.CommitAsync();
+            await SendBudgetInviteNotification(budgetInvite.Sender, budgetInvite.Receiver.Email, budgetInvite.Accepted.Value);
+
+            result.Data = createdInvite.ToDto();
+            _Logger.LogInformation("Budget invite {InviteId} responded by user {UserId}", budgetInviteId, userId);
 
             return result;
         }
 
-        private async Task SendBudgetInviteNotification(string receiverNotificationToken, string receiverEmail, bool accepted)
+        private async Task SendBudgetInviteNotification(AppUser sender, string receiverEmail, bool accepted)
         {
-            string notificationMessage = accepted
-                ? $"The invite for a budget you sent is accepted by {receiverEmail}!"
-                : $"The invite for a budget you sent is declined by {receiverEmail}!";
-            await _PushNotificationService.SendNotification([receiverNotificationToken], "Budget Invite Status", notificationMessage, new NotificationDto() { Type = NotificationTypeEnum.InviteResponse });
+            string bodyKey = accepted ? nameof(Messages.PushInviteAcceptedBody) : nameof(Messages.PushInviteDeclinedBody);
+            await _PushNotificationService.SendLocalized([sender], nameof(Messages.PushInviteResponseTitle), bodyKey, new NotificationDto() { Type = NotificationTypeEnum.InviteResponse }, receiverEmail);
         }
     }
 }

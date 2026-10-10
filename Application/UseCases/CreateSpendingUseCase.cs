@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto.Budget;
 using Application.Dto.Notification;
@@ -35,72 +36,51 @@ namespace Application.UseCases
             var result = new CaseResult<SpendingDto?>();
             result.Successful = true;
 
-            int userId = 0;
-            try
+            int userId = _UserService.GetUserId();
+            BudgetCategory? budgetCategory = await _UnitOfWork.BudgetCategoryRepository.GetBudgetCategoryById(spendingDto.BudgetCategoryId, userId);
+
+            if (budgetCategory == null)
             {
-                userId = _UserService.GetUserId();
-                BudgetCategory? budgetCategory = await _UnitOfWork.BudgetCategoryRepository.GetBudgetCategoryById(spendingDto.BudgetCategoryId, userId);
+                _Logger.LogInformation("Category {CategoryId} not found for user {UserId} when creating spending", spendingDto.Id, userId);
+                return CaseResult<SpendingDto?>.Error(Messages.CategoryNotFound);
 
-                if (budgetCategory == null)
-                {
-                    _Logger.LogWarning("Category {CategoryId} not found for user {UserId} when creating spending", spendingDto.Id, userId);
-                    result.Successful = false;
-                    result.ErrorMessage = "Can't find the category to add spending.";
-                    return result;
-
-                }
-
-                decimal categoryBalance = budgetCategory.Spendings.Sum(s => s.Amount);
-                decimal newBalance = categoryBalance + spendingDto.Amount;
-
-                if (spendingDto.Amount < 0 && newBalance < 0)
-                {
-                    _Logger.LogWarning("Insufficient balance: attempted {Attempted}, available {Available} in category {CategoryId}", spendingDto.Amount, categoryBalance, spendingDto.Id);
-                    result.Successful = false;
-                    result.ErrorMessage = "Trying to spend more than the category balance.";
-                    return result;
-                }
-
-                await _UnitOfWork.BeginTransactionAsync();
-
-                Spending newSpending = spendingDto.ToEntity();
-                newSpending.CreatedByUserId = userId;
-                Spending addedSpending = _UnitOfWork.CategorySpendingsRepository.AddSpending(newSpending);
-
-                await _UnitOfWork.CommitTransactionAsync();
-
-                List<string> budgetUsersNotificationTokens = budgetCategory.Budget.Users.Where(u => u.Id != userId).Select(u => u.NotificationToken).ToList();
-                AppUser currentUser = budgetCategory.Budget.Users.Where(u => u.Id == userId).First();
-                result.Data = addedSpending.ToDto();
-                result.Data.CreatedByEmail = currentUser.Email;
-                result.Data.CreatedByName = $"{currentUser.FirstName} {currentUser.LastName}".Trim();
-                await SendSpendingNotification(budgetUsersNotificationTokens, currentUser.Email, budgetCategory.Budget.Name, budgetCategory.Name, spendingDto.Amount, budgetCategory.Budget.Currency.Symbol);
-                _Logger.LogInformation("Spending {SpendingId} created: {Amount} in category {CategoryId} by user {UserId}", result.Data!.Id, spendingDto.Amount, spendingDto.Id, userId);
             }
-            catch (Exception ex)
+
+            decimal categoryBalance = budgetCategory.Spendings.Sum(s => s.Amount);
+            decimal newBalance = categoryBalance + spendingDto.Amount;
+
+            if (spendingDto.Amount < 0 && newBalance < 0)
             {
-                await _UnitOfWork.RollbackTransactionAsync();
-                _Logger.LogError(ex, "Error creating spending for user {UserId}", userId);
-                result.Successful = false;
-                result.ErrorMessage = "Something got wrong during getting budgets. Please try again later.";
+                _Logger.LogInformation("Insufficient balance: attempted {Attempted}, available {Available} in category {CategoryId}", spendingDto.Amount, categoryBalance, spendingDto.Id);
+                return CaseResult<SpendingDto?>.Error(Messages.SpendingInsufficientBalance);
             }
+
+            Spending newSpending = spendingDto.ToEntity();
+            newSpending.CreatedByUserId = userId;
+            Spending addedSpending = _UnitOfWork.CategorySpendingsRepository.AddSpending(newSpending);
+
+            await _UnitOfWork.CommitAsync();
+
+            List<AppUser> notificationReceivers = budgetCategory.Budget.Users.Where(u => u.Id != userId).ToList();
+            AppUser currentUser = budgetCategory.Budget.Users.Where(u => u.Id == userId).First();
+            result.Data = addedSpending.ToDto();
+            result.Data.CreatedByEmail = currentUser.Email;
+            result.Data.CreatedByName = $"{currentUser.FirstName} {currentUser.LastName}".Trim();
+            await SendSpendingNotification(notificationReceivers, currentUser.Email, budgetCategory.Name, spendingDto.Amount, budgetCategory.Budget.Currency.Symbol);
+            _Logger.LogInformation("Spending {SpendingId} created: {Amount} in category {CategoryId} by user {UserId}", result.Data!.Id, spendingDto.Amount, spendingDto.Id, userId);
 
             return result;
         }
 
-        private async Task SendSpendingNotification(List<string> receiversNotificationToken, string userName, string budgetName, string categoryName, decimal spentAmound, string currencySymbol)
+        private async Task SendSpendingNotification(List<AppUser> receivers, string userName, string categoryName, decimal spentAmount, string currencySymbol)
         {
-            string formattedAmount = $"{Math.Abs(spentAmound).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)} {currencySymbol}";
-
-            string notificationMessage = spentAmound > 0 ?
-                $"{userName} Added {formattedAmount} to {categoryName}." :
-                $"{userName} Spent {formattedAmount} from {categoryName}.";
-
-            string notificationTitle = spentAmound > 0 ?
-                $"Funds added." :
-                $"Funds spent.";
-
-            await _PushNotificationService.SendNotification(receiversNotificationToken, notificationTitle, notificationMessage, new NotificationDto() { Type = NotificationTypeEnum.SpendingAdd });
+            bool added = spentAmount > 0;
+            await _PushNotificationService.SendLocalized(
+                receivers,
+                added ? nameof(Messages.PushFundsAddedTitle) : nameof(Messages.PushFundsSpentTitle),
+                added ? nameof(Messages.PushFundsAddedBody) : nameof(Messages.PushFundsSpentBody),
+                new NotificationDto() { Type = NotificationTypeEnum.SpendingAdd },
+                userName, Math.Abs(spentAmount), currencySymbol, categoryName);
         }
     }
 }

@@ -12,13 +12,11 @@ namespace MonthSpendings.Controllers
         private ICreateSpendingUseCase _CreateSpendingUseCase;
         private IDeleteSpendingUseCase _DeleteSpendingUseCase;
         private IGetCategorySpendingsByPeriodUseCase _GetCategorySpendingsByPeriodUseCase;
-        private readonly ILogger<SpendingController> _Logger;
-        public SpendingController(ICreateSpendingUseCase createSpendingUseCase, IDeleteSpendingUseCase deleteSpendingUseCase, IGetCategorySpendingsByPeriodUseCase getCategorySpendingsByPeriodUseCase, ILogger<SpendingController> logger)
+        public SpendingController(ICreateSpendingUseCase createSpendingUseCase, IDeleteSpendingUseCase deleteSpendingUseCase, IGetCategorySpendingsByPeriodUseCase getCategorySpendingsByPeriodUseCase)
         {
             _CreateSpendingUseCase = createSpendingUseCase;
             _DeleteSpendingUseCase = deleteSpendingUseCase;
-            _GetCategorySpendingsByPeriodUseCase = getCategorySpendingsByPeriodUseCase;
-            _Logger = logger;
+            _GetCategorySpendingsByPeriodUseCase = getCategorySpendingsByPeriodUseCase;
         }
 
         [Authorize]
@@ -28,8 +26,7 @@ namespace MonthSpendings.Controllers
             var result = await _CreateSpendingUseCase.InvokeAsync(spendingDto);
             if (!result.Successful)
             {
-                _Logger.LogWarning("CreateSpending failed: {Error}", result.ErrorMessage);
-                return BadRequest(result.ErrorMessage);
+                return StatusCode((int)result.ErrorType, result.ErrorMessage);
             }
             return Ok(result.Data);
         }
@@ -41,8 +38,7 @@ namespace MonthSpendings.Controllers
             var result = await _DeleteSpendingUseCase.InvokeAsync(spendingId);
             if (!result.Successful)
             {
-                _Logger.LogWarning("DeleteSpending failed for spending {SpendingId}: {Error}", spendingId, result.ErrorMessage);
-                return BadRequest(result.ErrorMessage);
+                return StatusCode((int)result.ErrorType, result.ErrorMessage);
             }
             return Ok(result.Data);
         }
@@ -54,8 +50,7 @@ namespace MonthSpendings.Controllers
             var result = await _GetCategorySpendingsByPeriodUseCase.InvokeAsync(budgetCategoryId, budgetPeriodId);
             if (!result.Successful)
             {
-                _Logger.LogWarning("GetByPeriod failed for category {CategoryId} period {PeriodId}: {Error}", budgetCategoryId, budgetPeriodId, result.ErrorMessage);
-                return BadRequest(result.ErrorMessage);
+                return StatusCode((int)result.ErrorType, result.ErrorMessage);
             }
             return Ok(result.Data);
         }

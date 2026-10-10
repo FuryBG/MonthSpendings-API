@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="TooManyRequests" xml:space="preserve">
+    <value>Твърде много опити. Моля, изчакайте минута и опитайте отново.</value>
+  </data>
+  <data name="UserInvalid" xml:space="preserve">
+    <value>Невалиден потребител. Моля, влезте отново.</value>
+  </data>
+  <data name="UserNotFound" xml:space="preserve">
+    <value>Потребителят не е намерен.</value>
+  </data>
+  <data name="UserUnsupportedLanguage" xml:space="preserve">
+    <value>Неподдържан език. Използвайте en, bg или es.</value>
+  </data>
+  <data name="AuthInvalidGoogleCredentials" xml:space="preserve">
+    <value>Невалидни данни за вход с Google.</value>
+  </data>
+  <data name="AuthEmailExists" xml:space="preserve">
+    <value>Вече съществува акаунт с този имейл.</value>
+  </data>
+  <data name="AuthInvalidCredentials" xml:space="preserve">
+    <value>Грешен имейл или парола.</value>
+  </data>
+  <data name="AuthAccountLocked" xml:space="preserve">
+    <value>Акаунтът е заключен. Опитайте отново след {0} секунди.</value>
+  </data>
+  <data name="AuthRefreshTokenReused" xml:space="preserve">
+    <value>Сесията ви вече не е валидна. Моля, влезте отново.</value>
+  </data>
+  <data name="AuthRefreshTokenInvalid" xml:space="preserve">
+    <value>Сесията ви изтече. Моля, влезте отново.</value>
+  </data>
+  <data name="AuthPasswordTooShort" xml:space="preserve">
+    <value>Паролата трябва да е поне 8 символа.</value>
+  </data>
+  <data name="AuthPasswordTooWeak" xml:space="preserve">
+    <value>Паролата трябва да съдържа поне една главна буква, една цифра и един специален символ.</value>
+  </data>
+  <data name="BudgetNotFound" xml:space="preserve">
+    <value>Бюджетът не е намерен.</value>
+  </data>
+  <data name="BudgetProRequiredForMultiple" xml:space="preserve">
+    <value>За да имате повече от един бюджет, трябва да сте Pro.</value>
+  </data>
+  <data name="BudgetProLimitReached" xml:space="preserve">
+    <value>Pro акаунтите са ограничени до {0} бюджета.</value>
+  </data>
+  <data name="BudgetNotOwner" xml:space="preserve">
+    <value>Само собственикът на бюджета може да премахва членове.</value>
+  </data>
+  <data name="BudgetOwnerCannotBeRemoved" xml:space="preserve">
+    <value>Собственикът не може да бъде премахнат от бюджета.</value>
+  </data>
+  <data name="BudgetMemberNotFound" xml:space="preserve">
+    <value>Потребителят не е член на този бюджет.</value>
+  </data>
+  <data name="BudgetOwnerCannotLeave" xml:space="preserve">
+    <value>Собственикът не може да напусне бюджета. Вместо това го изтрийте.</value>
+  </data>
+  <data name="BudgetNotMember" xml:space="preserve">
+    <value>Не сте член на този бюджет.</value>
+  </data>
+  <data name="BudgetNoActivePeriod" xml:space="preserve">
+    <value>Няма активен бюджетен период.</value>
+  </data>
+  <data name="CategoryNotFound" xml:space="preserve">
+    <value>Категорията не е намерена.</value>
+  </data>
+  <data name="SpendingNotFound" xml:space="preserve">
+    <value>Разходът не е намерен.</value>
+  </data>
+  <data name="SpendingInsufficientBalance" xml:space="preserve">
+    <value>Опитвате се да похарчите повече от наличното в категорията.</value>
+  </data>
+  <data name="InviteNotFound" xml:space="preserve">
+    <value>Поканата за бюджет не е намерена.</value>
+  </data>
+  <data name="InviteUserNotFound" xml:space="preserve">
+    <value>Не съществува потребител с този имейл.</value>
+  </data>
+  <data name="InviteProRequiredForLargeBudget" xml:space="preserve">
+    <value>Трябва да сте Pro, за да се присъедините към бюджет с повече от двама участници.</value>
+  </data>
+  <data name="InviteParticipantLimitReached" xml:space="preserve">
+    <value>Този бюджет достигна лимита от {0} участници.</value>
+  </data>
+  <data name="TransactionNotFound" xml:space="preserve">
+    <value>Транзакцията не е намерена.</value>
+  </data>
+  <data name="SubscriptionProRequired" xml:space="preserve">
+    <value>Тази функция изисква активен Pro абонамент.</value>
+  </data>
+  <data name="StatisticsBudgetNotAccessible" xml:space="preserve">
+    <value>Бюджетът не е намерен или нямате достъп до него.</value>
+  </data>
+  <data name="StatisticsPeriodsMismatch" xml:space="preserve">
+    <value>Избраните периоди не принадлежат на този бюджет.</value>
+  </data>
+  <data name="PushInviteReceivedTitle" xml:space="preserve">
+    <value>Покана за бюджет</value>
+  </data>
+  <data name="PushInviteReceivedBody" xml:space="preserve">
+    <value>Поканени сте в бюджет. Докоснете, за да видите поканата.</value>
+  </data>
+  <data name="PushInviteResponseTitle" xml:space="preserve">
+    <value>Статус на поканата</value>
+  </data>
+  <data name="PushInviteAcceptedBody" xml:space="preserve">
+    <value>{0} прие поканата ви за бюджет!</value>
+  </data>
+  <data name="PushInviteDeclinedBody" xml:space="preserve">
+    <value>{0} отказа поканата ви за бюджет.</value>
+  </data>
+  <data name="PushFundsAddedTitle" xml:space="preserve">
+    <value>Добавени средства</value>
+  </data>
+  <data name="PushFundsAddedBody" xml:space="preserve">
+    <value>{0} добави {1:0.00} {2} към {3}.</value>
+  </data>
+  <data name="PushFundsSpentTitle" xml:space="preserve">
+    <value>Нов разход</value>
+  </data>
+  <data name="PushFundsSpentBody" xml:space="preserve">
+    <value>{0} похарчи {1:0.00} {2} от {3}.</value>
+  </data>
+  <data name="PushSpendingDeletedTitle" xml:space="preserve">
+    <value>Изтрит разход</value>
+  </data>
+  <data name="PushSpendingDeletedBody" xml:space="preserve">
+    <value>{0} изтри разход за {1:0.00} {2} в {3}.</value>
+  </data>
+  <data name="PushCategoryRenamedTitle" xml:space="preserve">
+    <value>Обновена категория</value>
+  </data>
+  <data name="PushCategoryRenamedBody" xml:space="preserve">
+    <value>{0} преименува категория {1} на {2}.</value>
+  </data>
+  <data name="PushKickedTitle" xml:space="preserve">
+    <value>Премахнати сте от бюджет</value>
+  </data>
+  <data name="PushKickedBody" xml:space="preserve">
+    <value>Бяхте премахнати от „{0}“.</value>
+  </data>
+  <data name="PushInactivityTitle" xml:space="preserve">
+    <value>Липсвате ни!</value>
+  </data>
+  <data name="PushInactivityBody" xml:space="preserve">
+    <value>Отворете Tavira, за да прегледате разходите си и да останете в рамките на бюджета.</value>
+  </data>
+</root>

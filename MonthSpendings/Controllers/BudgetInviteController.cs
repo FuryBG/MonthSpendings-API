@@ -11,12 +11,11 @@ namespace MonthSpendings.Controllers
     {
         private ICreateBudgetInviteUseCase _CreateBudgetInviteUseCase;
         private IUpdateBudgetInviteResponseUseCase _UpdateBudgetInviteResponseUseCase;
-        private readonly ILogger<BudgetInviteController> _Logger;
-        public BudgetInviteController(ICreateBudgetInviteUseCase createBudgetInviteUseCase, IUpdateBudgetInviteResponseUseCase updateBudgetInviteResponseUseCase, ILogger<BudgetInviteController> logger)
+        public BudgetInviteController(ICreateBudgetInviteUseCase createBudgetInviteUseCase, IUpdateBudgetInviteResponseUseCase updateBudgetInviteResponseUseCase)
         {
             _CreateBudgetInviteUseCase = createBudgetInviteUseCase;
             _UpdateBudgetInviteResponseUseCase = updateBudgetInviteResponseUseCase;
-            _Logger = logger;
+
         }
 
         [Authorize]
@@ -26,8 +25,7 @@ namespace MonthSpendings.Controllers
             var result = await _CreateBudgetInviteUseCase.InvokeAsync(budgetInviteDto);
             if (!result.Successful)
             {
-                _Logger.LogWarning("CreateBudgetInvite failed: {Error}", result.ErrorMessage);
-                return BadRequest(result.ErrorMessage);
+                return StatusCode((int)result.ErrorType, result.ErrorMessage);
             }
             return Ok(result.Data);
         }
@@ -39,8 +37,7 @@ namespace MonthSpendings.Controllers
             var result = await _UpdateBudgetInviteResponseUseCase.InvokeAsync(inviteId, response);
             if (!result.Successful)
             {
-                _Logger.LogWarning("UpdateBudgetInviteResponse failed for invite {InviteId}: {Error}", inviteId, result.ErrorMessage);
-                return BadRequest(result.ErrorMessage);
+                return StatusCode((int)result.ErrorType, result.ErrorMessage);
             }
             return Ok(result.Data);
         }
@@ -57,7 +54,7 @@ namespace MonthSpendings.Controllers
         //    }
         //    else
         //    {
-        //        return BadRequest(result.ErrorMessage);
+        //        return StatusCode((int)result.ErrorType, result.ErrorMessage);
         //    }
         //}
 
@@ -73,7 +70,7 @@ namespace MonthSpendings.Controllers
         //    }
         //    else
         //    {
-        //        return BadRequest(result.ErrorMessage);
+        //        return StatusCode((int)result.ErrorType, result.ErrorMessage);
         //    }
         //}
     }

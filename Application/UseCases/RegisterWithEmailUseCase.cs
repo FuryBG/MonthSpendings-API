@@ -1,3 +1,5 @@
+﻿using Application.Resources;
+using System.Globalization;
 using Application.Contracts;
 using Application.Dto;
 using Application.Interfaces;
@@ -34,40 +36,32 @@ namespace Application.UseCases
         {
             var result = new CaseResult<AuthResponseDto?>();
 
-            try
+            var existing = await _UnitOfWork.UserRepository.GetUserByEmail(dto.Email);
+            if (existing != null)
             {
-                var existing = await _UnitOfWork.UserRepository.GetUserByEmail(dto.Email);
-                if (existing != null)
-                {
-                    result.Successful = false;
-                    result.ErrorMessage = "An account with this email already exists.";
-                    return result;
-                }
-
-                var user = new AppUser
-                {
-                    Email = dto.Email,
-                    FirstName = dto.FirstName,
-                    LastName = dto.LastName,
-                    PasswordHash = _PasswordService.Hash(dto.Password),
-                };
-
-                _UnitOfWork.UserRepository.AddUser(user);
-                await _UnitOfWork.CommitAsync();
-
-                var accessToken = _TokenService.CreateAccessToken(user);
-                var refreshToken = await _TokenService.CreateRefreshTokenAsync(user.Id);
-
-                result.Successful = true;
-                result.Data = new AuthResponseDto(accessToken, refreshToken.Token);
-                _Logger.LogInformation("User registered with email, user {UserId}", user.Id);
+                _Logger.LogInformation("Email registration rejected: email already belongs to user {UserId}", existing.Id);
+                return CaseResult<AuthResponseDto?>.Error(Messages.AuthEmailExists, ErrorType.Conflict);
             }
-            catch (Exception ex)
+
+            var user = new AppUser
             {
-                _Logger.LogError(ex, "Error registering user with email");
-                result.Successful = false;
-                result.ErrorMessage = "Something went wrong. Please try again later.";
-            }
+                Email = dto.Email,
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                PasswordHash = _PasswordService.Hash(dto.Password),
+                // Request culture comes from the Accept-Language header (RequestLocalization middleware).
+                Language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName,
+            };
+
+            _UnitOfWork.UserRepository.AddUser(user);
+            await _UnitOfWork.CommitAsync();
+
+            var accessToken = _TokenService.CreateAccessToken(user);
+            var refreshToken = await _TokenService.CreateRefreshTokenAsync(user.Id);
+
+            result.Successful = true;
+            result.Data = new AuthResponseDto(accessToken, refreshToken.Token);
+            _Logger.LogInformation("User registered with email, user {UserId}", user.Id);
 
             return result;
         }

@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto.Statistics;
 using Application.Interfaces;
@@ -31,57 +32,44 @@ namespace Application.UseCases.Statistics
         {
             var result = new CaseResult<RangeSummaryDto>();
             result.Successful = true;
-            int userId = 0;
+            int userId = _UserService.GetUserId();
+            var repository = _UnitOfWork.StatisticsRepository;
 
-            try
+            if (!await repository.HasBudgetAccess(budgetId, userId))
             {
-                userId = _UserService.GetUserId();
-                var repository = _UnitOfWork.StatisticsRepository;
-
-                if (!await repository.HasBudgetAccess(budgetId, userId))
-                {
-                    result.Successful = false;
-                    result.ErrorMessage = "Budget not found or you don't have access.";
-                    return result;
-                }
-
-                var periods = await repository.GetPeriodTotals(budgetId, fromPeriodId, toPeriodId, categoryId);
-                if (periods == null || periods.Count == 0)
-                {
-                    result.Successful = false;
-                    result.ErrorMessage = "The selected periods do not belong to this budget.";
-                    return result;
-                }
-
-                var periodIds = periods.Select(p => p.PeriodId).ToList();
-                var categories = await repository.GetCategoryTotals(periodIds, categoryId);
-                var topSpendings = await repository.GetTopSpendings(periodIds, categoryId, Math.Clamp(top, 1, MaxTop));
-
-                decimal total = periods.Sum(p => p.Total);
-
-                foreach (var category in categories)
-                {
-                    category.Share = total == 0 ? 0 : Math.Round(category.Amount / total * 100, 1);
-                }
-
-                result.Data = new RangeSummaryDto
-                {
-                    StartDate = periods[0].StartDate,
-                    EndDate = periods[^1].EndDate,
-                    Total = total,
-                    AveragePerPeriod = Math.Round(total / periods.Count, 2),
-                    Periods = periods,
-                    Categories = categories,
-                    TopSpendings = topSpendings,
-                };
-                _Logger.LogInformation("Range summary retrieved for budget {BudgetId} ({Count} periods) by user {UserId}", budgetId, periods.Count, userId);
+                _Logger.LogWarning("User {UserId} requested statistics for budget {BudgetId} without access", userId, budgetId);
+                return CaseResult<RangeSummaryDto>.Error(Messages.StatisticsBudgetNotAccessible);
             }
-            catch (Exception ex)
+
+            var periods = await repository.GetPeriodTotals(budgetId, fromPeriodId, toPeriodId, categoryId);
+            if (periods == null || periods.Count == 0)
             {
-                _Logger.LogError(ex, "Error getting range summary for user {UserId}", userId);
-                result.Successful = false;
-                result.ErrorMessage = "Something went wrong while fetching statistics.";
+                _Logger.LogInformation("No periods {FromPeriodId}..{ToPeriodId} in budget {BudgetId} for statistics (user {UserId})", fromPeriodId, toPeriodId, budgetId, userId);
+                return CaseResult<RangeSummaryDto>.Error(Messages.StatisticsPeriodsMismatch);
             }
+
+            var periodIds = periods.Select(p => p.PeriodId).ToList();
+            var categories = await repository.GetCategoryTotals(periodIds, categoryId);
+            var topSpendings = await repository.GetTopSpendings(periodIds, categoryId, Math.Clamp(top, 1, MaxTop));
+
+            decimal total = periods.Sum(p => p.Total);
+
+            foreach (var category in categories)
+            {
+                category.Share = total == 0 ? 0 : Math.Round(category.Amount / total * 100, 1);
+            }
+
+            result.Data = new RangeSummaryDto
+            {
+                StartDate = periods[0].StartDate,
+                EndDate = periods[^1].EndDate,
+                Total = total,
+                AveragePerPeriod = Math.Round(total / periods.Count, 2),
+                Periods = periods,
+                Categories = categories,
+                TopSpendings = topSpendings,
+            };
+            _Logger.LogDebug("Range summary retrieved for budget {BudgetId} ({Count} periods) by user {UserId}", budgetId, periods.Count, userId);
 
             return result;
         }

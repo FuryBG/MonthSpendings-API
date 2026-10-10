@@ -12,13 +12,11 @@ namespace MonthSpendings.Controllers
         private ICreateBudgetCategoryUseCase _CreateBudgetCategoryUseCase;
         private IDeleteBudgetCategoryUseCase _DeleteBudgetCategoryUseCase;
         private IUpdateBudgetCategoryNameUseCase _UpdateBudgetCategoryNameUseCase;
-        private readonly ILogger<BudgetCategoryController> _Logger;
-        public BudgetCategoryController(ICreateBudgetCategoryUseCase createBudgetCategoryUseCase, IDeleteBudgetCategoryUseCase deleteBudgetCategoryUseCase, IUpdateBudgetCategoryNameUseCase updateBudgetCategoryNameUseCase, ILogger<BudgetCategoryController> logger)
+        public BudgetCategoryController(ICreateBudgetCategoryUseCase createBudgetCategoryUseCase, IDeleteBudgetCategoryUseCase deleteBudgetCategoryUseCase, IUpdateBudgetCategoryNameUseCase updateBudgetCategoryNameUseCase)
         {
             _CreateBudgetCategoryUseCase = createBudgetCategoryUseCase;
             _DeleteBudgetCategoryUseCase = deleteBudgetCategoryUseCase;
-            _UpdateBudgetCategoryNameUseCase = updateBudgetCategoryNameUseCase;
-            _Logger = logger;
+            _UpdateBudgetCategoryNameUseCase = updateBudgetCategoryNameUseCase;
         }
 
         [Authorize]
@@ -28,8 +26,7 @@ namespace MonthSpendings.Controllers
             var result = await _CreateBudgetCategoryUseCase.InvokeAsync(budgetCategoryDto);
             if (!result.Successful)
             {
-                _Logger.LogWarning("CreateBudgetCategory failed: {Error}", result.ErrorMessage);
-                return BadRequest(result.ErrorMessage);
+                return StatusCode((int)result.ErrorType, result.ErrorMessage);
             }
             return Ok(result.Data);
         }
@@ -41,8 +38,7 @@ namespace MonthSpendings.Controllers
             var result = await _DeleteBudgetCategoryUseCase.InvokeAsync(budgetCategoryId);
             if (!result.Successful)
             {
-                _Logger.LogWarning("DeleteBudgetCategory failed for category {CategoryId}: {Error}", budgetCategoryId, result.ErrorMessage);
-                return BadRequest(result.ErrorMessage);
+                return StatusCode((int)result.ErrorType, result.ErrorMessage);
             }
             return Ok(result.Data);
         }
@@ -54,8 +50,7 @@ namespace MonthSpendings.Controllers
             var result = await _UpdateBudgetCategoryNameUseCase.InvokeAsync(id, newName);
             if (!result.Successful)
             {
-                _Logger.LogWarning("UpdateBudgetCategoryName failed for category {CategoryId}: {Error}", id, result.ErrorMessage);
-                return BadRequest(result.ErrorMessage);
+                return StatusCode((int)result.ErrorType, result.ErrorMessage);
             }
             return Ok(result.Data);
         }

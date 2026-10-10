@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto;
 using Application.Interfaces;
@@ -27,24 +28,15 @@ namespace Application.UseCases
         {
             var result = new CaseResult<bool>();
 
-            try
+            var token = await _TokenService.GetValidRefreshTokenAsync(dto.RefreshToken);
+            if (token != null)
             {
-                var token = await _TokenService.GetValidRefreshTokenAsync(dto.RefreshToken);
-                if (token != null)
-                {
-                    await _TokenService.RevokeRefreshTokenAsync(token);
-                    _Logger.LogInformation("Refresh token revoked for user {UserId}", token.UserId);
-                }
+                await _TokenService.RevokeRefreshTokenAsync(token);
+                _Logger.LogInformation("Refresh token revoked for user {UserId}", token.UserId);
+            }
 
-                result.Successful = true;
-                result.Data = true;
-            }
-            catch (Exception ex)
-            {
-                _Logger.LogError(ex, "Error revoking token");
-                result.Successful = false;
-                result.ErrorMessage = "Something went wrong.";
-            }
+            result.Successful = true;
+            result.Data = true;
 
             return result;
         }

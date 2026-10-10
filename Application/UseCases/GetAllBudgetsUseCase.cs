@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto.Budget;
 using Application.Interfaces;
@@ -30,20 +31,11 @@ namespace Application.UseCases
             var result = new CaseResult<List<BudgetDto>>([]);
             result.Successful = true;
 
-            try
-            {
-                int userId = _UserService.GetUserId();
-                List<Budget> budgets = await _UnitOfWork.BudgetRepository.GetUserBudgets(userId);
-                List<BudgetDto> budgetsDto = budgets.Select(budget => budget.ToDto()).ToList();
-                result.Data = budgetsDto;
-                _Logger.LogInformation("Retrieved {Count} budgets for user {UserId}", result.Data!.Count, userId);
-            }
-            catch (Exception ex)
-            {
-                _Logger.LogError(ex, "Error retrieving budgets for user {UserId}", _UserService.GetUserId());
-                result.Successful = false;
-                result.ErrorMessage = "Something got wrong during getting budgets. Please try again later.";
-            }
+            int userId = _UserService.GetUserId();
+            List<Budget> budgets = await _UnitOfWork.BudgetRepository.GetUserBudgets(userId);
+            List<BudgetDto> budgetsDto = budgets.Select(budget => budget.ToDto()).ToList();
+            result.Data = budgetsDto;
+            _Logger.LogDebug("Retrieved {Count} budgets for user {UserId}", result.Data!.Count, userId);
 
             return result;
         }

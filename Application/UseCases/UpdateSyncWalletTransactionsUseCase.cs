@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto;
 using Application.Interfaces;
@@ -30,37 +31,26 @@ namespace Application.UseCases
             var result = new CaseResult<bool>();
             result.Successful = true;
 
-            try
+            int userId = _UserService.GetUserId();
+            AppUser? user = await _UnitOfWork.UserRepository.GetUserById(userId);
+
+            if (user == null)
             {
-                int userId = _UserService.GetUserId();
-                AppUser? user = await _UnitOfWork.UserRepository.GetUserById(userId);
-
-                if (user == null)
-                {
-                    result.Successful = false;
-                    result.ErrorMessage = "Invalid user.";
-                    return result;
-                }
-
-                if (!user.IsPro)
-                {
-                    result.Successful = false;
-                    result.ErrorMessage = "Feature requires an active Pro subscription.";
-                    return result;
-                }
-
-                user.SyncWalletTransactions = dto.SyncWalletTransactions;
-                await _UnitOfWork.CommitAsync();
-
-                result.Data = true;
-                _Logger.LogInformation("SyncWalletTransactions set to {Value} for user {UserId}.", dto.SyncWalletTransactions, userId);
+                _Logger.LogWarning("User {UserId} not found when updating wallet sync", userId);
+                return CaseResult<bool>.Error(Messages.UserInvalid);
             }
-            catch (Exception ex)
+
+            if (!user.IsPro)
             {
-                result.Successful = false;
-                result.ErrorMessage = "Failed to update wallet sync setting.";
-                _Logger.LogError(ex, "Error updating SyncWalletTransactions for user {UserId}.", _UserService.GetUserId());
+                _Logger.LogInformation("Non-pro user {UserId} tried to change wallet sync", userId);
+                return CaseResult<bool>.Error(Messages.SubscriptionProRequired, ErrorType.ProRequired);
             }
+
+            user.SyncWalletTransactions = dto.SyncWalletTransactions;
+            await _UnitOfWork.CommitAsync();
+
+            result.Data = true;
+            _Logger.LogInformation("SyncWalletTransactions set to {Value} for user {UserId}.", dto.SyncWalletTransactions, userId);
 
             return result;
         }

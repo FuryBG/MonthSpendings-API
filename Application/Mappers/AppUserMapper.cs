@@ -18,6 +18,7 @@ namespace Application.Mappers
                 NotificationToken = appUser.NotificationToken,
                 IsPro = appUser.IsPro,
                 SyncWalletTransactions = appUser.SyncWalletTransactions,
+                Language = appUser.Language,
                 Subscription = appUser.Subscriptions.MaxBy(s => s.CreatedAt)?.ToDto(),
                 ReceivedBudgetInvites = appUser.ReceivedBudgetInvites.Select(invite => invite.ToDto()).ToList(),
                 SentBudgetInvites = appUser.SentBudgetInvites.Select(invite => invite.ToDto()).ToList()

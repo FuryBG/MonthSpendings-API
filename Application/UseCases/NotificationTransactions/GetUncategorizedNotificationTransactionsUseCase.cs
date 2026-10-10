@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto;
 using Application.Interfaces;
@@ -28,29 +29,19 @@ namespace Application.UseCases.NotificationTransactions
         public async Task<CaseResult<List<NotificationTransactionDto>>> InvokeAsync(CancellationToken cancellationToken)
         {
             var result = new CaseResult<List<NotificationTransactionDto>>();
-            int userId = 0;
-            try
+            int userId = _UserService.GetUserId();
+            List<NotificationTransaction> transactions = await _UnitOfWork.NotificationTransactionRepository.GetUncategorizedByUserAsync(userId, cancellationToken);
+            result.Successful = true;
+            result.Data = transactions.Select(t => new NotificationTransactionDto
             {
-                userId = _UserService.GetUserId();
-                List<NotificationTransaction> transactions = await _UnitOfWork.NotificationTransactionRepository.GetUncategorizedByUserAsync(userId, cancellationToken);
-                result.Successful = true;
-                result.Data = transactions.Select(t => new NotificationTransactionDto
-                {
-                    Id = t.Id,
-                    Amount = t.Amount,
-                    Currency = t.Currency,
-                    MerchantName = t.MerchantName,
-                    ReceivedAt = t.ReceivedAt,
-                    Categorized = t.Categorized,
-                }).ToList();
-                _Logger.LogInformation("Retrieved {Count} uncategorized notification transactions for user {UserId}", result.Data.Count, userId);
-            }
-            catch (Exception ex)
-            {
-                _Logger.LogError(ex, "Error retrieving uncategorized notification transactions for user {UserId}", userId);
-                result.Successful = false;
-                result.ErrorMessage = "Failed to retrieve pending transactions. Please try again.";
-            }
+                Id = t.Id,
+                Amount = t.Amount,
+                Currency = t.Currency,
+                MerchantName = t.MerchantName,
+                ReceivedAt = t.ReceivedAt,
+                Categorized = t.Categorized,
+            }).ToList();
+            _Logger.LogDebug("Retrieved {Count} uncategorized notification transactions for user {UserId}", result.Data.Count, userId);
             return result;
         }
     }

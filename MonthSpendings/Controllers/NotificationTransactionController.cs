@@ -1,4 +1,4 @@
-using Application.Dto;
+﻿using Application.Dto;
 using Application.UseCases.NotificationTransactions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -32,7 +32,9 @@ namespace MonthSpendings.Controllers
         {
             var result = await _CreateUseCase.InvokeAsync(dto, cancellationToken);
             if (!result.Successful)
-                return BadRequest(result.ErrorMessage);
+            {
+                return StatusCode((int)result.ErrorType, result.ErrorMessage);
+            }
             return Ok(result.Data);
         }
 
@@ -41,7 +43,9 @@ namespace MonthSpendings.Controllers
         {
             var result = await _GetUncategorizedUseCase.InvokeAsync(cancellationToken);
             if (!result.Successful)
-                return BadRequest(result.ErrorMessage);
+            {
+                return StatusCode((int)result.ErrorType, result.ErrorMessage);
+            }
             return Ok(result.Data);
         }
 
@@ -50,7 +54,9 @@ namespace MonthSpendings.Controllers
         {
             var result = await _CategorizeUseCase.InvokeAsync(dto, cancellationToken);
             if (!result.Successful)
-                return BadRequest(result.ErrorMessage);
+            {
+                return StatusCode((int)result.ErrorType, result.ErrorMessage);
+            }
             return Ok(result.Data);
         }
 
@@ -59,7 +65,9 @@ namespace MonthSpendings.Controllers
         {
             var result = await _DeleteUseCase.InvokeAsync(id, cancellationToken);
             if (!result.Successful)
-                return BadRequest(result.ErrorMessage);
+            {
+                return StatusCode((int)result.ErrorType, result.ErrorMessage);
+            }
             return Ok();
         }
     }

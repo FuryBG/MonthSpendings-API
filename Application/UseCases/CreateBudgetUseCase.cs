@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto.Budget;
 using Application.Interfaces;
@@ -34,64 +35,49 @@ namespace Application.UseCases
             var result = new CaseResult<BudgetDto?>();
             result.Successful = true;
 
-            try
+            int userId = _UserService.GetUserId();
+            AppUser? existingUser = await _UnitOfWork.UserRepository.GetUserById(userId);
+
+            if (existingUser == null)
             {
-                int userId = _UserService.GetUserId();
-                AppUser? existingUser = await _UnitOfWork.UserRepository.GetUserById(userId);
+                _Logger.LogWarning("Unauthorized budget creation attempt — no user ID in context");
+                return CaseResult<BudgetDto?>.Error(Messages.UserInvalid);
+            }
 
-                if (existingUser == null)
+            var existingBudgets = await _UnitOfWork.BudgetRepository.GetUserBudgets(userId);
+
+            if (!existingUser.IsPro && existingBudgets.Count >= _Limits.FreeBudgetLimit)
+            {
+                _Logger.LogInformation("Non-pro user {UserId} attempted to create a second budget", userId);
+                return CaseResult<BudgetDto?>.Error(Messages.BudgetProRequiredForMultiple, ErrorType.ProRequired);
+            }
+
+            if (existingUser.IsPro && existingBudgets.Count >= _Limits.ProBudgetLimit)
+            {
+                _Logger.LogInformation("Pro user {UserId} attempted to exceed the {Limit}-budget limit", userId, _Limits.ProBudgetLimit);
+                return CaseResult<BudgetDto?>.Error(string.Format(Messages.BudgetProLimitReached, _Limits.ProBudgetLimit));
+            }
+
+            Budget budget = budgetDto.ToEntity();
+            budget.OwnerId = userId;
+            budget.Users.Add(existingUser);
+            BudgetPeriod newBudgetPeriod = new BudgetPeriod() { StartDate = DateTime.UtcNow };
+            budget.BudgetPeriods.Add(newBudgetPeriod);
+
+            budget.BudgetCategories.ForEach(budgetCategory =>
+            {
+                budgetCategory.Spendings.ForEach(spending =>
                 {
-                    _Logger.LogWarning("Unauthorized budget creation attempt — no user ID in context");
-                    result.Successful = false;
-                    result.ErrorMessage = "Can't find your personal information. Please first login, to create a budget.";
-                    return result;
-                }
-
-                var existingBudgets = await _UnitOfWork.BudgetRepository.GetUserBudgets(userId);
-
-                if (!existingUser.IsPro && existingBudgets.Count >= _Limits.FreeBudgetLimit)
-                {
-                    _Logger.LogWarning("Non-pro user {UserId} attempted to create a second budget", userId);
-                    result.Successful = false;
-                    result.ErrorMessage = "To have more than one budget you must be a Pro.";
-                    return result;
-                }
-
-                if (existingUser.IsPro && existingBudgets.Count >= _Limits.ProBudgetLimit)
-                {
-                    _Logger.LogWarning("Pro user {UserId} attempted to exceed the {Limit}-budget limit", userId, _Limits.ProBudgetLimit);
-                    result.Successful = false;
-                    result.ErrorMessage = $"Pro accounts are limited to {_Limits.ProBudgetLimit} budgets.";
-                    return result;
-                }
-
-                Budget budget = budgetDto.ToEntity();
-                budget.OwnerId = userId;
-                budget.Users.Add(existingUser);
-                BudgetPeriod newBudgetPeriod = new BudgetPeriod() { StartDate = DateTime.UtcNow };
-                budget.BudgetPeriods.Add(newBudgetPeriod);
-
-                budget.BudgetCategories.ForEach(budgetCategory =>
-                {
-                    budgetCategory.Spendings.ForEach(spending =>
-                    {
-                        spending.BudgetPeriod = newBudgetPeriod;
-                        spending.CreatedByUserId = userId;
-                    });
+                    spending.BudgetPeriod = newBudgetPeriod;
+                    spending.CreatedByUserId = userId;
                 });
+            });
 
-                Budget newBudget = _UnitOfWork.BudgetRepository.CreateBudget(budget);
-                await _UnitOfWork.CommitAsync();
+            Budget newBudget = _UnitOfWork.BudgetRepository.CreateBudget(budget);
+            await _UnitOfWork.CommitAsync();
 
-                result.Data = newBudget.ToDto();
-                _Logger.LogInformation("Budget {BudgetId} created for user {UserId}", result.Data!.Id, userId);
-            }
-            catch (Exception ex)
-            {
-                _Logger.LogError(ex, "Error creating budget for user {UserId}", _UserService.GetUserId());
-                result.Successful = false;
-                result.ErrorMessage = "Something got wrong during budget creation. Please try again later.";
-            }
+            result.Data = newBudget.ToDto();
+            _Logger.LogInformation("Budget {BudgetId} created for user {UserId}", result.Data!.Id, userId);
             return result;
         }
     }

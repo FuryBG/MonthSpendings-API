@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto;
 using Application.Dto.Notification;
@@ -33,68 +34,50 @@ namespace Application.UseCases
             var result = new CaseResult<BudgetInviteDto?>();
             result.Successful = true;
 
-            try
+            int userId = _UserService.GetUserId();
+            Budget? budget = await _UnitOfWork.BudgetRepository.GetBudgetById(budgetInviteDto.BudgetId, userId);
+
+            if (budget == null)
             {
-                int userId = _UserService.GetUserId();
-                Budget? budget = await _UnitOfWork.BudgetRepository.GetBudgetById(budgetInviteDto.BudgetId, userId);
-
-                if (budget == null)
-                {
-                    _Logger.LogWarning("Budget {BudgetId} not found when creating invite", budgetInviteDto.BudgetId);
-                    result.Successful = false;
-                    result.ErrorMessage = "Can't find the Budget to send Invite.";
-                    return result;
-                }
-
-                AppUser? sender = await _UnitOfWork.UserRepository.GetUserById(userId);
-
-                if (sender == null)
-                {
-                    _Logger.LogWarning("Sender {SenderId} not found when creating budget invite", userId);
-                    result.Successful = false;
-                    result.ErrorMessage = "Corrupted user, please log in again, and send invite again.";
-                    return result;
-                }
-
-                AppUser? receiver = await _UnitOfWork.UserRepository.GetUserByEmail(budgetInviteDto.ReceiverEmail);
-
-                if (receiver == null)
-                {
-                    _Logger.LogWarning("Receiver {ReceiverId} not found when creating budget invite", budgetInviteDto.ReceiverEmail);
-                    result.Successful = false;
-                    result.ErrorMessage = "User with this email doesn't exist.";
-                    return result;
-                }
-
-                BudgetInvite budgetInvite = budgetInviteDto.ToEntity();
-                budgetInvite.ReceiverId = receiver.Id;
-                budgetInvite.SenderId = sender.Id;
-
-                BudgetInvite createdInvite = _UnitOfWork.BudgetInviteRepository.CreateInvite(budgetInvite);
-
-                await _UnitOfWork.CommitAsync();
-
-                if (receiver.NotificationToken != null && receiver.NotificationToken != string.Empty)
-                {
-                    await SendBudgetInviteNotification(receiver.NotificationToken);
-                }
-
-                result.Data = createdInvite.ToDto();
-                _Logger.LogInformation("Budget invite {InviteId} sent from {SenderId} to {ReceiverId} for budget {BudgetId}", result.Data!.Id, userId, budgetInviteDto.ReceiverEmail, budgetInviteDto.BudgetId);
+                _Logger.LogInformation("Budget {BudgetId} not found for user {UserId} when creating invite", budgetInviteDto.BudgetId, userId);
+                return CaseResult<BudgetInviteDto?>.Error(Messages.BudgetNotFound);
             }
-            catch (Exception ex)
+
+            AppUser? sender = await _UnitOfWork.UserRepository.GetUserById(userId);
+
+            if (sender == null)
             {
-                _Logger.LogError(ex, "Error creating budget invite for budget {BudgetId}", budgetInviteDto.BudgetId);
-                result.Successful = false;
-                result.ErrorMessage = "Something got wrong during creating Invite. Please try again later.";
+                _Logger.LogWarning("Sender {SenderId} not found when creating budget invite", userId);
+                return CaseResult<BudgetInviteDto?>.Error(Messages.UserInvalid);
             }
+
+            AppUser? receiver = await _UnitOfWork.UserRepository.GetUserByEmail(budgetInviteDto.ReceiverEmail);
+
+            if (receiver == null)
+            {
+                _Logger.LogInformation("Invite to budget {BudgetId} by user {UserId} rejected: receiver email is not registered", budgetInviteDto.BudgetId, userId);
+                return CaseResult<BudgetInviteDto?>.Error(Messages.InviteUserNotFound);
+            }
+
+            BudgetInvite budgetInvite = budgetInviteDto.ToEntity();
+            budgetInvite.ReceiverId = receiver.Id;
+            budgetInvite.SenderId = sender.Id;
+
+            BudgetInvite createdInvite = _UnitOfWork.BudgetInviteRepository.CreateInvite(budgetInvite);
+
+            await _UnitOfWork.CommitAsync();
+
+            await SendBudgetInviteNotification(receiver);
+
+            result.Data = createdInvite.ToDto();
+            _Logger.LogInformation("Budget invite {InviteId} sent from {SenderId} to {ReceiverId} for budget {BudgetId}", result.Data!.Id, userId, budgetInviteDto.ReceiverEmail, budgetInviteDto.BudgetId);
 
             return result;
         }
 
-        private async Task SendBudgetInviteNotification(string receiverNotificationToken)
+        private async Task SendBudgetInviteNotification(AppUser receiver)
         {
-            await _PushNotificationService.SendNotification([receiverNotificationToken], "Budget Invite", "You have been invited for a Budget. Click to see the invite.", new NotificationDto() { Type = NotificationTypeEnum.ReceivedInvite });
+            await _PushNotificationService.SendLocalized([receiver], nameof(Messages.PushInviteReceivedTitle), nameof(Messages.PushInviteReceivedBody), new NotificationDto() { Type = NotificationTypeEnum.ReceivedInvite });
         }
     }
 }

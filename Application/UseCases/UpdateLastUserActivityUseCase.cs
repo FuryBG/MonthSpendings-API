@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto;
 using Application.Interfaces;
@@ -30,31 +31,21 @@ namespace Application.UseCases
             var result = new CaseResult<bool>();
             result.Successful = true;
 
-            try
+            int userId = _UserService.GetUserId();
+            AppUser? user = await _UnitOfWork.UserRepository.GetUserById(userId);
+
+            if (user == null)
             {
-                int userId = _UserService.GetUserId();
-                AppUser? user = await _UnitOfWork.UserRepository.GetUserById(userId);
-
-                if (user == null)
-                {
-                    result.Successful = false;
-                    result.ErrorMessage = "Invalid user.";
-                    return result;
-                }
-
-                user.LastVisited = DateTime.UtcNow;
-                user.Timezone = dto.Timezone;
-                await _UnitOfWork.CommitAsync();
-
-                result.Data = true;
-                _Logger.LogInformation("LastVisited updated for user {UserId}, timezone: {Timezone}", userId, dto.Timezone);
+                _Logger.LogWarning("User {UserId} not found when updating activity", userId);
+                return CaseResult<bool>.Error(Messages.UserInvalid);
             }
-            catch (Exception ex)
-            {
-                result.Successful = false;
-                result.ErrorMessage = "Failed to update user activity.";
-                _Logger.LogError(ex, "Error updating last activity for user {UserId}", _UserService.GetUserId());
-            }
+
+            user.LastVisited = DateTime.UtcNow;
+            user.Timezone = dto.Timezone;
+            await _UnitOfWork.CommitAsync();
+
+            result.Data = true;
+            _Logger.LogDebug("LastVisited updated for user {UserId}, timezone: {Timezone}", userId, dto.Timezone);
 
             return result;
         }

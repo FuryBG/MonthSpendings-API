@@ -13,6 +13,7 @@ namespace Domain
         public string GoogleId { get; set; } = "";
         public DateTime LastVisited { get; set; } = DateTime.UtcNow;
         public string Timezone { get; set; } = "UTC";
+        public string Language { get; set; } = "en";
         public DateTime? LastInactivityNotificationSentAt { get; set; }
         public string? GooglePhotoAddress { get; set; }
         public bool IsPro { get; set; } = true;

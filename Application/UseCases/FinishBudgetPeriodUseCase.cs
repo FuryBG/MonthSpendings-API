@@ -1,3 +1,4 @@
+﻿using Application.Resources;
 using Application.Contracts;
 using Application.Dto.Budget;
 using Application.Interfaces;
@@ -29,50 +30,40 @@ namespace Application.UseCases
             var result = new CaseResult<BudgetDto?>();
             result.Successful = true;
 
-            try
+            int userId = _UserService.GetUserId();
+            //TRACKED ENTITY, WILL UPDATE WHEN MODIFY ANY OF THE CHILDS
+            Budget? budget = await _UnitOfWork.BudgetRepository.GetBudgetById(budgetDto.Id, userId);
+
+            if (budget == null)
             {
-                int userId = _UserService.GetUserId();
-                //TRACKED ENTITY, WILL UPDATE WHEN MODIFY ANY OF THE CHILDS
-                Budget? budget = await _UnitOfWork.BudgetRepository.GetBudgetById(budgetDto.Id, userId);
-
-                if (budget == null)
-                {
-                    result.Successful = false;
-                    result.ErrorMessage = $"Can't find budget with id {budgetDto.Id} to delete. Please try again later.";
-                    return result;
-                }
-
-                BudgetPeriod oldPeriod = budget.BudgetPeriods.First(budgetPeriod => budgetPeriod.EndDate == null);
-                oldPeriod.EndDate = DateTime.UtcNow;
-
-                BudgetPeriod newBudgetPeriod = new BudgetPeriod() { StartDate = DateTime.UtcNow };
-                budget.BudgetPeriods.Add(newBudgetPeriod);
-
-                foreach (var budgetCategory in budget.BudgetCategories)
-                {
-                    var dtoCategory = budgetDto.BudgetCategories
-                        .FirstOrDefault(bc => bc.Id == budgetCategory.Id);
-
-                    if (dtoCategory?.Spendings?.Any() == true)
-                    {
-                        Spending spending = dtoCategory.Spendings.First().ToEntity();
-                        spending.Date = DateTime.UtcNow.AddSeconds(5);
-                        spending.CreatedByUserId = userId;
-                        spending.BudgetPeriod = newBudgetPeriod;
-                        budgetCategory.Spendings!.Add(spending);
-                    }
-                }
-
-                await _UnitOfWork.CommitAsync();
-                result.Data = budget.ToDto();
-                _Logger.LogInformation("Budget period finished for budget {BudgetId} by user {UserId}", budgetDto.Id, userId);
+                _Logger.LogInformation("Budget {BudgetId} not found for user {UserId} on finish period", budgetDto.Id, userId);
+                return CaseResult<BudgetDto?>.Error(Messages.BudgetNotFound);
             }
-            catch (Exception ex)
+
+            BudgetPeriod oldPeriod = budget.BudgetPeriods.First(budgetPeriod => budgetPeriod.EndDate == null);
+            oldPeriod.EndDate = DateTime.UtcNow;
+
+            BudgetPeriod newBudgetPeriod = new BudgetPeriod() { StartDate = DateTime.UtcNow };
+            budget.BudgetPeriods.Add(newBudgetPeriod);
+
+            foreach (var budgetCategory in budget.BudgetCategories)
             {
-                _Logger.LogError(ex, "Error finishing budget period for user {UserId}", _UserService.GetUserId());
-                result.Successful = false;
-                result.ErrorMessage = $"Something got wrong during finish budget period on budget with id {budgetDto.Id}. Please try again later.";
+                var dtoCategory = budgetDto.BudgetCategories
+                    .FirstOrDefault(bc => bc.Id == budgetCategory.Id);
+
+                if (dtoCategory?.Spendings?.Any() == true)
+                {
+                    Spending spending = dtoCategory.Spendings.First().ToEntity();
+                    spending.Date = DateTime.UtcNow.AddSeconds(5);
+                    spending.CreatedByUserId = userId;
+                    spending.BudgetPeriod = newBudgetPeriod;
+                    budgetCategory.Spendings!.Add(spending);
+                }
             }
+
+            await _UnitOfWork.CommitAsync();
+            result.Data = budget.ToDto();
+            _Logger.LogInformation("Budget period finished for budget {BudgetId} by user {UserId}", budgetDto.Id, userId);
 
             return result;
         }

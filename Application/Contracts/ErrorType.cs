@@ -6,6 +6,7 @@ namespace Application.Contracts
         Failure = 400,
         Unauthorized = 401,
         ProRequired = 402,
+        Forbidden = 403,
         Conflict = 409,
         Locked = 423
     }

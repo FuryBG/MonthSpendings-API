@@ -49,6 +49,28 @@ namespace Infrastructure.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+        public string CreateWalletIngestToken(AppUser user)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:WalletAudience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddDays(180),
+                signingCredentials: creds
+            );
+
+            _logger.LogInformation("Wallet ingest token issued for user {UserId}", user.Id);
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
         public async Task<RefreshToken> CreateRefreshTokenAsync(int userId)
         {
             var token = new RefreshToken

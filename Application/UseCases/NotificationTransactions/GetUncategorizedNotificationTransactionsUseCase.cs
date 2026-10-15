@@ -2,6 +2,7 @@
 using Application.Contracts;
 using Application.Dto;
 using Application.Interfaces;
+using Application.Mappers;
 using Application.Services;
 using Domain;
 using Microsoft.Extensions.Logging;
@@ -32,15 +33,7 @@ namespace Application.UseCases.NotificationTransactions
             int userId = _UserService.GetUserId();
             List<NotificationTransaction> transactions = await _UnitOfWork.NotificationTransactionRepository.GetUncategorizedByUserAsync(userId, cancellationToken);
             result.Successful = true;
-            result.Data = transactions.Select(t => new NotificationTransactionDto
-            {
-                Id = t.Id,
-                Amount = t.Amount,
-                Currency = t.Currency,
-                MerchantName = t.MerchantName,
-                ReceivedAt = t.ReceivedAt,
-                Categorized = t.Categorized,
-            }).ToList();
+            result.Data = transactions.Select(t => t.ToDto()).ToList();
             _Logger.LogDebug("Retrieved {Count} uncategorized notification transactions for user {UserId}", result.Data.Count, userId);
             return result;
         }

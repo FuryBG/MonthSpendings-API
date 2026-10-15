@@ -612,6 +612,10 @@ namespace Infrastructure.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric");
 
+                    b.Property<string>("CardLast4")
+                        .HasMaxLength(4)
+                        .HasColumnType("character varying(4)");
+
                     b.Property<bool>("Categorized")
                         .HasColumnType("boolean");
 
@@ -625,6 +629,12 @@ namespace Infrastructure.Migrations
                     b.Property<string>("MerchantName")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("PackageName")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("ParseFailed")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("RawBody")
                         .HasColumnType("text");

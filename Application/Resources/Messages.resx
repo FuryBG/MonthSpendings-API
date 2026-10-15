@@ -99,6 +99,9 @@
   <data name="TransactionNotFound" xml:space="preserve">
     <value>Transaction not found.</value>
   </data>
+  <data name="WalletSyncDisabled" xml:space="preserve">
+    <value>Wallet sync is turned off.</value>
+  </data>
   <data name="SubscriptionProRequired" xml:space="preserve">
     <value>Feature requires an active Pro subscription.</value>
   </data>

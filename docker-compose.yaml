@@ -8,6 +8,7 @@ services:
         condition: service_healthy
     environment:
       ConnectionStrings__AppDb: "Host=db;Port=5432;Database=monthspendingsdb;Username=postgres;Password=RWRpbjRvdmVrd2VpZGlvdC4="
+      Jwt__WalletAudience: "tavira-wallet"
 
   db:
     image: postgres:18

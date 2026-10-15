@@ -99,6 +99,9 @@
   <data name="TransactionNotFound" xml:space="preserve">
     <value>Transacción no encontrada.</value>
   </data>
+  <data name="WalletSyncDisabled" xml:space="preserve">
+    <value>La sincronización con la cartera está desactivada.</value>
+  </data>
   <data name="SubscriptionProRequired" xml:space="preserve">
     <value>Esta función requiere una suscripción Pro activa.</value>
   </data>

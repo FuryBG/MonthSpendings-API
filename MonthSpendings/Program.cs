@@ -4,6 +4,7 @@ using Application.Localization;
 using Application.Options;
 using Application.Resources;
 using Application.Services;
+using Application.Services.NotificationParsing;
 using Application.UseCases;
 using Application.UseCases.NotificationTransactions;
 using Application.UseCases.Statistics;
@@ -18,6 +19,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.WebEncoders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using MonthSpendings.Authentication;
 using MonthSpendings.BackgroundServices;
 using MonthSpendings.Controllers;
 using MonthSpendings.Exceptions;
@@ -176,12 +178,15 @@ public class Program
             builder.Services.AddTransient<IGetUncategorizedNotificationTransactionsUseCase, GetUncategorizedNotificationTransactionsUseCase>();
             builder.Services.AddTransient<ICategorizeNotificationTransactionUseCase, CategorizeNotificationTransactionUseCase>();
             builder.Services.AddTransient<IDeleteNotificationTransactionUseCase, DeleteNotificationTransactionUseCase>();
+            builder.Services.AddTransient<IGetWalletIngestTokenUseCase, GetWalletIngestTokenUseCase>();
+            builder.Services.AddSingleton<IWalletNotificationParser, WalletNotificationParser>();
 
             builder.Services.AddTransient<INotificationTransactionRepository, NotificationTransactionRepository>();
             builder.Services.AddTransient<ITransactionCategoryRuleRepository, TransactionCategoryRuleRepository>();
 
             builder.Services.AddHostedService<InactivityNotificationBackgroundService>();
 
+            var jwtSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!));
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(jwtOptions =>
             {
@@ -189,14 +194,27 @@ public class Program
                 jwtOptions.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = false,
-                    ValidateAudience = false,
+                    // Audience is validated so wallet ingest tokens can't call the rest of the API.
+                    ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = builder.Configuration["Jwt:Issuer"],
                     ValidAudience = builder.Configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
-                    )
+                    IssuerSigningKey = jwtSigningKey
+                };
+            })
+            .AddJwtBearer(WalletIngestAuth.Scheme, jwtOptions =>
+            {
+                jwtOptions.RequireHttpsMetadata = false;
+                jwtOptions.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidAudience = builder.Configuration["Jwt:WalletAudience"]
+                        ?? throw new Exception("Jwt:WalletAudience is not configured."),
+                    IssuerSigningKey = jwtSigningKey
                 };
             });
 

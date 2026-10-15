@@ -12,6 +12,8 @@ namespace Application.Dto
         public string Currency { get; set; } = null!;
         [JsonPropertyName("merchantName")]
         public string MerchantName { get; set; } = null!;
+        [JsonPropertyName("cardLast4")]
+        public string? CardLast4 { get; set; }
         [JsonPropertyName("receivedAt")]
         public DateTime ReceivedAt { get; set; }
         [JsonPropertyName("categorized")]

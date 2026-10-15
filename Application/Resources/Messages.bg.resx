@@ -99,6 +99,9 @@
   <data name="TransactionNotFound" xml:space="preserve">
     <value>Транзакцията не е намерена.</value>
   </data>
+  <data name="WalletSyncDisabled" xml:space="preserve">
+    <value>Синхронизацията с портфейла е изключена.</value>
+  </data>
   <data name="SubscriptionProRequired" xml:space="preserve">
     <value>Тази функция изисква активен Pro абонамент.</value>
   </data>

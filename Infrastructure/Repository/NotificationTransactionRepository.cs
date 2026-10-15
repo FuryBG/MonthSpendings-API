@@ -22,9 +22,20 @@ namespace Infrastructure.Repository
         public Task<List<NotificationTransaction>> GetUncategorizedByUserAsync(int userId, CancellationToken cancellationToken)
         {
             return _DbContext.NotificationTransactions
-                .Where(t => t.UserId == userId && !t.Categorized)
+                .Where(t => t.UserId == userId && !t.Categorized && !t.ParseFailed)
                 .OrderByDescending(t => t.ReceivedAt)
                 .ToListAsync(cancellationToken);
+        }
+
+        public Task<NotificationTransaction?> FindDuplicateAsync(int userId, string? rawTitle, string rawBody, DateTime receivedAt, TimeSpan window, CancellationToken cancellationToken)
+        {
+            DateTime from = receivedAt - window;
+            DateTime to = receivedAt + window;
+            return _DbContext.NotificationTransactions
+                .IgnoreQueryFilters()
+                .Where(t => t.UserId == userId && t.RawTitle == rawTitle && t.RawBody == rawBody
+                    && t.ReceivedAt >= from && t.ReceivedAt <= to)
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
         public Task<NotificationTransaction?> GetByIdAsync(int id, int userId, CancellationToken cancellationToken)

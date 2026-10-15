@@ -482,6 +482,15 @@ namespace Application.Resources {
                 return ResourceManager.GetString("TransactionNotFound", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Wallet sync is turned off..
+        /// </summary>
+        public static string WalletSyncDisabled {
+            get {
+                return ResourceManager.GetString("WalletSyncDisabled", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Unauthorized..

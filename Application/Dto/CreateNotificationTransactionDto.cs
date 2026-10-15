@@ -1,18 +1,19 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace Application.Dto
 {
+    /// <summary>Raw wallet notification posted by the phone; parsing happens on the server.</summary>
     public class CreateNotificationTransactionDto
     {
-        [JsonPropertyName("amount")]
-        public decimal Amount { get; set; }
-        [JsonPropertyName("currency")]
-        public string Currency { get; set; } = null!;
-        [JsonPropertyName("merchantName")]
-        public string MerchantName { get; set; } = null!;
-        [JsonPropertyName("rawTitle")]
-        public string? RawTitle { get; set; }
-        [JsonPropertyName("rawBody")]
-        public string? RawBody { get; set; }
+        [JsonPropertyName("title")]
+        public string? Title { get; set; }
+        [Required]
+        [JsonPropertyName("text")]
+        public string Text { get; set; } = null!;
+        [JsonPropertyName("packageName")]
+        public string? PackageName { get; set; }
+        [JsonPropertyName("postedAt")]
+        public DateTime PostedAt { get; set; }
     }
 }

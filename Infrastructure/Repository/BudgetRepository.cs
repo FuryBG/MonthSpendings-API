@@ -43,6 +43,16 @@ namespace Infrastructure.Repository
             return budget;
         }
 
+        public Task<string?> GetPrimaryCurrencyCode(int userId)
+        {
+            return _DbContext.Budgets
+                .Where(b => b.Users.Any(u => u.Id == userId))
+                .OrderByDescending(b => b.OwnerId == userId)
+                .ThenBy(b => b.Id)
+                .Select(b => (string?)b.Currency.Code)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<List<Budget>> GetUserBudgets(int userId)
         {
             return await _DbContext.Budgets
